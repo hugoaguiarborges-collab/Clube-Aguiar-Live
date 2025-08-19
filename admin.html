@@ -53,12 +53,33 @@
 
     <!-- APP -->
     <div id="app" style="display:none">
+      <!-- Barra superior -->
       <div class="card row">
         <div>Logado como <b id="who"></b></div>
         <div class="right row" style="gap:8px">
           <button id="btnPublish" title="Salva a posição atual (para calcular variação 📈)">Publicar ranking</button>
           <button id="btnLogout">Sair</button>
         </div>
+      </div>
+
+      <!-- NOVO: código do treino + pontos por check-in -->
+      <div class="card">
+        <h3>Código do treino de hoje</h3>
+        <div class="grid g3">
+          <div>
+            <label>Código (ex.: AG18)</label>
+            <input id="ck_code" placeholder="AG18">
+          </div>
+          <div>
+            <label>Pontos por check-in</label>
+            <input id="ck_points" type="number" value="3">
+          </div>
+          <div class="row" style="align-items:end">
+            <button id="btnCkSave">Salvar código</button>
+            <span id="ckMsg" class="muted"></span>
+          </div>
+        </div>
+        <p class="muted" id="ckInfo"></p>
       </div>
 
       <div class="grid g2">
@@ -151,7 +172,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // Config COM OS SEUS DADOS
+    // === SUA CONFIG DO FIREBASE ===
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
       authDomain: "clube-aguiar-live.firebaseapp.com",
@@ -195,6 +216,13 @@
     const roster   = document.getElementById('roster');
     const btnPublish = document.getElementById('btnPublish');
 
+    // NOVO: refs do check-in
+    const ckCode = document.getElementById('ck_code');
+    const ckPts  = document.getElementById('ck_points');
+    const btnCk  = document.getElementById('btnCkSave');
+    const ckMsg  = document.getElementById('ckMsg');
+    const ckInfo = document.getElementById('ckInfo');
+
     function toast(el, msg, ok=true){
       el.textContent = msg; el.className = ok ? 'ok' : 'err';
       setTimeout(()=>{el.textContent=''; el.className='muted';}, 2200);
@@ -223,7 +251,7 @@
       }
     });
 
-    // CRUD básico
+    // Carrega e renderiza jogadoras
     async function loadPlayers(){
       const snap = await db.collection('players').orderBy('name').get();
       const players = snap.docs.map(d=>({ id:d.id, ...d.data() }));
@@ -237,6 +265,7 @@
       </tr>`).join('');
     }
 
+    // Salvar/editar atleta
     btnAdd?.addEventListener('click', async () => {
       const name = p_name.value.trim();
       if(!name) return toast(addMsg, 'Informe o nome', false);
@@ -256,6 +285,7 @@
       }catch(e){ toast(addMsg, 'Erro ao salvar', false); }
     });
 
+    // Pontos
     btnScore?.addEventListener('click', async () => {
       const id = selPlayer.value; if(!id) return;
       const delta = parseInt(scoreDelta.value||'0',10) || 0;
@@ -267,6 +297,7 @@
       }catch(e){ alert('Permissão negada ou erro ao pontuar.'); }
     });
 
+    // Status
     btnStatus?.addEventListener('click', async () => {
       const id = selPlayer.value; if(!id) return;
       try{
@@ -275,6 +306,7 @@
       }catch(e){ alert('Permissão negada ou erro ao atualizar status.'); }
     });
 
+    // Selos
     btnAddBadge?.addEventListener('click', async () => {
       const id = selPlayer.value; if(!id) return;
       const b = badgeOne.value.trim(); if(!b) return;
@@ -297,7 +329,7 @@
       }catch(e){ alert('Permissão negada ou erro ao remover selo.'); }
     });
 
-    // Publicar ranking: grava 'position' atual + timestamp
+    // Publicar ranking
     btnPublish?.addEventListener('click', async () => {
       try{
         const q = await db.collection('players').orderBy('points','desc').get();
@@ -310,6 +342,32 @@
         await batch.commit();
         alert('Ranking publicado! A coluna 📈 usa essa fotografia como referência.');
       }catch(e){ alert('Erro ao publicar ranking. Verifique as regras/UID.'); }
+    });
+
+    // ===== NOVO: salvar código do treino e pontos por check-in =====
+    // Carrega a config em tempo real
+    db.collection('meta').doc('checkin').onSnapshot(doc=>{
+      const d = doc.data(); if(!d) return;
+      ckCode.value = d.code || '';
+      ckPts.value  = d.pointsPerCheckin || 3;
+      if(d.updatedAt?.toDate){
+        ckInfo.textContent = 'Última atualização: ' + d.updatedAt.toDate().toLocaleString('pt-BR');
+      }
+    });
+
+    // Salvar config
+    btnCk?.addEventListener('click', async ()=>{
+      try{
+        await db.collection('meta').doc('checkin').set({
+          code: ckCode.value.trim(),
+          pointsPerCheckin: parseInt(ckPts.value||'0',10) || 0,
+          updatedAt: firebase.firestore.Timestamp.fromDate(new Date())
+        }, { merge:true });
+        ckMsg.textContent = 'Salvo!'; ckMsg.className = 'ok';
+        setTimeout(()=>{ ckMsg.textContent=''; ckMsg.className='muted'; }, 1800);
+      }catch(e){
+        ckMsg.textContent = 'Erro ao salvar'; ckMsg.className = 'err';
+      }
     });
   </script>
 </body>
