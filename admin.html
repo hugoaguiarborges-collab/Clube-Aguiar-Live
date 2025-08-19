@@ -7,44 +7,151 @@
   <style>
     body{font-family:Arial,Helvetica,sans-serif;background:#f2f6fa;margin:0}
     header{background:#1976d2;color:#fff;padding:16px;text-align:center;font-size:20px}
-    main{display:flex;justify-content:center;align-items:center;min-height:calc(100vh - 64px);padding:16px}
-    .card{background:#fff;max-width:420px;width:100%;border-radius:12px;padding:20px;
-          box-shadow:0 6px 16px rgba(0,0,0,.08);border:1px solid #e5e7eb}
-    h2{margin:0 0 12px 0}
-    label{font-size:12px;color:#475569;margin:8px 0 4px;display:block}
-    input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px}
-    button{width:100%;margin-top:12px;padding:12px;border:0;border-radius:8px;background:#1976d2;color:#fff;cursor:pointer}
+    .wrap{max-width:980px;margin:18px auto;padding:0 14px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+    label{display:block;font-size:12px;color:#475569;margin-bottom:6px}
+    input,select,button{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+    input,select{width:100%}
+    button{background:#1976d2;color:#fff;border:none;cursor:pointer}
     button:hover{background:#0d47a1}
-    .msg{margin-top:10px;font-size:13px}
+    .grid{display:grid;gap:12px}
+    .g2{grid-template-columns:1fr 1fr}
+    .g3{grid-template-columns:1fr 1fr 1fr}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid #e5e7eb;padding:10px;text-align:left}
+    th{background:#1976d2;color:#fff}
+    .row{display:flex;gap:8px;align-items:center}
+    .right{margin-left:auto}
+    .muted{font-size:12px;color:#64748b}
     .ok{color:#16a34a}.err{color:#dc2626}
-    .muted{color:#64748b;font-size:12px;margin-top:6px}
   </style>
 </head>
 <body>
   <header>Admin — Desafio 40+</header>
 
-  <main>
-    <div class="card">
-      <h2>Entrar</h2>
-      <label for="email">E-mail</label>
-      <input id="email" type="email" placeholder="voce@exemplo.com"/>
+  <div class="wrap">
 
-      <label for="password">Senha</label>
-      <input id="password" type="password" placeholder="••••••••"/>
-
-      <button id="btnLogin">Entrar</button>
-      <div id="msg" class="msg muted"></div>
-      <div class="muted">O usuário é criado em Firebase → Authentication → Usuários.</div>
+    <!-- LOGIN -->
+    <div id="authCard" class="card">
+      <h3>Entrar</h3>
+      <div class="grid g2">
+        <div>
+          <label>E-mail</label>
+          <input id="email" type="email" placeholder="voce@exemplo.com">
+        </div>
+        <div>
+          <label>Senha</label>
+          <input id="password" type="password" placeholder="••••••••">
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="btnLogin">Entrar</button>
+        <span id="authMsg" class="muted"></span>
+      </div>
+      <p class="muted" style="margin-top:6px">O usuário é criado em Firebase → Authentication → Usuários.</p>
     </div>
-  </main>
 
-  <!-- SDKs “compat” (mais simples de usar) -->
+    <!-- APP -->
+    <div id="app" style="display:none">
+      <div class="card row">
+        <div>Logado como <b id="who"></b></div>
+        <div class="right row" style="gap:8px">
+          <button id="btnPublish" title="Salva a posição atual (para calcular variação 📈)">Publicar ranking</button>
+          <button id="btnLogout">Sair</button>
+        </div>
+      </div>
+
+      <div class="grid g2">
+        <!-- Adicionar/Editar atleta -->
+        <div class="card">
+          <h3>Adicionar / editar atleta</h3>
+          <div class="grid g2">
+            <div>
+              <label>Nome</label>
+              <input id="p_name" placeholder="Nome da atleta">
+            </div>
+            <div>
+              <label>Foto (URL pública — opcional)</label>
+              <input id="p_photo" placeholder="https://...">
+            </div>
+          </div>
+          <div class="grid g3" style="margin-top:10px">
+            <div>
+              <label>Pontos iniciais</label>
+              <input id="p_points" type="number" value="0">
+            </div>
+            <div>
+              <label>Status</label>
+              <input id="p_status" placeholder="Ex.: Em alta">
+            </div>
+            <div>
+              <label>Selos (emojis separados por espaço)</label>
+              <input id="p_badges" placeholder="🏅 🔥 💧">
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button id="btnAdd">Salvar atleta</button>
+            <span id="addMsg" class="muted"></span>
+          </div>
+        </div>
+
+        <!-- Pontuar / status / selos -->
+        <div class="card">
+          <h3>Pontuar / status / selos</h3>
+          <div class="grid g2">
+            <div>
+              <label>Selecione a atleta</label>
+              <select id="selPlayer"></select>
+            </div>
+            <div>
+              <label>Alterar pontos (+ ou −)</label>
+              <div class="row">
+                <input id="scoreDelta" type="number" value="1" style="max-width:140px">
+                <button id="btnScore">Aplicar</button>
+              </div>
+            </div>
+          </div>
+          <div class="grid g2" style="margin-top:10px">
+            <div>
+              <label>Novo status</label>
+              <div class="row">
+                <input id="newStatus" placeholder="Ex.: Em alta">
+                <button id="btnStatus">Definir</button>
+              </div>
+            </div>
+            <div>
+              <label>Selo (emoji)</label>
+              <div class="row">
+                <input id="badgeOne" placeholder="🏅" style="max-width:120px">
+                <button id="btnAddBadge">Adicionar</button>
+                <button id="btnRemoveBadge">Remover</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista rápida -->
+      <div class="card">
+        <h3>Atletas (visualização rápida)</h3>
+        <table>
+          <thead>
+            <tr><th>Nome</th><th>Pontos</th><th>Status</th><th>Selos</th><th>ID</th></tr>
+          </thead>
+          <tbody id="roster"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // SUA CONFIG (já com seus dados)
+    // Config COM OS SEUS DADOS
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
       authDomain: "clube-aguiar-live.firebaseapp.com",
@@ -54,33 +161,155 @@
       appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
     };
 
-    // Inicializa Firebase (compat)
+    // Init
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db   = firebase.firestore();
 
-    const emailEl = document.getElementById('email');
-    const passEl  = document.getElementById('password');
-    const btn     = document.getElementById('btnLogin');
-    const msg     = document.getElementById('msg');
+    // UI refs
+    const authCard = document.getElementById('authCard');
+    const app      = document.getElementById('app');
+    const email    = document.getElementById('email');
+    const password = document.getElementById('password');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnLogout= document.getElementById('btnLogout');
+    const authMsg  = document.getElementById('authMsg');
+    const who      = document.getElementById('who');
 
-    function showMsg(text, ok=null){
-      msg.textContent = text;
-      msg.className = 'msg ' + (ok===true ? 'ok' : ok===false ? 'err' : 'muted');
+    const p_name   = document.getElementById('p_name');
+    const p_photo  = document.getElementById('p_photo');
+    const p_points = document.getElementById('p_points');
+    const p_status = document.getElementById('p_status');
+    const p_badges = document.getElementById('p_badges');
+    const btnAdd   = document.getElementById('btnAdd');
+    const addMsg   = document.getElementById('addMsg');
+
+    const selPlayer= document.getElementById('selPlayer');
+    const scoreDelta = document.getElementById('scoreDelta');
+    const btnScore = document.getElementById('btnScore');
+    const newStatus= document.getElementById('newStatus');
+    const btnStatus= document.getElementById('btnStatus');
+    const badgeOne = document.getElementById('badgeOne');
+    const btnAddBadge = document.getElementById('btnAddBadge');
+    const btnRemoveBadge = document.getElementById('btnRemoveBadge');
+    const roster   = document.getElementById('roster');
+    const btnPublish = document.getElementById('btnPublish');
+
+    function toast(el, msg, ok=true){
+      el.textContent = msg; el.className = ok ? 'ok' : 'err';
+      setTimeout(()=>{el.textContent=''; el.className='muted';}, 2200);
     }
 
-    btn.addEventListener('click', async () => {
-      showMsg('Conectando…');
+    // Auth
+    btnLogin?.addEventListener('click', async () => {
+      authMsg.textContent = 'Entrando...';
       try {
-        const email = emailEl.value.trim();
-        const pass  = passEl.value.trim();
-        await auth.signInWithEmailAndPassword(email, pass);
-        showMsg('Login ok! Redirecionando…', true);
-        location.href = 'index.html';
-      } catch (e) {
-        console.error(e);
-        showMsg('Erro: ' + (e.code || e.message), false);
-        // Exemplos: auth/invalid-credential, auth/user-not-found, auth/wrong-password, auth/unauthorized-domain
+        await auth.signInWithEmailAndPassword(email.value.trim(), password.value.trim());
+      } catch(e){
+        toast(authMsg, 'Erro: ' + (e.code||e.message), false);
       }
+    });
+    btnLogout?.addEventListener('click', ()=> auth.signOut());
+
+    auth.onAuthStateChanged(async (user)=>{
+      if(user){
+        who.textContent = user.email;
+        authCard.style.display='none';
+        app.style.display='block';
+        loadPlayers();
+      } else {
+        authCard.style.display='block';
+        app.style.display='none';
+      }
+    });
+
+    // CRUD básico
+    async function loadPlayers(){
+      const snap = await db.collection('players').orderBy('name').get();
+      const players = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      selPlayer.innerHTML = players.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+      roster.innerHTML = players.map(p=>`<tr>
+        <td>${p.name||''}</td>
+        <td>${p.points||0}</td>
+        <td>${p.status||''}</td>
+        <td>${(p.badges||[]).join(' ')}</td>
+        <td>${p.id}</td>
+      </tr>`).join('');
+    }
+
+    btnAdd?.addEventListener('click', async () => {
+      const name = p_name.value.trim();
+      if(!name) return toast(addMsg, 'Informe o nome', false);
+      const doc = {
+        name,
+        photoUrl: p_photo.value.trim() || null,
+        points: parseInt(p_points.value||'0',10) || 0,
+        status: p_status.value.trim() || '',
+        badges: p_badges.value.trim() ? p_badges.value.trim().split(/\s+/) : []
+      };
+      try{
+        const slug = name.toLowerCase().normalize('NFD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
+        await db.collection('players').doc(slug).set(doc, { merge:true });
+        toast(addMsg, 'Salvo!');
+        p_name.value = p_photo.value = p_points.value = p_status.value = p_badges.value = '';
+        loadPlayers();
+      }catch(e){ toast(addMsg, 'Erro ao salvar', false); }
+    });
+
+    btnScore?.addEventListener('click', async () => {
+      const id = selPlayer.value; if(!id) return;
+      const delta = parseInt(scoreDelta.value||'0',10) || 0;
+      try{
+        await db.collection('players').doc(id).update({
+          points: firebase.firestore.FieldValue.increment(delta)
+        });
+        loadPlayers();
+      }catch(e){ alert('Permissão negada ou erro ao pontuar.'); }
+    });
+
+    btnStatus?.addEventListener('click', async () => {
+      const id = selPlayer.value; if(!id) return;
+      try{
+        await db.collection('players').doc(id).update({ status: newStatus.value.trim() });
+        newStatus.value=''; loadPlayers();
+      }catch(e){ alert('Permissão negada ou erro ao atualizar status.'); }
+    });
+
+    btnAddBadge?.addEventListener('click', async () => {
+      const id = selPlayer.value; if(!id) return;
+      const b = badgeOne.value.trim(); if(!b) return;
+      try{
+        await db.collection('players').doc(id).update({
+          badges: firebase.firestore.FieldValue.arrayUnion(b)
+        });
+        badgeOne.value=''; loadPlayers();
+      }catch(e){ alert('Permissão negada ou erro ao adicionar selo.'); }
+    });
+
+    btnRemoveBadge?.addEventListener('click', async () => {
+      const id = selPlayer.value; if(!id) return;
+      const b = badgeOne.value.trim(); if(!b) return;
+      try{
+        await db.collection('players').doc(id).update({
+          badges: firebase.firestore.FieldValue.arrayRemove(b)
+        });
+        badgeOne.value=''; loadPlayers();
+      }catch(e){ alert('Permissão negada ou erro ao remover selo.'); }
+    });
+
+    // Publicar ranking: grava 'position' atual + timestamp
+    btnPublish?.addEventListener('click', async () => {
+      try{
+        const q = await db.collection('players').orderBy('points','desc').get();
+        const batch = db.batch();
+        let pos = 0;
+        q.forEach(doc => { pos++; batch.set(doc.ref, { position: pos }, { merge:true }); });
+        batch.set(db.collection('meta').doc('ranking'), {
+          lastPublished: firebase.firestore.Timestamp.fromDate(new Date())
+        }, { merge:true });
+        await batch.commit();
+        alert('Ranking publicado! A coluna 📈 usa essa fotografia como referência.');
+      }catch(e){ alert('Erro ao publicar ranking. Verifique as regras/UID.'); }
     });
   </script>
 </body>
