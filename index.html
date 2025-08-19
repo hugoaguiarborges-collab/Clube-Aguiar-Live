@@ -1,39 +1,141 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ranking Desafio 40+</title>
+  <title>Melhores Desempenhos Aguiar 40+</title>
+
+  <!-- Fonte bonita -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#f2f6fa;margin:0;padding:0}
-    header{padding:18px;text-align:center;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:16px}
-    h1{margin:0}
-    .wrap{max-width:1000px;margin:0 auto;padding:0 12px 24px}
-    table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb}
-    th,td{padding:10px;border:1px solid #e5e7eb;text-align:left}
-    th{background:#111827;color:#fff}
-    .avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#e5e7eb;display:inline-block}
-    .pos{width:36px;text-align:center}
+    :root{
+      --bg1:#0a1a33;
+      --bg2:#0e2345;
+      --accent:#2a5cff;
+      --gold:#cfa93a;
+      --silver:#c0c6d4;
+      --bronze:#b77b47;
+      --card:#0f1f3c;
+      --text:#e6efff;
+      --muted:#a7b6d0;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--text); font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 500px at 50% -20%, #163060 0%, transparent 60%),
+        radial-gradient(800px 400px at 10% 20%, #142b56 0%, transparent 70%),
+        radial-gradient(900px 480px at 90% 30%, #10264b 0%, transparent 70%),
+        linear-gradient(180deg, var(--bg2), var(--bg1));
+      min-height:100dvh;
+    }
+    .container{max-width:1000px; margin:0 auto; padding:20px 14px 60px}
+
+    /* Topbar */
+    .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between}
+    .search{
+      flex:1; position:relative;
+      background:#102443; border:1px solid #18305a; border-radius:14px; padding:10px 14px; color:#d9e6ff;
+      outline:none; font-size:14px;
+    }
+    .login{
+      background:linear-gradient(180deg,#3d6cff,#224bde);
+      border:none; color:white; font-weight:600; padding:10px 18px; border-radius:14px; cursor:pointer;
+    }
+    .login:hover{filter:brightness(1.05)}
+
+    /* Hero */
+    .hero{ text-align:center; padding:28px 10px 22px }
+    .hero h1{ font-size:clamp(28px,6vw,44px); line-height:1.1; margin:10px 0 12px; font-weight:800; letter-spacing:0.5px }
+    .hero p{ color:var(--muted); max-width:740px; margin:0 auto }
+
+    /* Podium */
+    .podium{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; align-items:end; margin-top:24px }
+    .stage{
+      background:rgba(255,255,255,0.03); border:1px solid #213765; border-radius:16px; padding:16px 10px;
+      min-height:260px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; position:relative;
+      overflow:hidden;
+    }
+    .stage h3{margin:0 0 8px; font-weight:800; letter-spacing:1px; text-transform:uppercase; text-align:center}
+    .laurel{
+      position:absolute; inset:auto 0 74px 0; height:120px; opacity:.18; pointer-events:none;
+    }
+    .pedestal{
+      width:86%; border-radius:16px; height:82px; display:flex; align-items:center; justify-content:center;
+      box-shadow:inset 0 8px 24px rgba(0,0,0,.25);
+    }
+    .pedestal.gold{ background:linear-gradient(180deg,#f7d65a,#cfa93a); height:110px }
+    .pedestal.silver{ background:linear-gradient(180deg,#e5ebf7,#c0c6d4); height:90px }
+    .pedestal.bronze{ background:linear-gradient(180deg,#e4b28a,#b77b47); height:78px }
+
+    .medal{position:absolute; top:12px; right:12px; background:#102443; border:1px solid #2b457a; padding:6px 10px; border-radius:999px; font-size:12px}
+    .avatar{
+      width:72px; height:72px; border-radius:999px; object-fit:cover; border:3px solid rgba(255,255,255,.2); margin-bottom:12px;
+      background:#1e335f;
+    }
+    .name{font-size:18px; font-weight:800; margin-bottom:4px; text-align:center}
+    .points{font-size:14px; color:#bcd0ff; margin-bottom:8px}
+
+    /* Lista 4+ */
+    .list{
+      margin-top:28px; background:rgba(255,255,255,0.03); border:1px solid #213765; border-radius:16px; overflow:hidden;
+    }
+    .row{display:grid; grid-template-columns:48px 60px 1fr 110px 120px 100px; gap:10px; padding:12px 14px; align-items:center}
+    .row.header{ background:#0e2a55; color:#eaf2ff; font-weight:600 }
+    .row:not(.header){ border-top:1px solid #1c3360 }
+    .mini{ width:44px; height:44px; border-radius:999px; object-fit:cover; background:#1e335f }
+    .badge{margin-right:4px}
+
+    /* Info stamp */
+    .stamp{color:#9eb3df; font-size:12px; margin-top:8px}
+
+    @media (max-width:880px){
+      .row{ grid-template-columns:40px 46px 1fr 90px 0 0; }
+      .row span.badges{ display:none }
+      .row span.status{ display:none }
+    }
+    @media (max-width:720px){
+      .podium{ grid-template-columns:1fr; }
+      .stage{ min-height:220px }
+    }
   </style>
 </head>
 <body>
-  <header><h1>Ranking Desafio 40+</h1></header>
-  <div class="wrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="pos">#</th>
-          <th>Foto</th>
-          <th>Nome</th>
-          <th>Pontos</th>
-          <th>Status</th>
-          <th>Selos</th>
-          <th>📈</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-    <p id="stamp" style="color:#6b7280;font-size:12px;margin-top:8px"></p>
+  <div class="container">
+    <!-- Topbar -->
+    <div class="topbar">
+      <input id="q" class="search" placeholder="Buscar atleta…"/>
+      <button class="login" onclick="location.href='admin.html'">LOGIN</button>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+      <h1>MELHORES DE<br/>DESEMPENHOS AGUIAR 40+</h1>
+      <p>Ranking de melhores desempenhos de mulheres 40+ que participam dos treinos do Clube Aguiar. Atualização em tempo real.</p>
+    </section>
+
+    <!-- Pódio -->
+    <div id="podium" class="podium">
+      <!-- Os 3 primeiros entram aqui via JS -->
+    </div>
+
+    <!-- Lista do 4º em diante -->
+    <div class="list" id="list">
+      <div class="row header">
+        <div>#</div>
+        <div>Foto</div>
+        <div>Nome</div>
+        <div>Pontos</div>
+        <div>Status</div>
+        <div>Selos</div>
+      </div>
+      <!-- Linhas via JS -->
+    </div>
+
+    <p id="stamp" class="stamp"></p>
   </div>
 
   <!-- Firebase compat -->
@@ -41,7 +143,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // Config (seus dados)
+    // Config do seu projeto
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
       authDomain: "clube-aguiar-live.firebaseapp.com",
@@ -53,46 +155,101 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const tbody = document.getElementById('tbody');
-    const stamp = document.getElementById('stamp');
+    const $podium = document.getElementById('podium');
+    const $list   = document.getElementById('list');
+    const $stamp  = document.getElementById('stamp');
+    const $q      = document.getElementById('q');
 
-    // Lê 'meta/ranking' para mostrar a última publicação
+    // Louro SVG (decor)
+    const LAUREL = `
+      <svg class="laurel" viewBox="0 0 512 256" preserveAspectRatio="xMidYMid meet">
+        <g fill="none" stroke="#9eb3df" stroke-width="4">
+          <path d="M30,210 C120,120 180,60 256,60" />
+          <path d="M482,210 C392,120 332,60 256,60" />
+          <!-- folhinhas rápidas -->
+          ${Array.from({length:10}).map((_,i)=>`<path d="M${50+i*18},190 l10,-18 l10,18 z" fill="#9eb3df"/>`).join('')}
+          ${Array.from({length:10}).map((_,i)=>`<path d="M${462-i*18},190 l-10,-18 l-10,18 z" fill="#9eb3df"/>`).join('')}
+        </g>
+      </svg>`;
+
+    // Última publicação (para referência do 📈 se quiser usar depois)
     db.collection('meta').doc('ranking').onSnapshot(doc=>{
       const d = doc.data();
       if(d?.lastPublished?.toDate){
         const dt = d.lastPublished.toDate();
-        stamp.textContent = 'Última publicação do ranking: ' +
+        $stamp.textContent = 'Última publicação do ranking: ' +
           dt.toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
       } else {
-        stamp.textContent = 'Ranking ainda não publicado (📈 sem referência).';
+        $stamp.textContent = 'Ranking ainda não publicado.';
       }
     });
 
-    // Lê players em tempo real, ordenados por pontos
+    // Lê atletas ao vivo
+    let allPlayers = [];
     db.collection('players').orderBy('points','desc').onSnapshot(snap=>{
-      const arr = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-      tbody.innerHTML = '';
-      arr.forEach((p, idx)=>{
-        const posAtual = idx+1;
-        const posPublic = p.position || null;
-        let varTxt = '—';
-        if(posPublic){
-          if(posAtual < posPublic) varTxt = '↑';
-          else if(posAtual > posPublic) varTxt = '↓';
-        }
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="pos">${posAtual}</td>
-          <td>${p.photoUrl ? `<img class="avatar" src="${p.photoUrl}" alt="${p.name}">` : `<div class="avatar"></div>`}</td>
-          <td>${p.name||''}</td>
-          <td>${p.points||0}</td>
-          <td>${p.status||''}</td>
-          <td>${(p.badges||[]).join(' ')}</td>
-          <td>${varTxt}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+      allPlayers = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      render(allPlayers);
     });
+
+    // Busca por nome
+    $q.addEventListener('input', () => {
+      const term = $q.value.trim().toLowerCase();
+      const filtered = term ? allPlayers.filter(p => (p.name||'').toLowerCase().includes(term)) : allPlayers;
+      render(filtered);
+    });
+
+    function render(players){
+      // Top 3
+      const [first, second, third, ...rest] = players;
+      $podium.innerHTML = '';
+      const stages = [
+        { who: second, medal:'PRATA', cls:'silver' },
+        { who: first,  medal:'OURO',  cls:'gold'   },
+        { who: third,  medal:'BRONZE',cls:'bronze' }
+      ];
+      stages.forEach(st => {
+        const p = st.who;
+        const name = p?.name || '—';
+        const pts  = p?.points ?? '—';
+        const photo= p?.photoUrl || '';
+        const html = `
+          <div class="stage">
+            <div class="medal">${st.medal}</div>
+            ${LAUREL}
+            ${photo ? `<img class="avatar" src="${photo}" alt="${name}">` : `<div class="avatar"></div>`}
+            <div class="name">${name.toUpperCase()}</div>
+            <div class="points">${pts} pts</div>
+            <div class="pedestal ${st.cls}"></div>
+          </div>`;
+        const wrap = document.createElement('div'); wrap.innerHTML = html; $podium.appendChild(wrap.firstElementChild);
+      });
+
+      // Lista 4+
+      // Remove linhas antigas (deixa header)
+      [...$list.querySelectorAll('.row:not(.header)')].forEach(el=>el.remove());
+      rest.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <div>${idx+4}</div>
+          <div>${p.photoUrl ? `<img class="mini" src="${p.photoUrl}" alt="${p.name}"/>` : `<div class="mini"></div>`}</div>
+          <div>${p.name||''}</div>
+          <div>${p.points||0}</div>
+          <span class="status">${p.status||''}</span>
+          <span class="badges">${(p.badges||[]).map(b=>`<span class="badge">${b}</span>`).join(' ')}</span>
+        `;
+        $list.appendChild(row);
+      });
+
+      // Caso tenha menos gente
+      if(players.length === 0){
+        $podium.innerHTML = `
+          <div class="stage"><div class="name">Sem atletas</div><div class="pedestal silver"></div></div>
+          <div class="stage"><div class="name">Cadastre no Admin</div><div class="pedestal gold"></div></div>
+          <div class="stage"><div class="name">Sem atletas</div><div class="pedestal bronze"></div></div>
+        `;
+      }
+    }
   </script>
 </body>
 </html>
