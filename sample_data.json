@@ -1,0 +1,28 @@
+{
+  "athletes": {
+    "ana_silva": {
+      "name": "Ana Silva",
+      "photo": "",
+      "points": 10,
+      "status": "Em alta",
+      "badges": ["🏅", "💧"],
+      "position": 0
+    },
+    "bia_costa": {
+      "name": "Bia Costa",
+      "photo": "",
+      "points": 8,
+      "status": "Constante",
+      "badges": ["🔥"],
+      "position": 1
+    },
+    "carla_ferreira": {
+      "name": "Carla Ferreira",
+      "photo": "",
+      "points": 6,
+      "status": "Retomando",
+      "badges": [],
+      "position": 2
+    }
+  }
+}

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Ranking Desafio 40+</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+    .message {
+      margin-top: 10px;
+      color: green;
+    }
+    .error {
+      margin-top: 10px;
+      color: red;
+    }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, updateDoc, getDoc, getDocs, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // 🚧 Substitua estes valores pela configuração do seu projeto Firebase
+    const firebaseConfig = {
+       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+  authDomain: "clube-aguiar-live.firebaseapp.com",
+  projectId: "clube-aguiar-live",
+  storageBucket: "clube-aguiar-live.firebasestorage.app",
+  messagingSenderId: "694025911850",
+  appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const athletesCol = collection(db, "athletes");
+
+    // Elementos de tela
+    const loginSection = document.getElementById('login-section');
+    const adminSection = document.getElementById('admin-section');
+    const loginForm = document.getElementById('login-form');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginMsg = document.getElementById('login-msg');
+    const signOutBtn = document.getElementById('signout-btn');
+
+    // Inicializa a UI baseado no estado de autenticação
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginSection.classList.add('hidden');
+        adminSection.classList.remove('hidden');
+        fetchAthletes();
+      } else {
+        loginSection.classList.remove('hidden');
+        adminSection.classList.add('hidden');
+      }
+    });
+
+    // Tratamento do login
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginMsg.textContent = '';
+      try {
+        await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+      } catch (err) {
+        loginMsg.textContent = 'Erro ao entrar: ' + err.message;
+      }
+    });
+
+    // Logout
+    signOutBtn.addEventListener('click', async () => {
+      await signOut(auth);
+    });
+
+    // Carrega lista de atletas para o select
+    async function fetchAthletes() {
+      const select = document.getElementById('athlete-select');
+      select.innerHTML = '';
+      const snapshot = await getDocs(athletesCol);
+      const athletes = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        athletes.push({ id: docSnap.id, name: data.name });
+      });
+      athletes.sort((a, b) => a.name.localeCompare(b.name));
+      athletes.forEach((a) => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = a.name;
+        select.appendChild(opt);
+      });
+    }
+
+    // Botão para salvar atleta (novo ou edição)
+    document.getElementById('save-athlete-btn').addEventListener('click', async () => {
+      const name = document.getElementById('athlete-name').value.trim();
+      const photo = document.getElementById('athlete-photo').value.trim();
+      const points = parseInt(document.getElementById('athlete-points').value) || 0;
+      const status = document.getElementById('athlete-status').value.trim();
+      const badgesStr = document.getElementById('athlete-badges').value.trim();
+      const badges = badgesStr ? badgesStr.split(',').map((s) => s.trim()).filter((s) => s.length > 0) : [];
+      if (!name) {
+        alert('Nome é obrigatório.');
+        return;
+      }
+      // docId baseado no nome (minusculo e underscores). Pode ajustar como preferir.
+      const docId = name.toLowerCase().replace(/\s+/g, '_');
+      try {
+        await setDoc(doc(db, 'athletes', docId), {
+          name,
+          photo,
+          points,
+          status,
+          badges
+        }, { merge: true });
+        document.getElementById('save-msg').textContent = 'Atleta salvo com sucesso!';
+        fetchAthletes();
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao salvar atleta: ' + err.message);
+      }
+    });
+
+    // Incrementar pontuação
+    document.getElementById('apply-points-btn').addEventListener('click', async () => {
+      const athleteId = document.getElementById('athlete-select').value;
+      const delta = parseInt(document.getElementById('points-value').value);
+      if (!athleteId || isNaN(delta)) {
+        alert('Selecione um atleta e informe um valor numérico.');
+        return;
+      }
+      try {
+        const athleteRef = doc(db, 'athletes', athleteId);
+        const snap = await getDoc(athleteRef);
+        const currentPoints = snap.exists() ? (snap.data().points || 0) : 0;
+        await updateDoc(athleteRef, { points: currentPoints + delta });
+        document.getElementById('points-msg').textContent = 'Pontuação atualizada.';
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao aplicar pontos: ' + err.message);
+      }
+    });
+
+    // Definir status
+    document.getElementById('set-status-btn').addEventListener('click', async () => {
+      const athleteId = document.getElementById('athlete-select').value;
+      const status = document.getElementById('status-value').value.trim();
+      if (!athleteId) {
+        alert('Selecione um atleta.');
+        return;
+      }
+      try {
+        const athleteRef = doc(db, 'athletes', athleteId);
+        await updateDoc(athleteRef, { status });
+        document.getElementById('status-msg').textContent = 'Status atualizado.';
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao definir status: ' + err.message);
+      }
+    });
+
+    // Adicionar selo
+    document.getElementById('add-badge-btn').addEventListener('click', async () => {
+      const athleteId = document.getElementById('athlete-select').value;
+      const badge = document.getElementById('badge-value').value.trim();
+      if (!athleteId || !badge) {
+        alert('Selecione um atleta e informe o selo (emoji).');
+        return;
+      }
+      try {
+        const athleteRef = doc(db, 'athletes', athleteId);
+        await updateDoc(athleteRef, { badges: arrayUnion(badge) });
+        document.getElementById('badge-msg').textContent = 'Selo adicionado.';
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao adicionar selo: ' + err.message);
+      }
+    });
+
+    // Remover selo
+    document.getElementById('remove-badge-btn').addEventListener('click', async () => {
+      const athleteId = document.getElementById('athlete-select').value;
+      const badge = document.getElementById('badge-value').value.trim();
+      if (!athleteId || !badge) {
+        alert('Selecione um atleta e informe o selo (emoji).');
+        return;
+      }
+      try {
+        const athleteRef = doc(db, 'athletes', athleteId);
+        await updateDoc(athleteRef, { badges: arrayRemove(badge) });
+        document.getElementById('badge-msg').textContent = 'Selo removido.';
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao remover selo: ' + err.message);
+      }
+    });
+
+    // Publicar ranking (salvar posição de cada atleta)
+    document.getElementById('publish-ranking-btn').addEventListener('click', async () => {
+      try {
+        const q = query(athletesCol, orderBy('points', 'desc'));
+        const snapshot = await getDocs(q);
+        let idx = 0;
+        for (const docSnap of snapshot.docs) {
+          const athleteRef = doc(db, 'athletes', docSnap.id);
+          await updateDoc(athleteRef, { position: idx });
+          idx++;
+        }
+        alert('Ranking publicado! A coluna de variação será atualizada no site público.');
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao publicar ranking: ' + err.message);
+      }
+    });
+
+  </script>
+</head>
+<body>
+  <h1>Painel do Administrador - Desafio 40+</h1>
+  <!-- Seção de login -->
+  <section id="login-section">
+    <h2>Login</h2>
+    <form id="login-form">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" required />
+      <label for="password">Senha</label>
+      <input type="password" id="password" required />
+      <button type="submit">Entrar</button>
+    </form>
+    <div id="login-msg" class="error"></div>
+  </section>
+
+  <!-- Seção principal (aparece somente após login) -->
+  <section id="admin-section" class="hidden">
+    <button id="signout-btn" style="float: right;">Sair</button>
+    <h2>Adicionar / Editar Atleta</h2>
+    <label for="athlete-name">Nome</label>
+    <input type="text" id="athlete-name" placeholder="Ex.: Ana Silva" />
+    <label for="athlete-photo">URL da Foto (opcional)</label>
+    <input type="text" id="athlete-photo" placeholder="https://..."/>
+    <label for="athlete-points">Pontuação inicial</label>
+    <input type="number" id="athlete-points" value="0" />
+    <label for="athlete-status">Status (ex.: Em alta, Constante, Retomando)</label>
+    <input type="text" id="athlete-status" />
+    <label for="athlete-badges">Selos iniciais (separados por vírgula)</label>
+    <input type="text" id="athlete-badges" placeholder="🏅, 🔥" />
+    <button id="save-athlete-btn">Salvar Atleta</button>
+    <div id="save-msg" class="message"></div>
+
+    <h2 style="margin-top: 40px;">Pontuar / Status / Selos</h2>
+    <label for="athlete-select">Selecione a atleta</label>
+    <select id="athlete-select"></select>
+
+    <!-- Pontuação -->
+    <label for="points-value">Alterar pontuação (numero positivo ou negativo)</label>
+    <input type="number" id="points-value" value="1" />
+    <button id="apply-points-btn">Aplicar pontos</button>
+    <div id="points-msg" class="message"></div>
+
+    <!-- Status -->
+    <label for="status-value">Novo status</label>
+    <input type="text" id="status-value" placeholder="Ex.: Em alta" />
+    <button id="set-status-btn">Definir status</button>
+    <div id="status-msg" class="message"></div>
+
+    <!-- Selos -->
+    <label for="badge-value">Selo (emoji) para adicionar/remover</label>
+    <input type="text" id="badge-value" placeholder="🏅" />
+    <button id="add-badge-btn">Adicionar selo</button>
+    <button id="remove-badge-btn">Remover selo</button>
+    <div id="badge-msg" class="message"></div>
+
+    <!-- Publicar ranking -->
+    <h2 style="margin-top: 40px;">Publicar ranking (salvar posições)</h2>
+    <button id="publish-ranking-btn">Publicar ranking</button>
+    <p>Isso registra a posição atual de cada atleta para calcular a variação (📈). Depois de publicar, quaisquer alterações na pontuação mostrarão se a atleta subiu, desceu ou manteve a posição.</p>
+  </section>
+</body>
+</html>

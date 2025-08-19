@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ranking Desafio 40+</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #333;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    .photo {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .variation {
+      font-weight: bold;
+    }
+  </style>
+  <!-- Firebase libraries -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // 🚧 Substitua estes valores pela configuração do seu projeto Firebase
+    const firebaseConfig = {
+       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+  authDomain: "clube-aguiar-live.firebaseapp.com",
+  projectId: "clube-aguiar-live",
+  storageBucket: "clube-aguiar-live.firebasestorage.app",
+  messagingSenderId: "694025911850",
+  appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    /**
+     * Calcula o símbolo de variação baseado na posição anterior (position)
+     * e na posição atual (index). Retorna ↑/↓ ou — com o número de posições
+     * que o atleta subiu/desceu.
+     */
+    function getVariationSymbol(prevPos, newPos) {
+      if (prevPos === undefined || prevPos === null) return "—";
+      const diff = prevPos - newPos;
+      if (diff > 0) {
+        return `↑ ${diff}`;
+      } else if (diff < 0) {
+        return `↓ ${Math.abs(diff)}`;
+      } else {
+        return "—";
+      }
+    }
+
+    /**
+     * Renderiza a tabela de ranking no DOM.
+     * @param {Array<Object>} list Lista de atletas ordenada por pontuação.
+     */
+    function renderTable(list) {
+      const tbody = document.getElementById('rank-body');
+      tbody.innerHTML = '';
+      list.forEach((athlete, index) => {
+        const tr = document.createElement('tr');
+
+        // Posição
+        const posTd = document.createElement('td');
+        posTd.textContent = index + 1;
+        tr.appendChild(posTd);
+
+        // Foto ou inicial
+        const photoTd = document.createElement('td');
+        if (athlete.photo && athlete.photo.trim() !== '') {
+          const img = document.createElement('img');
+          img.src = athlete.photo;
+          img.className = 'photo';
+          photoTd.appendChild(img);
+        } else {
+          const div = document.createElement('div');
+          div.className = 'photo';
+          div.style.background = '#ccc';
+          div.style.display = 'flex';
+          div.style.alignItems = 'center';
+          div.style.justifyContent = 'center';
+          div.textContent = athlete.name ? athlete.name.charAt(0).toUpperCase() : '';
+          photoTd.appendChild(div);
+        }
+        tr.appendChild(photoTd);
+
+        // Nome
+        const nameTd = document.createElement('td');
+        nameTd.textContent = athlete.name;
+        tr.appendChild(nameTd);
+
+        // Pontos
+        const pointsTd = document.createElement('td');
+        pointsTd.textContent = athlete.points || 0;
+        tr.appendChild(pointsTd);
+
+        // Status
+        const statusTd = document.createElement('td');
+        statusTd.textContent = athlete.status || '';
+        tr.appendChild(statusTd);
+
+        // Selos
+        const badgesTd = document.createElement('td');
+        badgesTd.textContent = (athlete.badges && athlete.badges.length > 0) ? athlete.badges.join(' ') : '';
+        tr.appendChild(badgesTd);
+
+        // Variação de posição
+        const variationTd = document.createElement('td');
+        variationTd.className = 'variation';
+        variationTd.textContent = getVariationSymbol(athlete.position, index);
+        tr.appendChild(variationTd);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    /**
+     * Inicia o listener em tempo real da coleção de atletas. Sempre que
+     * houver mudança no Firestore, a tabela é atualizada automaticamente.
+     */
+    function startRankingListener() {
+      const colRef = collection(db, "athletes");
+      onSnapshot(colRef, (snapshot) => {
+        const athletes = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          athletes.push({
+            id: docSnap.id,
+            ...data
+          });
+        });
+        // Ordena por pontos (descendente)
+        athletes.sort((a, b) => (b.points || 0) - (a.points || 0));
+        renderTable(athletes);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      startRankingListener();
+    });
+  </script>
+</head>
+<body>
+  <h1>Ranking Desafio 40+</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Foto</th>
+        <th>Nome</th>
+        <th>Pontos</th>
+        <th>Status</th>
+        <th>Selos</th>
+        <th>📈</th>
+      </tr>
+    </thead>
+    <tbody id="rank-body">
+      <!-- Linhas do ranking serão inseridas aqui -->
+    </tbody>
+  </table>
+</body>
+</html>
