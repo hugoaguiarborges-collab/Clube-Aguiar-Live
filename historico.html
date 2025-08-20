@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Meu Progresso — Desafio 40+</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--muted:#a7b6d0}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0a1a33,#08142a);color:#e6efff;font-family:Poppins,Arial,Helvetica,sans-serif}
+  header{padding:16px;text-align:center;background:#0d2042}
+  .wrap{max-width:820px;margin:24px auto;padding:0 14px}
+  .card{background:rgba(255,255,255,.06);border:1px solid #1d386c;border-radius:16px;padding:20px}
+  .row{display:grid;grid-template-columns:120px 1fr 120px;gap:10px;padding:10px;border-top:1px solid #1e3563}
+  .row:first-child{border-top:0}
+  .ok{color:#16a34a} .muted{color:var(--muted)}
+  select{padding:10px;border-radius:10px;border:1px solid #2b4a8d;background:#0d2144;color:#e6efff}
+  a{color:#9ec2ff}
+</style>
+</head>
+<body>
+<header><b>Meu Progresso</b></header>
+<div class="wrap">
+  <div class="card">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <label>Selecione seu nome:</label>
+      <select id="nome"><option>Carregando...</option></select>
+    </div>
+    <div id="list"></div>
+    <p style="margin-top:12px"><a href="index.html">← Voltar ao ranking</a></p>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+    authDomain: "clube-aguiar-live.firebaseapp.com",
+    projectId: "clube-aguiar-live",
+    storageBucket: "clube-aguiar-live.firebasestorage.app",
+    messagingSenderId: "694025911850",
+    appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const $nome = document.getElementById('nome');
+  const $list = document.getElementById('list');
+  const slug = s => (s||'').toLowerCase().normalize('NFD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
+
+  // Pré-seleciona nome via ?name=
+  const p = new URLSearchParams(location.search);
+  const initialName = p.get('name')||'';
+
+  async function loadNames(){
+    const snap = await db.collection('players').orderBy('name').get();
+    $nome.innerHTML = '<option value="">-- Escolha --</option>';
+    snap.forEach(d=>{
+      const n=d.data().name; const opt=document.createElement('option');
+      opt.value=n; opt.textContent=n; if(n===initialName) opt.selected=true;
+      $nome.appendChild(opt);
+    });
+    if(initialName) render(initialName);
+  }
+
+  async function render(name){
+    const playerId = slug(name);
+    $list.innerHTML = '';
+    const q = await db.collection('progress_public')
+      .where('playerId','==',playerId)
+      .orderBy('dateKey','desc')
+      .limit(60)
+      .get();
+    if(q.empty){ $list.innerHTML = '<p class="muted">Nenhum registro ainda.</p>'; return; }
+    q.forEach(doc=>{
+      const d = doc.data();
+      const dataBR = d.dateKey.split('-').reverse().join('/');
+      const line = document.createElement('div');
+      line.className='row';
+      line.innerHTML = `
+        <div><b>${dataBR}</b></div>
+        <div>${d.checkedAt ? '✔️ Fez o treino' : '—'}</div>
+        <div class="${d.hasMedia?'ok':'muted'}">${d.hasMedia?'📸 c/ mídia (+10)':'sem mídia'}</div>
+      `;
+      $list.appendChild(line);
+    });
+  }
+
+  $nome.addEventListener('change', e=>{
+    const name = e.target.value; if(name) render(name); else $list.innerHTML='';
+  });
+
+  loadNames();
+</script>
+</body>
+</html>
