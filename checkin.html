@@ -1,142 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Check-in — Desafio 40+</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --muted:#a7b6d0;
-      --ok:#16a34a;
-      --err:#dc2626;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      background:linear-gradient(180deg,#0e2345,#0a1a33);
-      color:#e6efff;
-      font-family:Poppins,Arial,Helvetica,sans-serif
-    }
-    header{
-      padding:16px;
-      text-align:center;
-      background:#0e2345;
-      box-shadow:0 2px 8px rgba(0,0,0,.25)
-    }
-    .wrap{
-      max-width:760px;
-      margin:24px auto;
-      padding:0 14px
-    }
-    .card{
-      background:#255,255,255,0.05;
-      border-radius:14px;
-      padding:18px;
-      box-shadow:0 6px 16px rgba(0,0,0,.12)
-    }
-    h1{margin:0 0 8px;color:var(--muted)}
-    label{display:block;font-size:14px;color:#b0c4ff;margin:10px 0 6px}
-    input,select{
-      width:100%;
-      padding:12px;
-      border:1px solid #2947ad;
-      background:#0d2144;
-      color:#e6efff;
-      border-radius:12px;
-      margin-bottom:14px;
-      font-size:14px;
-    }
-    button{
-      background:linear-gradient(180deg,#3d66ff,#224ad6);
-      color:#fff;
-      border:0;
-      border-radius:12px;
-      padding:14px;
-      cursor:pointer;
-      font-size:15px;
-      font-weight:bold;
-      width:100%
-    }
-    button:hover{opacity:0.9}
-    small{font-size:12px;line-height:1.4}
-    a{color:#6da4ff;text-decoration:none}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Check-in — Desafio 40+</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--muted:#a7b6d0;--ok:#16a34a;--err:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0e2345,#0a1a33);color:#e6efff;font-family:Poppins,Arial,Helvetica,sans-serif}
+  header{padding:16px;text-align:center;background:#0e2345;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  .wrap{max-width:760px;margin:24px auto;padding:0 14px}
+  .card{background:rgba(255,255,255,.05);border:1px solid #203a6e;border-radius:14px;padding:18px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+  h1{margin:0 0 8px}
+  label{display:block;font-size:14px;color:#c9d9ff;margin:12px 0 6px}
+  select,input{width:100%;padding:12px;border:1px solid #2b4a8d;background:#0d2144;color:#e6efff;border-radius:12px}
+  button{width:100%;margin-top:14px;background:linear-gradient(180deg,#3d6cff,#224bde);color:#fff;border:0;border-radius:12px;padding:14px;font-weight:700;cursor:pointer}
+  .muted{color:var(--muted);font-size:13px;margin-top:8px}
+  .err{color:var(--err);margin-top:8px}
+  .ok{color:var(--ok);margin-top:8px}
+  a{color:#9ec2ff}
+</style>
 </head>
 <body>
-  <header>
-    <h2>Check-in — Desafio 40+</h2>
-  </header>
-  <div class="wrap">
-    <div class="card">
-      <h1>Fez o treino de hoje?</h1>
-      <p>
-        Este check-in só deve ser feito se você realmente realizou o treino de hoje.  
-        Para contar no ranking, informe o <b>código da aula</b> (enviado no grupo).  
-      </p>
+<header><b>Check-in — Desafio 40+</b></header>
+<div class="wrap">
+  <div class="card">
+    <h1>Fez o treino de hoje?</h1>
+    <p>Para contar no ranking, selecione seu <b>nome</b> e informe o <b>código</b> da aula de hoje.</p>
 
-      <form id="checkinForm" enctype="multipart/form-data">
-        <!-- Seleção do nome -->
-        <label for="nome">Selecione seu nome (igual ao ranking):</label>
-        <select id="nome" name="nome" required>
-          <option value="">Carregando nomes...</option>
-        </select>
+    <label>Selecione seu nome (igual ao ranking)</label>
+    <select id="nome">
+      <option value="">Carregando nomes...</option>
+    </select>
 
-        <!-- Código do treino -->
-        <label for="codigo">Código do treino:</label>
-        <input type="text" id="codigo" name="codigo" placeholder="Ex.: AG18" required />
+    <label>Código do treino</label>
+    <input id="code" placeholder="Ex.: AG18" />
 
-        <!-- Upload de foto/vídeo -->
-        <label for="arquivo">
-          Foto ou vídeo do treino (máx. 10 MB)  
-          <br>
-          <small style="color:#FFD700; font-weight:bold;">
-            ➜ Enviando foto/vídeo da aula de hoje (mostrando você e a TV com a aula), você ganha +5 pontos.  
-            Atenção: usar imagens de outras aulas pode acarretar em perda de pontos.
-          </small>
-        </label>
-        <input type="file" id="arquivo" name="arquivo" accept="image/*,video/*" />
+    <button id="btn">Fazer check-in</button>
+    <div id="msg" class="muted"></div>
 
-        <!-- Botão -->
-        <button type="submit">Fazer check-in</button>
-      </form>
-
-      <p style="margin-top:16px">
-        <a href="index.html">← Voltar ao ranking</a>
-      </p>
-    </div>
+    <p class="muted" style="margin-top:14px"><a href="index.html">← Voltar ao ranking</a></p>
   </div>
+</div>
 
-  <script>
-    // Buscar os nomes direto do ranking (sample_data.json ou Firestore)
-    async function carregarNomes() {
-      try {
-        // Caminho do JSON do ranking (ajuste se o nome estiver em outro arquivo)
-        const resposta = await fetch("sample_data.json");
-        const dados = await resposta.json();
+<!-- Firebase compat (mesma base do resto do seu site) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-        const select = document.getElementById("nome");
-        select.innerHTML = "<option value=''>-- Escolha seu nome --</option>";
+<script>
+  // === CONFIG DO SEU FIREBASE ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+    authDomain: "clube-aguiar-live.firebaseapp.com",
+    projectId: "clube-aguiar-live",
+    storageBucket: "clube-aguiar-live.firebasestorage.app",
+    messagingSenderId: "694025911850",
+    appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-        // Supondo que o JSON tenha formato { "usuarios": [ { "nome": "Paula Silva", "pontos": 10 } ] }
-        dados.usuarios.forEach(usuario => {
-          const opt = document.createElement("option");
-          opt.value = usuario.nome;
-          opt.textContent = usuario.nome;
-          select.appendChild(opt);
-        });
+  const $nome = document.getElementById('nome');
+  const $code = document.getElementById('code');
+  const $btn = document.getElementById('btn');
+  const $msg = document.getElementById('msg');
 
-      } catch (erro) {
-        console.error("Erro ao carregar nomes:", erro);
-        document.getElementById("nome").innerHTML =
-          "<option value=''>Erro ao carregar nomes</option>";
-      }
+  const slug = s => (s||'').toLowerCase().normalize('NFD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
+
+  // Carregar lista de nomes (da coleção players)
+  firebase.firestore().collection('players').orderBy('name').get().then(snap=>{
+    $nome.innerHTML = '<option value="">-- Escolha seu nome --</option>';
+    snap.forEach(doc=>{
+      const p = doc.data();
+      const opt = document.createElement('option');
+      opt.value = p.name;
+      opt.textContent = p.name;
+      $nome.appendChild(opt);
+    });
+  }).catch(e=>{
+    console.error(e);
+    $nome.innerHTML = '<option value="">Erro ao carregar nomes</option>';
+  });
+
+  // Obter config do check-in (código e pontos por check-in)
+  async function getCfg(){
+    const doc = await db.collection('meta').doc('checkin').get();
+    return doc.exists ? doc.data() : { code:null, pointsPerCheckin:3, mediaBonus:10 };
+  }
+
+  $btn.addEventListener('click', async ()=>{
+    $msg.className = 'muted'; $msg.textContent = 'Enviando...';
+
+    try{
+      const name = $nome.value.trim();
+      const code = $code.value.trim();
+      if(!name || !code){ $msg.className='err'; $msg.textContent='Selecione seu nome e informe o código.'; return; }
+
+      const cfg = await getCfg();
+      if(!cfg.code){ $msg.className='err'; $msg.textContent='O código do treino ainda não foi configurado.'; return; }
+      if(code !== cfg.code){ $msg.className='err'; $msg.textContent='Código incorreto. Verifique no grupo.'; return; }
+
+      const playerId = slug(name);
+      const pts = parseInt(cfg.pointsPerCheckin||'0',10) || 0;
+      const todayKey = new Date().toISOString().slice(0,10); // yyyy-mm-dd
+
+      // 1) Incrementa pontos
+      await db.collection('players').doc(playerId).set({
+        name,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+      await db.collection('players').doc(playerId).update({
+        points: firebase.firestore.FieldValue.increment(pts)
+      });
+
+      // 2) Registra progresso público do dia (para histórico)
+      await db.collection('progress_public').doc(`${playerId}_${todayKey}`).set({
+        playerId, name, dateKey: todayKey,
+        checkedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        hasMedia: false, // será atualizado na página 2
+        pointsAdded: pts
+      }, { merge:true });
+
+      // Vai para a página 2 (bonus) levando nome por querystring
+      const qp = new URLSearchParams({ name });
+      location.href = `bonus.html?${qp.toString()}`;
+    }catch(e){
+      console.error(e);
+      $msg.className='err';
+      $msg.textContent='Erro ao registrar. Tente novamente.';
     }
-
-    // Executa quando a página abrir
-    carregarNomes();
-  </script>
+  });
+</script>
 </body>
 </html>
