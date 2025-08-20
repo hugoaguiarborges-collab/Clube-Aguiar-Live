@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bônus — Desafio 40+</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--muted:#a7b6d0;--ok:#16a34a;--err:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0a1a33,#08142a);color:#e6efff;font-family:Poppins,Arial,Helvetica,sans-serif}
+  header{padding:16px;text-align:center;background:#0d2042;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  .wrap{max-width:760px;margin:24px auto;padding:0 14px}
+  .card{background:rgba(255,255,255,.06);border:1px solid #1d386c;border-radius:16px;padding:20px;position:relative;overflow:hidden}
+  h1{margin:0 0 8px}
+  .cele{font-size:18px;color:#cfe1ff;margin:6px 0 12px}
+  label{display:block;margin:12px 0 6px}
+  input[type=file]{width:100%;padding:12px;border:1px solid #2b4a8d;background:#0d2144;color:#e6efff;border-radius:12px}
+  button{margin-top:12px;background:linear-gradient(180deg,#3d6cff,#224bde);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .muted{color:var(--muted)}
+  .err{color:var(--err)}
+  .ok{color:var(--ok)}
+  .right{display:flex;gap:10px;align-items:center;justify-content:flex-start;margin-top:10px}
+  a{color:#9ec2ff}
+  #confettiCanvas{position:fixed;inset:0;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="confettiCanvas"></canvas>
+<header><b>Desafio 40+ — Bônus</b></header>
+<div class="wrap">
+  <div class="card">
+    <h1>Parabéns! 🎉</h1>
+    <p class="cele">Seu check-in foi registrado com sucesso. <b>+ pontos adicionados ao ranking!</b></p>
+    <p class="cele">Quer ganhar <b>+10 pontos</b> enviando uma foto ou vídeo do treino de <u>hoje</u> (mostrando você e a TV com a aula)?</p>
+
+    <div class="muted">
+      Regras: precisa ser da aula atual. Enviar mídia de outra aula pode acarretar em <b>perda de até 10 pontos</b>.
+    </div>
+
+    <div class="right">
+      <input type="file" id="media" accept="image/*,video/*">
+      <button id="enviar">Enviar e ganhar +10</button>
+      <button id="pular" style="background:#283a69">Prefiro não enviar</button>
+    </div>
+
+    <div id="msg" class="muted"></div>
+
+    <p style="margin-top:16px"><a href="index.html">← Voltar ao ranking</a> · <a id="histLink" href="#">Ver meu histórico</a></p>
+  </div>
+</div>
+
+<!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+<script>
+  // === CONFIG DO SEU FIREBASE ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+    authDomain: "clube-aguiar-live.firebaseapp.com",
+    projectId: "clube-aguiar-live",
+    storageBucket: "clube-aguiar-live.firebasestorage.app",
+    messagingSenderId: "694025911850",
+    appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const st = firebase.storage();
+
+  const params = new URLSearchParams(location.search);
+  const name = params.get('name') || '';
+  const slug = s => (s||'').toLowerCase().normalize('NFD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
+  const playerId = slug(name);
+  const todayKey = new Date().toISOString().slice(0,10);
+
+  document.getElementById('histLink').href = `historico.html?name=${encodeURIComponent(name)}`;
+
+  // confete simples
+  (function confetti(){
+    const c = document.getElementById('confettiCanvas'), ctx = c.getContext('2d');
+    function resize(){ c.width=innerWidth; c.height=innerHeight } resize(); addEventListener('resize',resize);
+    const P = Array.from({length:120}, ()=>({x:Math.random()*c.width,y:Math.random()*-c.height,v:2+Math.random()*3,s:2+Math.random()*4,col:`hsl(${~~(Math.random()*360)},90%,60%)`}));
+    let t=0; (function draw(){
+      ctx.clearRect(0,0,c.width,c.height);
+      for(const p of P){ p.y+=p.v; p.x += Math.sin((t+p.y)/40); if(p.y>c.height)p.y=-20; ctx.fillStyle=p.col; ctx.fillRect(p.x,p.y,p.s,p.s) }
+      t++; requestAnimationFrame(draw);
+    })();
+  })();
+
+  const $file = document.getElementById('media');
+  const $send = document.getElementById('enviar');
+  const $skip = document.getElementById('pular');
+  const $msg  = document.getElementById('msg');
+
+  async function getCfg(){
+    const doc = await db.collection('meta').doc('checkin').get();
+    return doc.exists ? doc.data() : { mediaBonus:10 };
+  }
+
+  $send.addEventListener('click', async ()=>{
+    $msg.className='muted'; $msg.textContent='Enviando...';
+    try{
+      const f = $file.files[0];
+      if(!f){ $msg.className='err'; $msg.textContent='Escolha uma foto ou vídeo.'; return; }
+      if(f.size > 10*1024*1024){ $msg.className='err'; $msg.textContent='Arquivo maior que 10 MB.'; return; }
+
+      const cfg = await getCfg();
+      const bonus = parseInt(cfg.mediaBonus||'10',10) || 10;
+
+      const ext = (f.name.split('.').pop()||'bin').toLowerCase();
+      const ref = st.ref(`checkins-uploads/${Date.now()}-${playerId}.${ext}`);
+      await ref.put(f, { contentType: f.type });
+      const url = await ref.getDownloadURL();
+
+      // +10 pontos no jogador
+      await db.collection('players').doc(playerId).update({
+        points: firebase.firestore.FieldValue.increment(bonus),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Atualiza progresso do dia
+      await db.collection('progress_public').doc(`${playerId}_${todayKey}`).set({
+        hasMedia: true,
+        mediaURL: url,
+        mediaAdded: firebase.firestore.FieldValue.serverTimestamp(),
+        mediaBonus: bonus
+      }, { merge:true });
+
+      $msg.className='ok';
+      $msg.textContent = `Mídia enviada! +${bonus} pontos adicionados.`;
+    }catch(e){
+      console.error(e);
+      $msg.className='err';
+      $msg.textContent='Erro ao enviar. Tente novamente.';
+    }
+  });
+
+  $skip.addEventListener('click', ()=>{
+    $msg.className='muted';
+    $msg.innerHTML = 'Tudo bem! 😉 Mas ó... <b>vai deixar sua amiga te ultrapassar no ranking?</b> Você ainda pode enviar mais tarde.';
+  });
+</script>
+</body>
+</html>
