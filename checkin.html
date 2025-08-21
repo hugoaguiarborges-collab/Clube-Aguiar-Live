@@ -4,146 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Check-in — Desafio 40+</title>
-
-  <!-- Bootstrap base (só para garantir caso o CSS local não carregue) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Seus CSS (mantém a identidade visual azul) -->
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="styles.css">
-
-  <!-- Fallback leve de tema escuro/azulado se os arquivos acima não estiverem presentes -->
-  <style>
-    body { background:#0e1b2b; color:#e7eef7; }
-    .card-dark { background:#12243a; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,.3); }
-    .text-dim { color:#9fb3c8; }
-    .btn-primary { background:#2f6bff; border:none; }
-    .btn-primary:hover { background:#2757cf; }
-    .form-control, .form-select { background:#0f2035; border-color:#1e385a; color:#e7eef7; }
-    .form-control::placeholder { color:#7190b3; }
-    a.link-soft{ color:#7cc7ff; text-decoration:none; } a.link-soft:hover{ text-decoration:underline; }
-    label{ color:#cfe2f3; }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-12 col-md-8 col-lg-6">
-        <div class="card-dark p-4 p-md-5">
-          <h1 class="text-center mb-3">Fez seu treino?</h1>
-          <p class="text-center text-dim mb-4">
-            Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!
-          </p>
+  <div class="container">
+    <div class="checkin-box">
+      <h2>Fez seu treino?</h2>
+      <p>
+        Não dê vacilo! Escolha seu nome, digite o Código-treino informado na
+        aula de hoje e garanta seus pontos!
+      </p>
 
-          <div id="message" class="mb-3"></div>
+      <form id="checkin-form">
+        <label for="name">Seu nome</label>
+        <select id="name" name="name" required>
+          <option value="">Selecione seu nome</option>
+          <option value="Lúcia Silva">Lúcia Silva</option>
+          <option value="Fernanda Colombo">Fernanda Colombo</option>
+          <option value="Maria do Carmo">Maria do Carmo</option>
+          <option value="Manuela Souza">Manuela Souza</option>
+          <option value="Rafaela dos Santos">Rafaela dos Santos</option>
+          <!-- adicione mais nomes aqui -->
+        </select>
 
-          <form id="checkin-form" autocomplete="off">
-            <div class="mb-3">
-              <label for="name" class="form-label">Seu nome</label>
-              <select id="name" class="form-select" required>
-                <option value="">Selecione seu nome</option>
-                <!-- os nomes serão inseridos via JS a partir de /ranking -->
-              </select>
-            </div>
+        <label for="code">Código do treino</label>
+        <input
+          type="text"
+          id="code"
+          name="code"
+          placeholder="Ex.: FOCO"
+          required
+        />
 
-            <div class="mb-4">
-              <label for="code" class="form-label">Código do treino</label>
-              <input id="code" type="text" class="form-control" placeholder="Ex.: FOCO" required />
-            </div>
+        <button type="submit" class="btn">Confirmar treino</button>
+      </form>
 
-            <button type="submit" class="btn btn-primary w-100">Confirmar treino</button>
-          </form>
-
-          <div class="text-center mt-4">
-            <a href="index.html" class="link-soft">← Voltar ao ranking</a>
-          </div>
-          <p id="session" class="text-center text-dim mt-2">Sessão ativa (UID anônimo: ...)</p>
-        </div>
-      </div>
+      <a href="index.html">← Voltar ao ranking</a>
+      <p class="session">Sessão ativa (UID anônimo: ALCBL3...)</p>
     </div>
   </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Firebase compat (mantém firebase.* no escopo global) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
-  <!-- Sua inicialização do Firebase -->
-  <script src="firebase-init.js"></script>
-
-  <!-- Seus scripts existentes (mantidos para não quebrar nada) -->
   <script src="script.js"></script>
-  <script src="checkin.js"></script>
-  <script src="app.js"></script>
-
-  <!-- POPULAR NOMES a partir de /ranking (definitivo) -->
-  <script>
-    (async function () {
-      const nameSel = document.getElementById('name');
-      const sessionEl = document.getElementById('session');
-
-      // 1) Garante login anônimo (algumas regras podem exigir request.auth != null)
-      try {
-        if (!firebase.auth().currentUser) {
-          await firebase.auth().signInAnonymously();
-        }
-      } catch (e) {
-        console.warn('Falha ao autenticar anonimamente (vai tentar ler mesmo assim):', e);
-      }
-      try {
-        const u = firebase.auth().currentUser;
-        if (u && sessionEl) sessionEl.textContent = 'Sessão ativa (UID anônimo: ' + u.uid.slice(0,6) + '...)';
-      } catch {}
-
-      // 2) Lê nomes diretamente de /ranking (coleção que já está com allow read: true nas suas regras)
-      const db = firebase.firestore();
-      const seen = new Set();
-
-      function addName(n) {
-        const name = (n || '').toString().trim();
-        if (!name || seen.has(name)) return;
-        const opt = document.createElement('option');
-        opt.value = name; opt.textContent = name;
-        nameSel.appendChild(opt);
-        seen.add(name);
-      }
-
-      try {
-        // primeiro tenta ordenar por nome (se o campo existir); senão por pontos
-        let snap = null;
-        try {
-          snap = await db.collection('ranking').orderBy('name').get();
-        } catch {
-          try { snap = await db.collection('ranking').orderBy('points', 'desc').get(); }
-          catch (e2) {
-            snap = await db.collection('ranking').get();
-          }
-        }
-
-        snap.forEach(doc => {
-          const d = doc.data() || {};
-          addName(d.name || d.nome || d.displayName || d.title || doc.id);
-        });
-
-        // Segurança extra: se vier vazio por algum motivo, tenta novamente sem orderBy
-        if (nameSel.options.length <= 1) {
-          const s2 = await db.collection('ranking').get();
-          s2.forEach(doc => {
-            const d = doc.data() || {};
-            addName(d.name || d.nome || d.displayName || d.title || doc.id);
-          });
-        }
-
-        if (nameSel.options.length <= 1) {
-          console.warn('Nenhum nome encontrado em /ranking. Confirme se os documentos têm o campo "name" (ou "nome").');
-        }
-      } catch (e) {
-        console.error('Erro ao carregar nomes de /ranking:', e);
-      }
-    })();
-  </script>
 </body>
 </html>
