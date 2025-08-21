@@ -5,29 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Check-in — Desafio 40+</title>
 
-  <!-- Bootstrap (garante base caso o CSS local falhe) -->
+  <!-- Bootstrap base (só para garantir caso o CSS local não carregue) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Seu(s) CSS -->
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="styles.css" />
+  <!-- Seus CSS (mantém a identidade visual azul) -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles.css">
 
+  <!-- Fallback leve de tema escuro/azulado se os arquivos acima não estiverem presentes -->
   <style>
-    /* fallback leve para manter o dark/azulado se o style.css não aplicar */
-    body { background: #0e1b2b; color: #e7eef7; }
-    .card-dark { background: #12243a; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
-    .text-dim { color: #9fb3c8; }
-    .link-soft { color: #7cc7ff; text-decoration: none; }
-    .link-soft:hover { text-decoration: underline; }
-    .btn-primary { background: #2f6bff; border: none; }
-    .btn-primary:hover { background: #2757cf; }
-    label { color: #cfe2f3; }
-    .form-control, .form-select { background: #0f2035; border-color: #1e385a; color: #e7eef7; }
-    .form-control::placeholder { color: #7190b3; }
+    body { background:#0e1b2b; color:#e7eef7; }
+    .card-dark { background:#12243a; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,.3); }
+    .text-dim { color:#9fb3c8; }
+    .btn-primary { background:#2f6bff; border:none; }
+    .btn-primary:hover { background:#2757cf; }
+    .form-control, .form-select { background:#0f2035; border-color:#1e385a; color:#e7eef7; }
+    .form-control::placeholder { color:#7190b3; }
+    a.link-soft{ color:#7cc7ff; text-decoration:none; } a.link-soft:hover{ text-decoration:underline; }
+    label{ color:#cfe2f3; }
   </style>
 </head>
 <body>
-
   <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-12 col-md-8 col-lg-6">
@@ -44,7 +42,7 @@
               <label for="name" class="form-label">Seu nome</label>
               <select id="name" class="form-select" required>
                 <option value="">Selecione seu nome</option>
-                <!-- seu script pode preencher; se não, o fallback abaixo trata -->
+                <!-- os nomes serão inseridos via JS a partir de /ranking -->
               </select>
             </div>
 
@@ -68,100 +66,82 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Firebase compat (expõe firebase.* no global) -->
+  <!-- Firebase compat (mantém firebase.* no escopo global) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <!-- Inicialização do seu Firebase -->
+  <!-- Sua inicialização do Firebase -->
   <script src="firebase-init.js"></script>
 
-  <!-- Scripts do seu projeto (se existirem, rodam; se não existirem, não quebram) -->
+  <!-- Seus scripts existentes (mantidos para não quebrar nada) -->
   <script src="script.js"></script>
   <script src="checkin.js"></script>
   <script src="app.js"></script>
 
-  <!-- Fallback robusto de nomes -->
+  <!-- POPULAR NOMES a partir de /ranking (definitivo) -->
   <script>
     (async function () {
-      // Utilidades
-      const byId = id => document.getElementById(id);
-      const nameSelect = byId('name');
-      const sessionEl  = byId('session');
+      const nameSel = document.getElementById('name');
+      const sessionEl = document.getElementById('session');
 
-      function extractName(doc) {
-        const d = doc.data?.() || doc.data || {};
-        return (d.name || d.nome || d.displayName || d.title || doc.id || '').toString().trim();
-      }
-
-      // 1) Auth anônima (p/ regras allow read) e mostrar UID
+      // 1) Garante login anônimo (algumas regras podem exigir request.auth != null)
       try {
-        try { await firebase.auth().signInAnonymously(); } catch (_) {}
-        const user = firebase.auth().currentUser || await new Promise(res => {
-          const off = firebase.auth().onAuthStateChanged(u => { if (u) { off(); res(u); } });
-        });
-        if (sessionEl) sessionEl.textContent = 'Sessão ativa (UID anônimo: ' + (user?.uid?.slice(0,6) || '...') + '...)';
+        if (!firebase.auth().currentUser) {
+          await firebase.auth().signInAnonymously();
+        }
       } catch (e) {
-        console.warn('Falha no login anônimo:', e);
+        console.warn('Falha ao autenticar anonimamente (vai tentar ler mesmo assim):', e);
       }
+      try {
+        const u = firebase.auth().currentUser;
+        if (u && sessionEl) sessionEl.textContent = 'Sessão ativa (UID anônimo: ' + u.uid.slice(0,6) + '...)';
+      } catch {}
 
-      // Se seu script já populou o select, não faz nada
-      if (!nameSelect || nameSelect.options.length > 1) return;
-
+      // 2) Lê nomes diretamente de /ranking (coleção que já está com allow read: true nas suas regras)
       const db = firebase.firestore();
-      const added = new Set();
+      const seen = new Set();
 
-      async function fillFromCollection(path, orderByField) {
+      function addName(n) {
+        const name = (n || '').toString().trim();
+        if (!name || seen.has(name)) return;
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        nameSel.appendChild(opt);
+        seen.add(name);
+      }
+
+      try {
+        // primeiro tenta ordenar por nome (se o campo existir); senão por pontos
+        let snap = null;
         try {
-          let ref = db.collection(path);
-          if (orderByField) {
-            try { ref = ref.orderBy(orderByField, 'desc'); } catch (_) {}
+          snap = await db.collection('ranking').orderBy('name').get();
+        } catch {
+          try { snap = await db.collection('ranking').orderBy('points', 'desc').get(); }
+          catch (e2) {
+            snap = await db.collection('ranking').get();
           }
-          const snap = await ref.get();
-          snap.forEach(doc => {
-            const n = extractName(doc);
-            if (n && !added.has(n)) {
-              const opt = document.createElement('option');
-              opt.value = n; opt.textContent = n;
-              nameSelect.appendChild(opt);
-              added.add(n);
-            }
-          });
-          return added.size;
-        } catch (e) {
-          console.debug(`Não consegui ler ${path}:`, e.message || e);
-          return 0;
         }
-      }
 
-      async function fillFromGroup(groupName) {
-        try {
-          const ref = db.collectionGroup(groupName);
-          const snap = await ref.get();
-          snap.forEach(doc => {
-            const n = extractName(doc);
-            if (n && !added.has(n)) {
-              const opt = document.createElement('option');
-              opt.value = n; opt.textContent = n;
-              nameSelect.appendChild(opt);
-              added.add(n);
-            }
+        snap.forEach(doc => {
+          const d = doc.data() || {};
+          addName(d.name || d.nome || d.displayName || d.title || doc.id);
+        });
+
+        // Segurança extra: se vier vazio por algum motivo, tenta novamente sem orderBy
+        if (nameSel.options.length <= 1) {
+          const s2 = await db.collection('ranking').get();
+          s2.forEach(doc => {
+            const d = doc.data() || {};
+            addName(d.name || d.nome || d.displayName || d.title || doc.id);
           });
-          return added.size;
-        } catch (e) {
-          console.debug(`Não consegui ler collectionGroup ${groupName}:`, e.message || e);
-          return 0;
         }
-      }
 
-      // 2) Tenta nas coleções mais prováveis, em ordem
-      await fillFromCollection('ranking', 'points');   // raiz /ranking
-      if (added.size === 0) await fillFromCollection('players');   // raiz /players
-      if (added.size === 0) await fillFromGroup('players');        // qualquer /.../players
-      if (added.size === 0) await fillFromGroup('ranking');        // qualquer /.../ranking
-
-      if (added.size === 0) {
-        console.warn('Nenhum nome encontrado. Se sua coleção tem outro nome, me diga qual é para eu fixar aqui.');
+        if (nameSel.options.length <= 1) {
+          console.warn('Nenhum nome encontrado em /ranking. Confirme se os documentos têm o campo "name" (ou "nome").');
+        }
+      } catch (e) {
+        console.error('Erro ao carregar nomes de /ranking:', e);
       }
     })();
   </script>
