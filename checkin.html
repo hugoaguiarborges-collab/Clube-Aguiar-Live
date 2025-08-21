@@ -4,67 +4,69 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Check-in — Desafio 40+</title>
-  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Seu CSS personalizado -->
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <div class="container">
-    <div class="checkin-box">
-      <h2>Fez seu treino?</h2>
-      <p>
-        Não dê vacilo! Escolha seu nome, digite o Código-treino informado na
-        aula de hoje e garanta seus pontos!
-      </p>
+<body class="bg-dark text-light">
 
-      <form id="checkin-form">
-        <label for="name">Seu nome</label>
-        <select id="name" name="name" required>
-          <option value="">Selecione seu nome</option>
-          <option value="Lúcia Silva">Lúcia Silva</option>
-          <option value="Fernanda Colombo">Fernanda Colombo</option>
-          <option value="Maria do Carmo">Maria do Carmo</option>
-          <option value="Manuela Souza">Manuela Souza</option>
-          <option value="Rafaela dos Santos">Rafaela dos Santos</option>
-          <!-- adicione mais nomes aqui -->
-        </select>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-lg p-4 bg-dark text-light rounded-4">
+          <div class="card-body text-center">
 
-        <label for="code">Código do treino</label>
-        <input
-          type="text"
-          id="code"
-          name="code"
-          placeholder="Ex.: FOCO"
-          required
-        />
+            <!-- TÍTULO -->
+            <h1 class="mb-3">Fez seu treino?</h1>
 
-        <button type="submit" class="btn">Confirmar treino</button>
-      </form>
+            <!-- SUBTÍTULO -->
+            <p class="mb-4">
+              Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!
+            </p>
 
-      <a href="index.html">← Voltar ao ranking</a>
-      <p class="session">Sessão ativa (UID anônimo: ALCBL3...)</p>
+            <!-- FORMULÁRIO -->
+            <form id="checkinForm">
+              <div class="mb-3 text-start">
+                <label for="userName" class="form-label">Seu nome</label>
+                <select class="form-select" id="userName" required>
+                  <option value="">Selecione seu nome</option>
+                  <!-- nomes virão dinamicamente do Firebase -->
+                </select>
+              </div>
+
+              <div class="mb-3 text-start">
+                <label for="codigoTreino" class="form-label">Código do treino</label>
+                <input type="text" class="form-control" id="codigoTreino" placeholder="Ex.: FOCO" required />
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100">
+                Confirmar treino
+              </button>
+            </form>
+
+            <!-- LINK VOLTAR -->
+            <div class="mt-3">
+              <a href="index.html" class="text-decoration-none text-info">&larr; Voltar ao ranking</a>
+            </div>
+
+            <!-- SESSÃO ATIVA -->
+            <div class="mt-2 small text-secondary" id="sessionInfo">
+              Sessão ativa (UID anônimo: ...)
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="script.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // 1) Título
-    const title =
-      document.querySelector('.card h1, .card h2, .header-title, .title, h1, h2');
-    if (title) title.textContent = 'Fez seu treino?';
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    // 2) Subtítulo / texto explicativo
-    const subtitle =
-      document.querySelector('.card p, .subtitle, .lead, .description, main p');
-    if (subtitle) {
-      subtitle.textContent =
-        'Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!';
-    }
-
-    // 3) Texto do botão de envio
-    const btn =
-      document.querySelector('button[type="submit"], .btn-primary, .btn');
-    if (btn) btn.textContent = 'Confirmar treino';
-  });
-</script>
+  <!-- Firebase + seu JS -->
+  <script src="firebase-config.js"></script>
+  <script src="checkin.js"></script>
 </body>
 </html>
