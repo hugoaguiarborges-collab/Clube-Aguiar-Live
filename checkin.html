@@ -5,59 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Check-in — Desafio 40+</title>
 
-  <!-- Firebase v8 (simples no HTML) -->
+  <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
   <style>
     :root{
-      --bg:#081a34;
-      --card:#0f2547;
-      --card2:#132c55;
-      --text:#e7f1ff;
-      --muted:#9bb7e0;
-      --accent:#2f5bff;
-      --input:#0d2142;
+      --bg:#081a34; --card:#0f2547; --card2:#132c55; --text:#e7f1ff; --muted:#9bb7e0;
+      --accent:#2f5bff; --input:#0d2142;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-      background:var(--bg);
-      color:var(--text);
-    }
-    .wrap{
-      max-width:680px; margin:48px auto; padding:0 20px;
-    }
-    .card{
-      background:linear-gradient(180deg, var(--card), var(--card2));
-      border-radius:18px; padding:24px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35);
-    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text)}
+    .wrap{max-width:680px; margin:48px auto; padding:0 20px}
+    .card{background:linear-gradient(180deg,var(--card),var(--card2)); border-radius:18px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
     h1{margin:0 0 10px; font-weight:800}
     .sub{color:var(--muted); margin:0 0 18px}
     label{display:block; margin:14px 0 8px; font-weight:700}
-    select,input,button{
-      width:100%; padding:12px 14px; border-radius:12px; border:0; font-size:16px;
-    }
-    select,input{ background:var(--input); color:var(--text); }
-    button{
-      background:var(--accent); color:#fff; font-weight:800; cursor:pointer; margin-top:14px;
-      box-shadow:0 6px 16px rgba(47,91,255,.35);
-    }
+    select,input,button{width:100%; padding:12px 14px; border-radius:12px; border:0; font-size:16px}
+    select,input{background:var(--input); color:var(--text)}
+    button{background:var(--accent); color:#fff; font-weight:800; cursor:pointer; margin-top:14px; box-shadow:0 6px 16px rgba(47,91,255,.35)}
     .msg{margin-top:12px; font-weight:800}
     a{color:#9ec3ff}
     .row{display:grid; grid-template-columns:1fr; gap:12px}
-    .foot{margin-top:14px; color:var(--muted); font-size:14px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <h1>Fazer check-in</h1>
-      <p class="sub">Selecione seu nome e digite o código da aula de hoje.</p>
+      <p class="sub">Selecione seu nome e digite o código do treino de hoje.</p>
 
       <div class="row">
         <div>
@@ -74,12 +51,12 @@
       <button id="btnCheckin">Fazer check-in</button>
       <div id="msg" class="msg"></div>
 
-      <p class="foot" style="margin-top:18px;"><a href="./index.html">← Voltar ao ranking</a></p>
+      <p style="margin-top:18px;"><a href="./index.html">← Voltar ao ranking</a></p>
     </div>
   </div>
 
   <script>
-    // 1) Inicializa Firebase
+    // 1) Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
       authDomain: "clube-aguiar-live.firebaseapp.com",
@@ -89,44 +66,31 @@
       appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-
-    // 2) Auth anônima (silenciosa)
     firebase.auth().signInAnonymously().catch(function(){});
-
     const db = firebase.firestore();
 
     // helpers
     const $ = (sel)=>document.querySelector(sel);
-    const nomesSelect = $('#nomes');
-    const inputCodigo = $('#codigo');
-    const btn = $('#btnCheckin');
-    const msg = $('#msg');
+    const nomesSelect = $('#nomes'), inputCodigo = $('#codigo'), btn = $('#btnCheckin'), msg = $('#msg');
 
-    // Normaliza código (remove acentos/maiúsculas/espaços extras)
-    function normalize(s){
-      return String(s||'').trim().toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // remove acentos
+    // Mesmo normalizador do admin (para recuperar o id do player a partir do nome)
+    function normalizeId(s){
+      return String(s||"").trim().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")  // tira acentos
+        .replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
     }
+    const normalizeText=(s)=>String(s||'').trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
     async function carregarNomes(){
       try{
         const snap = await db.collection('players').orderBy('name').get();
         const nomes = [];
-        snap.forEach(d=>{
-          const x = d.data();
-          if (x && x.name) nomes.push(x.name);
-        });
-
-        if (!nomes.length) {
-          nomesSelect.innerHTML = `<option>Nenhuma atleta cadastrada</option>`;
-          return;
-        }
-
+        snap.forEach(d=>{ const x=d.data(); if(x && x.name) nomes.push(x.name); });
+        if (!nomes.length) { nomesSelect.innerHTML = `<option>Nenhuma atleta cadastrada</option>`; return; }
         nomesSelect.innerHTML = nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
-        // cache local (fallback caso o Firestore falhe)
         localStorage.setItem('nomesPlayers', JSON.stringify(nomes));
       }catch(e){
-        console.error('Falha ao carregar nomes', e);
         const cache = localStorage.getItem('nomesPlayers');
         if (cache) {
           const nomes = JSON.parse(cache);
@@ -138,63 +102,55 @@
     }
 
     async function registrarCheckin(){
-      msg.textContent = '';
-      msg.style.color = '';
+      msg.textContent = ''; msg.style.color = '';
+      const name = nomesSelect?.value, codeUser = inputCodigo?.value;
+      if(!name || !codeUser){ msg.textContent='Selecione o nome e informe o código.'; msg.style.color='salmon'; return; }
 
-      const name = nomesSelect?.value;
-      const codeUser = inputCodigo?.value;
-
-      if (!name || !codeUser) {
-        msg.textContent = 'Selecione o nome e informe o código.';
-        msg.style.color = 'salmon';
-        return;
-      }
-
-      // 1) Lê código do dia em meta/checkin
+      // Lê configuração do dia
       let cfg;
       try{
         const snap = await db.collection('meta').doc('checkin').get();
-        if (!snap.exists) {
-          msg.textContent = 'Configuração de check-in não encontrada.';
-          msg.style.color = 'salmon';
-          return;
-        }
+        if(!snap.exists){ msg.textContent='Configuração de check-in não encontrada.'; msg.style.color='salmon'; return; }
         cfg = snap.data(); // { code, points }
-      }catch(e){
-        console.error(e);
-        msg.textContent = 'Erro ao ler configuração do check-in.';
-        msg.style.color = 'salmon';
-        return;
+      }catch(e){ msg.textContent='Erro ao ler configuração.'; msg.style.color='salmon'; return; }
+
+      const codeOfDay = cfg?.code, points = Number(cfg?.points)||1;
+      if (normalizeText(codeUser) !== normalizeText(codeOfDay)){
+        msg.textContent = 'Código inválido.'; msg.style.color = 'salmon'; return;
       }
 
-      const codeOfDay = cfg?.code;
-      const points = Number(cfg?.points) || 1;
-
-      if (normalize(codeUser) !== normalize(codeOfDay)) {
-        msg.textContent = 'Código inválido.';
-        msg.style.color = 'salmon';
-        return;
-      }
-
-      // 2) Grava o check-in (APENAS os campos permitidos pelas regras)
+      // 1) cria o registro em /checkins
       try{
         await db.collection('checkins').add({
-          name: name,
+          name,
           userId: null,
-          code: normalize(codeUser),
-          points: points,
+          code: normalizeText(codeUser),
+          points,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+      }catch(e){
+        console.error(e); msg.textContent='Erro ao registrar check-in.'; msg.style.color='salmon'; return;
+      }
 
-        msg.textContent = '✅ Check-in registrado!';
+      // 2) soma pontos no players/{id} (apenas "points")
+      const playerId = normalizeId(name);
+      try{
+        // usar transaction para ler o atual e escrever o novo (alinha com as regras)
+        await db.runTransaction(async (t)=>{
+          const ref = db.collection('players').doc(playerId);
+          const snap = await t.get(ref);
+          const cur = Number((snap.data()||{}).points||0);
+          t.set(ref, { points: cur + points }, { merge:true });
+        });
+
+        msg.textContent = `🎉 Parabéns! Você somou ${points} ponto(s).`;
         msg.style.color = 'limegreen';
         inputCodigo.value = '';
-
-        // (opcional) rolar pra mensagem
         msg.scrollIntoView({behavior:'smooth', block:'center'});
       }catch(e){
         console.error(e);
-        msg.textContent = 'Erro ao registrar. Tente novamente.';
+        // Se regra bloquear, o Firestore retorna PERMISSION_DENIED
+        msg.textContent = 'Check-in lançado, mas não foi possível somar os pontos. Avise o instrutor.';
         msg.style.color = 'salmon';
       }
     }
