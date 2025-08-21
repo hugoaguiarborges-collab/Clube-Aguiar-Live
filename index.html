@@ -1,49 +1,208 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ranking - Desafio 40+ Play</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ranking Desafio 40+</title>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f8ff;
-      margin: 0;
-      padding: 0;
+    :root{
+      --bg:#081a34; --card:#0f2547; --card2:#132c55; --text:#e7f1ff; --muted:#9bb7e0;
+      --accent:#2f5bff; --input:#0d2142;
+      --gold:#ffd54d; --silver:#cdd2d8; --bronze:#e6a06f;
     }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text)}
+    .wrap{max-width:1100px; margin:56px auto; padding:0 20px}
+    .card{background:linear-gradient(180deg,var(--card),var(--card2)); border-radius:18px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    h1{margin:0 0 6px; font-weight:900; letter-spacing:.3px}
+    .sub{color:var(--muted); margin:0 0 18px}
+    .topbar{display:flex; align-items:center; justify-content:space-between; gap:16px}
+    .btn{display:inline-flex; align-items:center; gap:10px; background:var(--accent); color:#fff; font-weight:800; text-decoration:none; padding:12px 16px; border-radius:12px; box-shadow:0 6px 16px rgba(47,91,255,.35)}
+    .btn:hover{transform:translateY(-1px)}
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #003366;
-      padding: 15px;
-    }
+    /* PÓDIO */
+    .podium{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:10px 0 24px}
+    .podium-card{position:relative; border-radius:16px; padding:16px; background:rgba(255,255,255,.05); overflow:hidden}
+    .podium-head{display:flex; align-items:center; gap:12px; margin-bottom:12px}
+    .avatar{width:44px; height:44px; border-radius:50%; object-fit:cover; background:#0b1d3a; display:inline-flex; align-items:center; justify-content:center; font-weight:900; color:#9ec3ff}
+    .podium-title{font-weight:900; margin:0; font-size:16px}
+    .podium-pts{opacity:.9; margin:2px 0 0}
+    .pedestal{position:relative; width:100%; display:flex; align-items:flex-end; gap:8px; height:110px; margin-top:6px}
+    .col{flex:1; background:rgba(255,255,255,.06); border-radius:10px 10px 6px 6px}
+    .col.first{height:100%; box-shadow:0 10px 30px rgba(255,213,77,.18); border:2px solid var(--gold)}
+    .col.second{height:78%; box-shadow:0 8px 26px rgba(205,210,216,.14); border:2px solid var(--silver)}
+    .col.third{height:62%; box-shadow:0 8px 26px rgba(230,160,111,.14); border:2px solid var(--bronze)}
+    .medal{position:absolute; top:10px; right:12px; font-size:22px}
 
-    header img {
-      height: 60px;
-      margin-right: 15px;
-    }
-
-    header h1 {
-      color: white;
-      font-size: 26px;
-      margin: 0;
-    }
-
-    main {
-      padding: 20px;
-    }
-
-    .ranking {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
+    /* TABELA */
+    .table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px; background:rgba(0,0,0,.08)}
+    .table th,.table td{padding:14px 14px; text-align:left}
+    .table thead th{background:rgba(255,255,255,.06); color:#dfe9ff; font-size:14px; letter-spacing:.3px}
+    .table tbody tr{border-top:1px solid rgba(255,255,255,.06)}
+    .muted{color:var(--muted)}
+    .rowflex{display:flex; align-items:center; gap:12px}
+    .badge{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; font-size:18px; border-radius:8px; background:rgba(255,255,255,.06); margin-right:6px}
+    .footnote{margin-top:12px; color:var(--muted)}
   </style>
 </head>
 <body>
-  <header>
-    <!-- Logomarca embutida em Base64 -->
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABoCAYAAAAoBqxaAAAACXBIWXMAAAsSAAALEgHS3X78AAAB7klEQVR4nO3cS04CQRSA4U8cRI8yqRS0FJ2FfMIRAhNAl9EEHkR/2CEtwC7m2kMXMpnG0smj8VshW3r9F5VraRhwAAAAAAAAAA8F85oNzq35T3Jc0O3dV1QKczZVJXOiEpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILdCUpBbpClILd
+  <div class="wrap">
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <h1>Ranking Desafio 40+</h1>
+          <p class="sub">Acompanhe a classificação das atletas. Pontos atualizados automaticamente.</p>
+        </div>
+        <a class="btn" href="./checkin.html">Fazer check-in →</a>
+      </div>
+
+      <!-- PÓDIO VISUAL -->
+      <div id="podium" class="podium" aria-live="polite"></div>
+
+      <!-- TABELA COMPLETA -->
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:48px;">#</th>
+            <th style="width:64px;">Foto</th>
+            <th>Nome</th>
+            <th style="width:120px;">Pontos</th>
+            <th style="width:220px;">Status</th>
+            <th style="width:200px;">Selos</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="6" class="rowflex" style="justify-content:center; padding:20px"><span class="muted">Carregando…</span></td></tr>
+        </tbody>
+      </table>
+
+      <p class="footnote">Dica: tire um print e compartilhe com o time! 💙</p>
+    </div>
+  </div>
+
+  <script>
+    // Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+      authDomain: "clube-aguiar-live.firebaseapp.com",
+      projectId: "clube-aguiar-live",
+      storageBucket: "clube-aguiar-live.appspot.com",
+      messagingSenderId: "694025911850",
+      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const $ = (s)=>document.querySelector(s);
+    const tbody = $('#tbody');
+    const podium = $('#podium');
+
+    // util: iniciais quando não houver foto
+    function initials(name){
+      const p = String(name||'').trim().split(/\s+/);
+      const a = (p[0]||'').charAt(0).toUpperCase();
+      const b = (p[1]||'').charAt(0).toUpperCase();
+      return (a+b)||'A';
+    }
+
+    // badges automáticos para top3
+    const autoBadge = (pos)=>{
+      if(pos===1) return "🏆";
+      if(pos===2) return "🥈";
+      if(pos===3) return "🥉";
+      return null;
+    };
+
+    // renderiza pódio visual
+    function renderPodium(list){
+      const top = list.slice(0,3);
+      if (!top.length){ podium.innerHTML = ""; return; }
+
+      const items = top.map((p,idx)=>{
+        const pos = idx+1;
+        const medal = autoBadge(pos);
+        const avatar = p.photoUrl
+          ? `<img class="avatar" src="${p.photoUrl}" alt="${p.name}" />`
+          : `<div class="avatar">${initials(p.name)}</div>`;
+        const colCls = pos===1 ? "first" : (pos===2 ? "second" : "third");
+        const posTxt = pos===1 ? "1º" : pos===2 ? "2º" : "3º";
+        return `
+          <div class="podium-card">
+            <div class="podium-head">
+              ${avatar}
+              <div>
+                <p class="podium-title">${posTxt} — ${p.name}</p>
+                <p class="podium-pts">${p.points||0} pts</p>
+              </div>
+            </div>
+            <div class="medal">${medal}</div>
+            <div class="pedestal">
+              <div class="col ${colCls}" style="width:100%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      podium.innerHTML = items;
+    }
+
+    // renderiza tabela
+    function renderTable(list){
+      if (!list.length){
+        tbody.innerHTML = `<tr><td colspan="6" class="rowflex" style="justify-content:center; padding:22px"><span class="muted">Nenhuma atleta cadastrada ainda.</span></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map((p,idx)=>{
+        const pos = idx+1;
+        const avatar = p.photoUrl ? `<img class="avatar" src="${p.photoUrl}" alt="${p.name}" />`
+                                  : `<div class="avatar">${initials(p.name)}</div>`;
+        // badges: auto para top3 + badges do banco
+        const extras = autoBadge(pos) ? [autoBadge(pos)] : [];
+        const allBadges = [...extras, ...(Array.isArray(p.badges)? p.badges : [])];
+        const badgesHtml = allBadges.map(b=>`<span class="badge" title="Selo">${b}</span>`).join('');
+        const status = p.status ? p.status : '<span class="muted">—</span>';
+        return `
+          <tr>
+            <td><strong>${pos}</strong></td>
+            <td>${avatar}</td>
+            <td><strong>${p.name||'-'}</strong></td>
+            <td><strong>${p.points||0}</strong></td>
+            <td>${status}</td>
+            <td>${badgesHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // carrega/ouve players em tempo real
+    db.collection('players')
+      .onSnapshot(snap=>{
+        const list = [];
+        snap.forEach(doc=>{
+          const d = doc.data()||{};
+          list.push({
+            name: d.name || '',
+            points: Number(d.points||0),
+            status: d.status || '',
+            badges: Array.isArray(d.badges)? d.badges : [],
+            photoUrl: d.photoUrl || d.photo || ''
+          });
+        });
+        // ordena: pontos desc, nome asc
+        list.sort((a,b)=>{
+          if (b.points !== a.points) return b.points - a.points;
+          return a.name.localeCompare(b.name,'pt',{sensitivity:'base'});
+        });
+        renderPodium(list);
+        renderTable(list);
+      }, err=>{
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="6" class="rowflex" style="justify-content:center; padding:22px; color:salmon">Erro ao carregar ranking.</td></tr>`;
+      });
+  </script>
+</body>
+</html>
