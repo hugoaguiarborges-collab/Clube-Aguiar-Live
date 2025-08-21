@@ -37,7 +37,7 @@
     </select>
 
     <label>Código do treino</label>
-    <input id="code" placeholder="Ex.: AG18" />
+    <input id="code" placeholder="Ex.: FOCO" />
 
     <button id="btn">Fazer check-in</button>
     <div id="msg" class="muted"></div>
@@ -65,10 +65,15 @@
 
   const $nome = document.getElementById('nome');
   const $code = document.getElementById('code');
-  const $btn = document.getElementById('btn');
-  const $msg = document.getElementById('msg');
+  const $btn  = document.getElementById('btn');
+  const $msg  = document.getElementById('msg');
 
   const slug = s => (s||'').toLowerCase().normalize('NFD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
+  const norm = s => (s==null?'':String(s))
+                    .trim()
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g,''); // remove acentos
 
   // Carrega nomes da coleção players
   db.collection('players').orderBy('name').get().then(snap=>{
@@ -86,27 +91,69 @@
 
   async function getCfg(){
     const d = await db.collection('meta').doc('checkin').get();
-    return d.exists ? d.data() : { code:null, pointsPerCheckin:3, mediaBonus:10 };
+    // Estrutura aceita:
+    //  - code: "FOCO"
+    //  - codes: ["FOCO","AG18","FORCA"]
+    if (!d.exists) return null;
+    const data = d.data() || {};
+    const pointsPerCheckin = parseInt(data.pointsPerCheckin||'3',10) || 3;
+    const mediaBonus = parseInt(data.mediaBonus||'10',10) || 10;
+
+    // normaliza para uma lista de códigos válidos
+    let list = [];
+    if (Array.isArray(data.codes)) list = data.codes.map(norm);
+    if (data.code) list.push(norm(data.code));
+
+    // remove duplicados
+    list = Array.from(new Set(list)).filter(Boolean);
+
+    return { pointsPerCheckin, mediaBonus, list };
   }
 
   $btn.addEventListener('click', async ()=>{
     $msg.className='muted'; $msg.textContent='Enviando...';
     try{
-      const name = $nome.value.trim();
-      const code = $code.value.trim();
-      if(!name || !code){ $msg.className='err'; $msg.textContent='Selecione seu nome e informe o código.'; return; }
+      const name = ($nome.value||'').trim();
+      const typed = norm($code.value);
+
+      if(!name || !typed){
+        $msg.className='err';
+        $msg.textContent='Selecione seu nome e informe o código.';
+        return;
+      }
 
       const cfg = await getCfg();
-      if(!cfg.code){ $msg.className='err'; $msg.textContent='O código do treino ainda não foi configurado.'; return; }
-      if(code !== cfg.code){ $msg.className='err'; $msg.textContent='Código incorreto. Verifique no grupo.'; return; }
+      if(!cfg || !cfg.list || cfg.list.length===0){
+        $msg.className='err';
+        $msg.textContent='O código do treino ainda não foi configurado no Admin.';
+        return;
+      }
+
+      // validação tolerante (case-insensitive, sem acento, sem espaços)
+      const isValid = cfg.list.includes(typed);
+      if(!isValid){
+        $msg.className='err';
+        $msg.textContent='Código incorreto. Verifique no grupo.';
+        return;
+      }
 
       const playerId = slug(name);
-      const pts = parseInt(cfg.pointsPerCheckin||'0',10) || 0;
+      const pts = cfg.pointsPerCheckin;
       const todayKey = new Date().toISOString().slice(0,10);
 
-      await db.collection('players').doc(playerId).set({ name, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
-      await db.collection('players').doc(playerId).update({ points: firebase.firestore.FieldValue.increment(pts) });
+      // garante doc do player
+      await db.collection('players').doc(playerId).set(
+        { name, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge:true }
+      );
 
+      // soma pontos do check-in
+      await db.collection('players').doc(playerId).update({
+        points: firebase.firestore.FieldValue.increment(pts),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // registra progresso do dia
       await db.collection('progress_public').doc(`${playerId}_${todayKey}`).set({
         playerId, name, dateKey: todayKey,
         checkedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -114,10 +161,12 @@
         pointsAdded: pts
       }, { merge:true });
 
+      // segue para o bônus
       location.href = `bonus.html?name=${encodeURIComponent(name)}`;
     }catch(e){
       console.error(e);
-      $msg.className='err'; $msg.textContent='Erro ao registrar. Tente novamente.';
+      $msg.className='err';
+      $msg.textContent='Erro ao registrar. Tente novamente.';
     }
   });
 </script>
