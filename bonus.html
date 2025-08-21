@@ -53,13 +53,12 @@
   </div>
 </div>
 
-<!-- Firebase compat -->
+<!-- Firebase (para atualizar pontos/histórico) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <script>
-  // === CONFIG DO SEU FIREBASE ===
+  // === CONFIG DO SEU FIREBASE (igual aos outros arquivos) ===
   const firebaseConfig = {
     apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
     authDomain: "clube-aguiar-live.firebaseapp.com",
@@ -70,14 +69,12 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-  const st = firebase.storage();
 
   const params = new URLSearchParams(location.search);
   const name = params.get('name') || '';
   const slug = s => (s||'').toLowerCase().normalize('NFD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
   const playerId = slug(name);
   const todayKey = new Date().toISOString().slice(0,10);
-
   document.getElementById('histLink').href = `historico.html?name=${encodeURIComponent(name)}`;
 
   // confete simples
@@ -102,6 +99,23 @@
     return doc.exists ? doc.data() : { mediaBonus:10 };
   }
 
+  // ======== CONFIGURE AQUI o Cloudinary (GRÁTIS) ========
+  const cloudName    = "SEU_CLOUD_NAME_AQUI";      // ex.: dabc12345
+  const uploadPreset = "SEU_UPLOAD_PRESET_AQUI";   // ex.: checkin_unsigned
+  // ======================================================
+
+  async function uploadToCloudinary(file){
+    // Para foto ou vídeo; usa endpoint "auto"
+    const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+    const form = new FormData();
+    form.append('file', file);
+    form.append('upload_preset', uploadPreset);
+    // opcional: form.append('folder', 'checkins-uploads');
+    const res = await fetch(url, { method:'POST', body: form });
+    if(!res.ok) throw new Error('Falha no upload Cloudinary');
+    return await res.json(); // retorna { secure_url, resource_type, ... }
+  }
+
   $send.addEventListener('click', async ()=>{
     $msg.className='muted'; $msg.textContent='Enviando...';
     try{
@@ -112,21 +126,20 @@
       const cfg = await getCfg();
       const bonus = parseInt(cfg.mediaBonus||'10',10) || 10;
 
-      const ext = (f.name.split('.').pop()||'bin').toLowerCase();
-      const ref = st.ref(`checkins-uploads/${Date.now()}-${playerId}.${ext}`);
-      await ref.put(f, { contentType: f.type });
-      const url = await ref.getDownloadURL();
+      // 1) Upload na Cloudinary (grátis)
+      const result = await uploadToCloudinary(f);
+      const mediaURL = result.secure_url;
 
-      // +10 pontos no jogador
+      // 2) Soma pontos do bônus na jogadora
       await db.collection('players').doc(playerId).update({
         points: firebase.firestore.FieldValue.increment(bonus),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      // Atualiza progresso do dia
+      // 3) Atualiza progresso do dia
       await db.collection('progress_public').doc(`${playerId}_${todayKey}`).set({
         hasMedia: true,
-        mediaURL: url,
+        mediaURL,
         mediaAdded: firebase.firestore.FieldValue.serverTimestamp(),
         mediaBonus: bonus
       }, { merge:true });
@@ -136,7 +149,7 @@
     }catch(e){
       console.error(e);
       $msg.className='err';
-      $msg.textContent='Erro ao enviar. Tente novamente.';
+      $msg.textContent='Erro ao enviar. Verifique suas chaves Cloudinary e tente novamente.';
     }
   });
 
