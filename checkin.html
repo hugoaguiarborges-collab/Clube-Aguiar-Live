@@ -5,68 +5,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Check-in — Desafio 40+</title>
 
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Seu CSS personalizado -->
+  <!-- Seu CSS principal (mantém a identidade visual do site) -->
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="bg-dark text-light">
+<body>
 
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <div class="card shadow-lg p-4 bg-dark text-light rounded-4">
-          <div class="card-body text-center">
+  <main class="container container-narrow py-6">
+    <section class="card card-elevated p-5 mx-auto" style="max-width: 720px;">
+      <header class="text-center mb-4">
+        <h1 class="mb-2">Fez seu treino?</h1>
+        <p class="text-muted">
+          Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!
+        </p>
+      </header>
 
-            <!-- TÍTULO -->
-            <h1 class="mb-3">Fez seu treino?</h1>
+      <!-- Mensagens -->
+      <div id="message" class="mb-3"></div>
 
-            <!-- SUBTÍTULO -->
-            <p class="mb-4">
-              Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!
-            </p>
-
-            <!-- FORMULÁRIO -->
-            <form id="checkinForm">
-              <div class="mb-3 text-start">
-                <label for="userName" class="form-label">Seu nome</label>
-                <select class="form-select" id="userName" required>
-                  <option value="">Selecione seu nome</option>
-                  <!-- nomes virão dinamicamente do Firebase -->
-                </select>
-              </div>
-
-              <div class="mb-3 text-start">
-                <label for="codigoTreino" class="form-label">Código do treino</label>
-                <input type="text" class="form-control" id="codigoTreino" placeholder="Ex.: FOCO" required />
-              </div>
-
-              <button type="submit" class="btn btn-primary w-100">
-                Confirmar treino
-              </button>
-            </form>
-
-            <!-- LINK VOLTAR -->
-            <div class="mt-3">
-              <a href="index.html" class="text-decoration-none text-info">&larr; Voltar ao ranking</a>
-            </div>
-
-            <!-- SESSÃO ATIVA -->
-            <div class="mt-2 small text-secondary" id="sessionInfo">
-              Sessão ativa (UID anônimo: ...)
-            </div>
-          </div>
+      <!-- Formulário -->
+      <form id="checkin-form" autocomplete="off">
+        <div class="form-group mb-3">
+          <label for="name">Seu nome</label>
+          <select id="name" class="form-control" required>
+            <option value="">Selecione seu nome</option>
+            <!-- nomes serão carregados pelo script do projeto;
+                 se não vierem, o fallback abaixo preenche pela coleção "ranking" -->
+          </select>
         </div>
+
+        <div class="form-group mb-4">
+          <label for="code">Código do treino</label>
+          <input id="code" type="text" class="form-control" placeholder="Ex.: FOCO" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+          Confirmar treino
+        </button>
+      </form>
+
+      <div class="mt-4 text-center">
+        <a href="index.html" class="link-soft">← Voltar ao ranking</a>
       </div>
-    </div>
-  </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+      <p id="session" class="text-center text-dim mt-2">Sessão ativa (UID anônimo: ...)</p>
+    </section>
+  </main>
 
-  <!-- Firebase + seu JS -->
-  <script src="firebase-config.js"></script>
-  <script src="checkin.js"></script>
+  <!-- Firebase do seu projeto (NÃO remover) -->
+  <script src="firebase-init.js"></script>
+
+  <!-- Script original do projeto (NÃO remover) -->
+  <script src="script.js"></script>
+
+  <!-- Fallback seguro: se a lista de nomes não vier do script original,
+       preenche a partir da coleção "ranking" sem conflitar -->
+  <script>
+    (function () {
+      const tryFillNamesFromRanking = async () => {
+        if (!window.firebase || !firebase.firestore) return;
+        const select = document.getElementById('name');
+        // se já foi preenchido pelo seu script, não faz nada
+        if (!select || select.options.length > 1) return;
+
+        try {
+          const db = firebase.firestore();
+          const snap = await db.collection('ranking').orderBy('points', 'desc').get();
+          const names = [];
+          snap.forEach(doc => {
+            const d = doc.data() || {};
+            const n = d.name || doc.id;
+            if (n && !names.includes(n)) names.push(n);
+          });
+          names.forEach(n => {
+            const opt = document.createElement('option');
+            opt.value = n;
+            opt.textContent = n;
+            select.appendChild(opt);
+          });
+        } catch (e) {
+          // mantém silencioso para não poluir a UI
+          console.warn('Fallback de nomes falhou:', e);
+        }
+      };
+
+      // tenta preencher 2x: logo após carregar e um pouco depois
+      document.addEventListener('DOMContentLoaded', () => {
+        tryFillNamesFromRanking();
+        setTimeout(tryFillNamesFromRanking, 1200);
+      });
+    })();
+  </script>
 </body>
 </html>
