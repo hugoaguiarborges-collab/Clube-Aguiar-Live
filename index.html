@@ -12,8 +12,8 @@
   <style>
     :root{
       --bg:#081a34; --card:#0f2547; --card2:#132c55; --text:#e7f1ff; --muted:#9bb7e0;
-      --accent:#2f5bff; --input:#0d2142; --gold:#ffd54d; --silver:#cdd2d8; --bronze:#e6a06f;
-      --good:#3de48d;
+      --accent:#2f5bff; --input:#0d2142;
+      --gold:#ffd54d; --silver:#cdd2d8; --bronze:#e6a06f;
     }
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text)}
@@ -24,20 +24,29 @@
     .topbar{display:flex; align-items:center; justify-content:space-between; gap:16px}
     .btn{display:inline-flex; align-items:center; gap:10px; background:var(--accent); color:#fff; font-weight:800; text-decoration:none; padding:12px 16px; border-radius:12px; box-shadow:0 6px 16px rgba(47,91,255,.35)}
     .btn:hover{transform:translateY(-1px)}
-    .table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px; background:rgba(0,0,0,.1)}
+
+    /* PÓDIO */
+    .podium{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:10px 0 24px}
+    .podium-card{position:relative; border-radius:16px; padding:16px; background:rgba(255,255,255,.05); overflow:hidden}
+    .podium-head{display:flex; align-items:center; gap:12px; margin-bottom:12px}
+    .avatar{width:44px; height:44px; border-radius:50%; object-fit:cover; background:#0b1d3a; display:inline-flex; align-items:center; justify-content:center; font-weight:900; color:#9ec3ff}
+    .podium-title{font-weight:900; margin:0; font-size:16px}
+    .podium-pts{opacity:.9; margin:2px 0 0}
+    .pedestal{position:relative; width:100%; display:flex; align-items:flex-end; gap:8px; height:110px; margin-top:6px}
+    .col{flex:1; background:rgba(255,255,255,.06); border-radius:10px 10px 6px 6px}
+    .col.first{height:100%; box-shadow:0 10px 30px rgba(255,213,77,.18); border:2px solid var(--gold)}
+    .col.second{height:78%; box-shadow:0 8px 26px rgba(205,210,216,.14); border:2px solid var(--silver)}
+    .col.third{height:62%; box-shadow:0 8px 26px rgba(230,160,111,.14); border:2px solid var(--bronze)}
+    .medal{position:absolute; top:10px; right:12px; font-size:22px}
+
+    /* TABELA */
+    .table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px; background:rgba(0,0,0,.08)}
     .table th,.table td{padding:14px 14px; text-align:left}
     .table thead th{background:rgba(255,255,255,.06); color:#dfe9ff; font-size:14px; letter-spacing:.3px}
     .table tbody tr{border-top:1px solid rgba(255,255,255,.06)}
     .muted{color:var(--muted)}
-    .center{display:flex; align-items:center; justify-content:center}
-    .avatar{width:36px; height:36px; border-radius:50%; object-fit:cover; background:#0b1d3a; display:inline-flex; align-items:center; justify-content:center; font-weight:800; color:#9ec3ff}
     .rowflex{display:flex; align-items:center; gap:12px}
     .badge{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; font-size:18px; border-radius:8px; background:rgba(255,255,255,.06); margin-right:6px}
-    .podium{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:12px 0 18px}
-    .stand{background:rgba(255,255,255,.06); border-radius:14px; padding:14px}
-    .stand h3{margin:0 0 4px; font-size:16px}
-    .stand .pts{font-weight:900}
-    .g{border:2px solid var(--gold)} .s{border:2px solid var(--silver)} .b{border:2px solid var(--bronze)}
     .footnote{margin-top:12px; color:var(--muted)}
   </style>
 </head>
@@ -52,10 +61,10 @@
         <a class="btn" href="./checkin.html">Fazer check-in →</a>
       </div>
 
-      <!-- Pódio -->
+      <!-- PÓDIO VISUAL -->
       <div id="podium" class="podium" aria-live="polite"></div>
 
-      <!-- Tabela -->
+      <!-- TABELA COMPLETA -->
       <table class="table">
         <thead>
           <tr>
@@ -68,7 +77,7 @@
           </tr>
         </thead>
         <tbody id="tbody">
-          <tr><td colspan="6" class="center muted" style="padding:20px">Carregando…</td></tr>
+          <tr><td colspan="6" class="rowflex" style="justify-content:center; padding:20px"><span class="muted">Carregando…</span></td></tr>
         </tbody>
       </table>
 
@@ -101,44 +110,60 @@
       return (a+b)||'A';
     }
 
-    // renderiza pódio
+    // badges automáticos para top3
+    const autoBadge = (pos)=>{
+      if(pos===1) return "🏆";
+      if(pos===2) return "🥈";
+      if(pos===3) return "🥉";
+      return null;
+    };
+
+    // renderiza pódio visual
     function renderPodium(list){
       const top = list.slice(0,3);
-      if (!top.length){
-        podium.innerHTML = '';
-        return;
-      }
-      podium.innerHTML = top.map((p,idx)=>{
-        const cls = idx===0?'g':(idx===1?'s':'b');
-        const border = idx===0?'var(--gold)':(idx===1?'var(--silver)':'var(--bronze)');
+      if (!top.length){ podium.innerHTML = ""; return; }
+
+      const items = top.map((p,idx)=>{
         const pos = idx+1;
-        const avatar = p.photoUrl ? `<img class="avatar ${cls}" src="${p.photoUrl}" alt="${p.name}" />`
-                                  : `<div class="avatar ${cls}">${initials(p.name)}</div>`;
+        const medal = autoBadge(pos);
+        const avatar = p.photoUrl
+          ? `<img class="avatar" src="${p.photoUrl}" alt="${p.name}" />`
+          : `<div class="avatar">${initials(p.name)}</div>`;
+        const colCls = pos===1 ? "first" : (pos===2 ? "second" : "third");
+        const posTxt = pos===1 ? "1º" : pos===2 ? "2º" : "3º";
         return `
-          <div class="stand" style="border-color:${border}">
-            <div class="rowflex">
+          <div class="podium-card">
+            <div class="podium-head">
               ${avatar}
               <div>
-                <h3>${pos}º — ${p.name}</h3>
-                <div class="pts">${p.points||0} pts</div>
+                <p class="podium-title">${posTxt} — ${p.name}</p>
+                <p class="podium-pts">${p.points||0} pts</p>
               </div>
+            </div>
+            <div class="medal">${medal}</div>
+            <div class="pedestal">
+              <div class="col ${colCls}" style="width:100%"></div>
             </div>
           </div>
         `;
       }).join('');
+      podium.innerHTML = items;
     }
 
     // renderiza tabela
     function renderTable(list){
       if (!list.length){
-        tbody.innerHTML = `<tr><td colspan="6" class="center muted" style="padding:22px">Nenhuma atleta cadastrada ainda.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="rowflex" style="justify-content:center; padding:22px"><span class="muted">Nenhuma atleta cadastrada ainda.</span></td></tr>`;
         return;
       }
       tbody.innerHTML = list.map((p,idx)=>{
         const pos = idx+1;
         const avatar = p.photoUrl ? `<img class="avatar" src="${p.photoUrl}" alt="${p.name}" />`
                                   : `<div class="avatar">${initials(p.name)}</div>`;
-        const badges = Array.isArray(p.badges) ? p.badges.map(b=>`<span class="badge">${b}</span>`).join('') : '';
+        // badges: auto para top3 + badges do banco
+        const extras = autoBadge(pos) ? [autoBadge(pos)] : [];
+        const allBadges = [...extras, ...(Array.isArray(p.badges)? p.badges : [])];
+        const badgesHtml = allBadges.map(b=>`<span class="badge" title="Selo">${b}</span>`).join('');
         const status = p.status ? p.status : '<span class="muted">—</span>';
         return `
           <tr>
@@ -147,7 +172,7 @@
             <td><strong>${p.name||'-'}</strong></td>
             <td><strong>${p.points||0}</strong></td>
             <td>${status}</td>
-            <td>${badges}</td>
+            <td>${badgesHtml}</td>
           </tr>
         `;
       }).join('');
@@ -164,7 +189,7 @@
             points: Number(d.points||0),
             status: d.status || '',
             badges: Array.isArray(d.badges)? d.badges : [],
-            photoUrl: d.photoUrl || d.photo || '' // cobre nomes de campo diferentes
+            photoUrl: d.photoUrl || d.photo || ''
           });
         });
         // ordena: pontos desc, nome asc
@@ -176,7 +201,7 @@
         renderTable(list);
       }, err=>{
         console.error(err);
-        tbody.innerHTML = `<tr><td colspan="6" class="center" style="padding:22px;color:salmon">Erro ao carregar ranking.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="rowflex" style="justify-content:center; padding:22px; color:salmon">Erro ao carregar ranking.</td></tr>`;
       });
   </script>
 </body>
