@@ -1,62 +1,93 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin - Desafio 40+</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Desafio 40+</title>
+
+  <!-- Firebase v8 (mais direto em HTML) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
-  <script>
-    // 🔥 Configuração Firebase (substitua se já tiver firebase-init.js separado)
-    const firebaseConfig = {
-      apiKey: "SUA_API_KEY_AQUI",
-      authDomain: "clube-aguiar-live.firebaseapp.com",
-      projectId: "clube-aguiar-live",
-      storageBucket: "clube-aguiar-live.appspot.com",
-      messagingSenderId: "000000000000",
-      appId: "1:000000000000:web:xxxxxxxxxxxx"
-    };
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-  </script>
-
   <style>
-    body { font-family: Arial, sans-serif; margin: 30px; }
-    h1 { color: #333; }
-    #conteudo { display: none; }
-    .erro { color: red; }
+    :root{
+      --bg:#081a34; --card:#0f2547; --card2:#132c55; --text:#e7f1ff; --muted:#9bb7e0; --accent:#2f5bff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:system-ui, -apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text)}
+    .wrap{max-width:980px; margin:40px auto; padding:0 20px}
+    .card{background:linear-gradient(180deg,var(--card),var(--card2)); border-radius:18px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    h1{margin:0 0 10px; font-weight:800}
+    .muted{color:var(--muted)}
+    .ok{color:#8ef0a0; font-weight:800}
+    .err{color:#ff9b9b; white-space:pre-wrap}
+    .hidden{display:none}
+    .btn{display:inline-block; background:var(--accent); color:#fff; text-decoration:none; padding:10px 14px; border-radius:12px; font-weight:800; box-shadow:0 6px 16px rgba(47,91,255,.35)}
   </style>
 </head>
 <body>
-  <h1>Área Administrativa</h1>
-  <p id="status">Conectando...</p>
-  <div id="conteudo">
-    <h2>Bem-vindo ao Painel do Admin 🎉</h2>
-    <p>Aqui você vai gerenciar os códigos, pontos e ranking.</p>
+  <div class="wrap">
+    <div class="card">
+      <h1>Admin — Desafio 40+</h1>
+      <p id="status" class="muted">Conectando…</p>
+      <p id="who" class="muted hidden"></p>
+      <pre id="err" class="err hidden"></pre>
+
+      <div id="content" class="hidden">
+        <p class="ok">✅ Admin logado! Você já pode usar sua página administrativa completa.</p>
+        <p class="muted">Se você tem outro arquivo de administração com formulários (ex.: cadastrar atleta, código do treino etc.), mantenha-o. Este arquivo serve para garantir o login correto. </p>
+        <p><a class="btn" href="./index.html">← Voltar ao ranking</a></p>
+      </div>
+    </div>
   </div>
-  <p id="erro" class="erro"></p>
 
   <script>
-    const ADMIN_EMAIL = "clubeenvelhecerbem@gmail.com";
-    const ADMIN_SENHA = "112233hugo";
-    const ADMIN_UID = "LkLp9zwhhcSMgrWttuSiEk2D5I02"; // seu UID já cadastrado
+    // ===== 1) Configuração REAL do seu Firebase (sem placeholders) =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+      authDomain: "clube-aguiar-live.firebaseapp.com",
+      projectId: "clube-aguiar-live",
+      storageBucket: "clube-aguiar-live.appspot.com",
+      messagingSenderId: "694025911850",
+      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
-    firebase.auth().signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_SENHA)
-      .then((cred) => {
-        if (cred.user.uid === ADMIN_UID) {
-          document.getElementById("status").innerText = "✅ Admin logado com sucesso!";
-          document.getElementById("conteudo").style.display = "block";
+    // ===== 2) Login automático com o SEU admin (email/senha) =====
+    const ADMIN_EMAIL = "clubeenvelhecerbem@gmail.com";
+    const ADMIN_PASS  = "112233hugo";
+    // UID que aparece no Authentication > Users
+    const ADMIN_UID   = "Lklp9zwhhcSMgrWttuSiEk2D5I02"; // cuidado com maiúsc/minúsc
+
+    const $ = (id)=>document.getElementById(id);
+    const statusEl = $("status");
+    const whoEl    = $("who");
+    const errEl    = $("err");
+    const content  = $("content");
+
+    statusEl.textContent = "Fazendo login do admin…";
+
+    firebase.auth().signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASS)
+      .then(cred=>{
+        const uid = cred.user && cred.user.uid;
+        if (uid === ADMIN_UID) {
+          statusEl.textContent = "✅ Login efetuado.";
+          whoEl.textContent = `Logado como ${cred.user.email || uid}`;
+          whoEl.classList.remove("hidden");
+          content.classList.remove("hidden");
         } else {
-          document.getElementById("status").innerText = "❌ Acesso negado";
-          document.getElementById("erro").innerText = "Você não é administrador autorizado.";
+          statusEl.textContent = "❌ Acesso negado";
+          errEl.textContent = "Este usuário não está autorizado nas regras do Firestore (UID diferente).";
+          errEl.classList.remove("hidden");
           firebase.auth().signOut();
         }
       })
-      .catch((err) => {
-        document.getElementById("status").innerText = "❌ Erro ao logar";
-        document.getElementById("erro").innerText = err.message;
+      .catch(err=>{
+        statusEl.textContent = "❌ Erro ao logar";
+        errEl.textContent = JSON.stringify(err, null, 2);
+        errEl.classList.remove("hidden");
       });
   </script>
 </body>
