@@ -1,156 +1,202 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bônus — Desafio 40+</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-<style>
-  :root{--muted:#a7b6d0;--ok:#16a34a;--err:#dc2626}
-  *{box-sizing:border-box}
-  body{margin:0;background:linear-gradient(180deg,#0a1a33,#08142a);color:#e6efff;font-family:Poppins,Arial,Helvetica,sans-serif}
-  header{padding:16px;text-align:center;background:#0d2042;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-  .wrap{max-width:760px;margin:24px auto;padding:0 14px}
-  .card{background:rgba(255,255,255,.06);border:1px solid #1d386c;border-radius:16px;padding:20px;position:relative;overflow:hidden}
-  h1{margin:0 0 8px}
-  .cele{font-size:18px;color:#cfe1ff;margin:6px 0 12px}
-  label{display:block;margin:12px 0 6px}
-  input[type=file]{width:100%;padding:12px;border:1px solid #2b4a8d;background:#0d2144;color:#e6efff;border-radius:12px}
-  button{margin-top:12px;background:linear-gradient(180deg,#3d6cff,#224bde);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
-  .row{display:flex;gap:12px;flex-wrap:wrap}
-  .muted{color:var(--muted)}
-  .err{color:var(--err)}
-  .ok{color:var(--ok)}
-  .right{display:flex;gap:10px;align-items:center;justify-content:flex-start;margin-top:10px}
-  a{color:#9ec2ff}
-  #confettiCanvas{position:fixed;inset:0;pointer-events:none}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bônus extra — Desafio 40+ Play</title>
+
+  <!-- Bootstrap (fallback) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Seus estilos (mantém identidade visual) -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Fallback leve caso os CSS acima não estejam disponíveis -->
+  <style>
+    body { background:#0e1b2b; color:#e7eef7; }
+    .card-dark { background:#12243a; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,.3); }
+    .text-dim { color:#9fb3c8; }
+    .btn-primary { background:#2f6bff; border:none; }
+    .btn-primary:hover { background:#2757cf; }
+    .form-control { background:#0f2035; border-color:#1e385a; color:#e7eef7; }
+    .form-control::file-selector-button{ background:#1b3b65; color:#e7eef7; border:none; padding:.4rem .7rem; border-radius:.375rem; }
+    .progress-bar { background:#2f6bff; }
+    a.link-soft{ color:#7cc7ff; text-decoration:none; } a.link-soft:hover{ text-decoration:underline; }
+  </style>
 </head>
 <body>
-<canvas id="confettiCanvas"></canvas>
-<header><b>Desafio 40+ — Bônus</b></header>
-<div class="wrap">
-  <div class="card">
-    <h1>Parabéns! 🎉</h1>
-    <p class="cele">Seu check-in foi registrado com sucesso. <b>+ pontos adicionados ao ranking!</b></p>
-    <p class="cele">Quer ganhar <b>+10 pontos</b> enviando uma foto ou vídeo do treino de <u>hoje</u> (mostrando você e a TV com a aula)?</p>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-7">
+        <div class="card-dark p-4 p-md-5">
+          <h1 class="mb-2 text-center">Bônus de hoje (+10 pts)</h1>
+          <p class="text-center text-dim mb-4">
+            Envie <strong>uma foto ou vídeo</strong> da aula <strong>de hoje</strong> para ganhar +10 pontos.
+          </p>
 
-    <div class="muted">
-      Regras: precisa ser da aula atual. Enviar mídia de outra aula pode acarretar em <b>perda de até 10 pontos</b>.
+          <div class="alert alert-warning" role="alert" style="background:#2c3e55;color:#ffdd99;border:none">
+            <ul class="mb-0">
+              <li>O conteúdo deve ser <strong>da aula de hoje</strong>.</li>
+              <li>Envio de mídia antiga pode resultar em <strong>perda de pontos</strong>.</li>
+              <li>Máximo 1 bônus por dia por atleta.</li>
+            </ul>
+          </div>
+
+          <div id="hello" class="mb-3 text-dim"></div>
+          <div id="status" class="mb-3"></div>
+
+          <div class="mb-3">
+            <label for="proof" class="form-label">Selecione a foto/vídeo da aula de hoje</label>
+            <input id="proof" type="file" class="form-control" accept="image/*,video/*" />
+            <div class="form-text text-dim">Formatos comuns de imagem/vídeo. Tamanho recomendado: até 25 MB.</div>
+          </div>
+
+          <div class="mb-4">
+            <button id="btnSend" class="btn btn-primary w-100">Enviar e ganhar +10 pontos</button>
+          </div>
+
+          <div class="progress mb-3" style="height:10px; display:none" id="barWrap">
+            <div id="bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+          </div>
+
+          <div class="text-center">
+            <a class="link-soft" href="index.html">← Voltar ao ranking</a>
+          </div>
+
+          <p id="session" class="text-center text-dim mt-2">Sessão ativa: …</p>
+        </div>
+      </div>
     </div>
-
-    <div class="right">
-      <input type="file" id="media" accept="image/*,video/*">
-      <button id="enviar">Enviar e ganhar +10</button>
-      <button id="pular" style="background:#283a69">Prefiro não enviar</button>
-    </div>
-
-    <div id="msg" class="muted"></div>
-
-    <p style="margin-top:16px"><a href="index.html">← Voltar ao ranking</a> · <a id="histLink" href="#">Ver meu histórico</a></p>
   </div>
-</div>
 
-<!-- Firebase (para atualizar pontos/histórico) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-  // === SEU FIREBASE ===
-  const firebaseConfig = {
-    apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
-    authDomain: "clube-aguiar-live.firebaseapp.com",
-    projectId: "clube-aguiar-live",
-    storageBucket: "clube-aguiar-live.firebasestorage.app",
-    messagingSenderId: "694025911850",
-    appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
-  const params = new URLSearchParams(location.search);
-  const name = params.get('name') || '';
-  const slug = s => (s||'').toLowerCase().normalize('NFD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
-  const playerId = slug(name);
-  const todayKey = new Date().toISOString().slice(0,10);
-  document.getElementById('histLink').href = `historico.html?name=${encodeURIComponent(name)}`;
+  <!-- Sua init -->
+  <script src="firebase-init.js"></script>
 
-  // confete simples
-  (function confetti(){
-    const c = document.getElementById('confettiCanvas'), ctx = c.getContext('2d');
-    function resize(){ c.width=innerWidth; c.height=innerHeight } resize(); addEventListener('resize',resize);
-    const P = Array.from({length:120}, ()=>({x:Math.random()*c.width,y:Math.random()*-c.height,v:2+Math.random()*3,s:2+Math.random()*4,col:`hsl(${~~(Math.random()*360)},90%,60%)`}));
-    let t=0; (function draw(){
-      ctx.clearRect(0,0,c.width,c.height);
-      for(const p of P){ p.y+=p.v; p.x += Math.sin((t+p.y)/40); if(p.y>c.height)p.y=-20; ctx.fillStyle=p.col; ctx.fillRect(p.x,p.y,p.s,p.s) }
-      t++; requestAnimationFrame(draw);
+  <script>
+    // Utilidades
+    const $ = sel => document.querySelector(sel);
+    const params = new URLSearchParams(location.search);
+    const athleteName = params.get('name') || '';
+
+    const todayStr = (() => {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;           // ex: 2025-08-19
     })();
-  })();
 
-  const $file = document.getElementById('media');
-  const $send = document.getElementById('enviar');
-  const $skip = document.getElementById('pular');
-  const $msg  = document.getElementById('msg');
+    const db = firebase.firestore();
+    const storage = firebase.storage();
 
-  async function getCfg(){
-    const doc = await db.collection('meta').doc('checkin').get();
-    return doc.exists ? doc.data() : { mediaBonus:10 };
-  }
+    // Login anônimo (se necessário)
+    (async () => {
+      if (!firebase.auth().currentUser) {
+        await firebase.auth().signInAnonymously().catch(()=>{});
+      }
+      const u = firebase.auth().currentUser;
+      if (u) $('#session').textContent = `Sessão ativa (UID: ${u.uid.slice(0,6)}...)`;
+      if (athleteName) $('#hello').innerHTML = `Atleta: <strong>${athleteName}</strong> — Dia: <strong>${todayStr}</strong>`;
+    })();
 
-  // ======== Cloudinary (GRÁTIS) — já configurado ========
-  const cloudName    = "dj6gmz0pa";
-  const uploadPreset = "checkin_unsigned";
-  async function uploadToCloudinary(file){
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
-    const form = new FormData();
-    form.append('file', file);
-    form.append('upload_preset', uploadPreset);
-    // opcional: form.append('folder', 'checkins-uploads');
-    const res = await fetch(url, { method:'POST', body: form });
-    if(!res.ok) throw new Error('Falha no upload Cloudinary');
-    return await res.json(); // { secure_url, ... }
-  }
+    // Verifica se já ganhou hoje
+    async function alreadyGotToday(uid, name, date) {
+      const docId = `${(uid||'anon')}_${(name||'').toLowerCase()}_${date}`;
+      const ref = db.collection('bonuses').doc(docId);
+      const snap = await ref.get();
+      return { exists: snap.exists, ref };
+    }
 
-  $send.addEventListener('click', async ()=>{
-    $msg.className='muted'; $msg.textContent='Enviando...';
-    try{
-      const f = $file.files[0];
-      if(!f){ $msg.className='err'; $msg.textContent='Escolha uma foto ou vídeo.'; return; }
-      if(f.size > 10*1024*1024){ $msg.className='err'; $msg.textContent='Arquivo maior que 10 MB.'; return; }
+    // Atualiza +10 pontos no /ranking (documento por nome)
+    async function addTenPointsByName(name) {
+      // 1) busca doc do ranking por nome
+      const q = await db.collection('ranking').where('name','==', name).limit(1).get();
+      if (q.empty) throw new Error('Não encontrei sua ficha no ranking.');
+      const docRef = q.docs[0].ref;
 
-      const cfg = await getCfg();
-      const bonus = parseInt(cfg.mediaBonus||'10',10) || 10;
+      // 2) incrementa
+      await docRef.update({ points: firebase.firestore.FieldValue.increment(10) });
+    }
 
-      const result = await uploadToCloudinary(f);
-      const mediaURL = result.secure_url;
+    // Upload + registro
+    async function handleSend() {
+      const status = $('#status');
+      status.innerHTML = '';
+      const file = $('#proof').files[0];
 
-      await db.collection('players').doc(playerId).update({
-        points: firebase.firestore.FieldValue.increment(bonus),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      if (!athleteName) {
+        status.innerHTML = `<div class="alert alert-danger">Nome não informado. Volte ao check-in e tente novamente.</div>`;
+        return;
+      }
+      if (!file) {
+        status.innerHTML = `<div class="alert alert-danger">Selecione uma foto ou vídeo da aula de hoje.</div>`;
+        return;
+      }
+      if (file.size > 25 * 1024 * 1024) {
+        status.innerHTML = `<div class="alert alert-danger">Arquivo muito grande (máx. 25MB).</div>`;
+        return;
+      }
+
+      const user = firebase.auth().currentUser;
+      const uid = user ? user.uid : 'anon';
+
+      // Checa se já ganhou hoje
+      const { exists, ref } = await alreadyGotToday(uid, athleteName, todayStr);
+      if (exists) {
+        status.innerHTML = `<div class="alert alert-warning">Você já garantiu os +10 pontos hoje. Obrigado!</div>`;
+        return;
+      }
+
+      // Envia para Storage
+      const safeName = athleteName.replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'_').toLowerCase();
+      const path = `proofs/${todayStr}/${safeName}/${Date.now()}_${file.name}`;
+      const task = storage.ref(path).put(file);
+
+      // Barra de progresso
+      $('#barWrap').style.display = 'block';
+      task.on('state_changed', snap=>{
+        const p = snap.bytesTransferred / snap.totalBytes * 100;
+        $('#bar').style.width = `${p.toFixed(0)}%`;
       });
 
-      await db.collection('progress_public').doc(`${playerId}_${todayKey}`).set({
-        hasMedia: true,
-        mediaURL,
-        mediaAdded: firebase.firestore.FieldValue.serverTimestamp(),
-        mediaBonus: bonus
-      }, { merge:true });
+      try {
+        await task;
 
-      $msg.className='ok';
-      $msg.textContent = `Mídia enviada! +${bonus} pontos adicionados.`;
-    }catch(e){
-      console.error(e);
-      $msg.className='err';
-      $msg.textContent='Erro ao enviar. Tente novamente.';
+        // (Opcional) URL para verificação posterior
+        const url = await storage.ref(path).getDownloadURL();
+
+        // Transação: registra bônus do dia e incrementa pontos
+        await db.runTransaction(async (tx) => {
+          const snap = await tx.get(ref);
+          if (snap.exists) return; // corrida dupla
+          tx.set(ref, {
+            uid, name: athleteName, date: todayStr,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            storagePath: path, downloadURL: url || null,
+            awarded: 10
+          });
+        });
+
+        await addTenPointsByName(athleteName);
+
+        status.innerHTML = `<div class="alert alert-success"><strong>Parabéns!</strong> Upload concluído e você ganhou <strong>+10 pontos</strong> 🎉</div>`;
+      } catch (e) {
+        console.error(e);
+        status.innerHTML = `<div class="alert alert-danger">Erro ao processar o bônus: ${e.message}</div>`;
+      }
     }
-  });
 
-  $skip.addEventListener('click', ()=>{
-    $msg.className='muted';
-    $msg.innerHTML = 'Tudo bem! 😉 Mas ó... <b>vai deixar sua amiga te ultrapassar no ranking?</b> Você ainda pode enviar mais tarde.';
-  });
-</script>
+    $('#btnSend').addEventListener('click', handleSend);
+  </script>
 </body>
 </html>
