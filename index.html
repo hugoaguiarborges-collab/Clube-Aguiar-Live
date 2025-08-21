@@ -1,214 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Melhores Desempenhos Aguiar 40+</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Desafio 40+ — Ranking</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <!-- Inicializa Firebase -->
+  <script type="module" src="./firebase-init.js"></script>
 
   <style>
-    :root{
-      --bg1:#0a1a33; --bg2:#0e2345; --accent:#2a5cff;
-      --gold:#cfa93a; --silver:#c0c6d4; --bronze:#b77b47;
-      --card:#0f1f3c; --text:#e6efff; --muted:#a7b6d0;
+    body {
+      background:#0b1b34;
+      color:#fff;
+      font-family:system-ui, Arial;
+      margin:0;
+      padding:0;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0; color:var(--text); font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:
-        radial-gradient(1200px 500px at 50% -20%, #163060 0%, transparent 60%),
-        radial-gradient(800px 400px at 10% 20%, #142b56 0%, transparent 70%),
-        radial-gradient(900px 480px at 90% 30%, #10264b 0%, transparent 70%),
-        linear-gradient(180deg, var(--bg2), var(--bg1));
-      min-height:100dvh;
+    .container {
+      max-width:900px;
+      margin:40px auto;
+      padding:24px;
+      background:#112244;
+      border-radius:16px;
     }
-    .container{max-width:1000px; margin:0 auto; padding:20px 14px 60px}
-
-    .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between}
-    .search{
-      flex:1; position:relative;
-      background:#102443; border:1px solid #18305a; border-radius:14px; padding:10px 14px; color:#d9e6ff;
-      outline:none; font-size:14px;
+    h1 {
+      margin:0 0 16px;
     }
-    .btn{
-      background:linear-gradient(180deg,#3d6cff,#224bde);
-      border:none; color:white; font-weight:600; padding:10px 18px; border-radius:14px; cursor:pointer;
+    .posicao {
+      padding:10px 14px;
+      background:#0f1f3a;
+      border-radius:12px;
+      margin:.5rem 0;
     }
-    .btn:hover{filter:brightness(1.05)}
-
-    .hero{ text-align:center; padding:28px 10px 22px }
-    .hero h1{ font-size:clamp(28px,6vw,44px); line-height:1.1; margin:10px 0 12px; font-weight:800; letter-spacing:0.5px }
-    .hero p{ color:var(--muted); max-width:740px; margin:0 auto }
-
-    .actions{display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap}
-
-    .podium{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; align-items:end; margin-top:24px }
-    .stage{
-      background:rgba(255,255,255,0.03); border:1px solid #213765; border-radius:16px; padding:16px 10px;
-      min-height:260px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; position:relative;
-      overflow:hidden;
-    }
-    .stage h3{margin:0 0 8px; font-weight:800; letter-spacing:1px; text-transform:uppercase; text-align:center}
-    .laurel{ position:absolute; inset:auto 0 74px 0; height:120px; opacity:.18; pointer-events:none; }
-    .pedestal{ width:86%; border-radius:16px; height:82px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 8px 24px rgba(0,0,0,.25); }
-    .pedestal.gold{ background:linear-gradient(180deg,#f7d65a,#cfa93a); height:110px }
-    .pedestal.silver{ background:linear-gradient(180deg,#e5ebf7,#c0c6d4); height:90px }
-    .pedestal.bronze{ background:linear-gradient(180deg,#e4b28a,#b77b47); height:78px }
-    .medal{position:absolute; top:12px; right:12px; background:#102443; border:1px solid #2b457a; padding:6px 10px; border-radius:999px; font-size:12px}
-    .avatar{ width:72px; height:72px; border-radius:999px; object-fit:cover; border:3px solid rgba(255,255,255,.2); margin-bottom:12px; background:#1e335f; }
-    .name{font-size:18px; font-weight:800; margin-bottom:4px; text-align:center}
-    .points{font-size:14px; color:#bcd0ff; margin-bottom:8px}
-
-    .list{ margin-top:28px; background:rgba(255,255,255,0.03); border:1px solid #213765; border-radius:16px; overflow:hidden; }
-    .row{display:grid; grid-template-columns:48px 60px 1fr 110px 120px 100px; gap:10px; padding:12px 14px; align-items:center}
-    .row.header{ background:#0e2a55; color:#eaf2ff; font-weight:600 }
-    .row:not(.header){ border-top:1px solid #1c3360 }
-    .mini{ width:44px; height:44px; border-radius:999px; object-fit:cover; background:#1e335f }
-    .badge{margin-right:4px}
-
-    .stamp{color:#9eb3df; font-size:12px; margin-top:8px}
-
-    @media (max-width:880px){
-      .row{ grid-template-columns:40px 46px 1fr 90px 0 0; }
-      .row span.badges{ display:none }
-      .row span.status{ display:none }
-    }
-    @media (max-width:720px){
-      .podium{ grid-template-columns:1fr; }
-      .stage{ min-height:220px }
-    }
+    a { color:#9ec3ff; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="topbar">
-      <input id="q" class="search" placeholder="Buscar atleta…"/>
-      <button class="btn" onclick="location.href='admin.html'">LOGIN</button>
-    </div>
+    <h1>🏆 Pódio — Top 3</h1>
+    <div id="podio">Carregando…</div>
 
-    <section class="hero">
-      <h1>MELHORES DE<br/>DESEMPENHOS AGUIAR 40+</h1>
-      <p>Ranking de melhores desempenhos de mulheres 40+ que participam dos treinos do Clube Aguiar. Atualização em tempo real.</p>
-      <div class="actions">
-        <button class="btn" onclick="location.href='checkin.html'">FAZER CHECK-IN</button>
-      </div>
-    </section>
+    <h2 style="margin-top:30px;">📋 Ranking completo</h2>
+    <div id="ranking">Carregando…</div>
 
-    <div id="podium" class="podium"></div>
-
-    <div class="list" id="list">
-      <div class="row header">
-        <div>#</div><div>Foto</div><div>Nome</div><div>Pontos</div><div>Status</div><div>Selos</div>
-      </div>
-    </div>
-
-    <p id="stamp" class="stamp"></p>
+    <p style="margin-top:16px;">
+      <a href="./checkin.html">Ir para o check-in →</a>
+    </p>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <!-- Script que carrega pódio e ranking -->
+  <script type="module">
+    import {
+      getFirestore, collection, query, orderBy, limit, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+    import { getApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
-      authDomain: "clube-aguiar-live.firebaseapp.com",
-      projectId: "clube-aguiar-live",
-      storageBucket: "clube-aguiar-live.firebasestorage.app",
-      messagingSenderId: "694025911850",
-      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const db = getFirestore(getApp());
 
-    const $podium = document.getElementById('podium');
-    const $list   = document.getElementById('list');
-    const $stamp  = document.getElementById('stamp');
-    const $q      = document.getElementById('q');
+    async function carregarPodio() {
+      const el = document.querySelector('#podio');
+      try {
+        const q = query(collection(db, "ranking"), orderBy("points", "desc"), limit(3));
+        const snap = await getDocs(q);
+        const top = [];
+        snap.forEach(d => top.push(d.data()));
 
-    const LAUREL = `
-      <svg class="laurel" viewBox="0 0 512 256" preserveAspectRatio="xMidYMid meet">
-        <g fill="none" stroke="#9eb3df" stroke-width="4">
-          <path d="M30,210 C120,120 180,60 256,60" />
-          <path d="M482,210 C392,120 332,60 256,60" />
-          ${Array.from({length:10}).map((_,i)=>`<path d="M${50+i*18},190 l10,-18 l10,18 z" fill="#9eb3df"/>`).join('')}
-          ${Array.from({length:10}).map((_,i)=>`<path d="M${462-i*18},190 l-10,-18 l-10,18 z" fill="#9eb3df"/>`).join('')}
-        </g>
-      </svg>`;
+        if (!top.length) {
+          el.innerHTML = "<p>Sem dados no momento.</p>";
+          return;
+        }
 
-    db.collection('meta').doc('ranking').onSnapshot(doc=>{
-      const d = doc.data();
-      if(d?.lastPublished?.toDate){
-        const dt = d.lastPublished.toDate();
-        $stamp.textContent = 'Última publicação do ranking: ' +
-          dt.toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
-      } else {
-        $stamp.textContent = '';
-      }
-    });
-
-    let allPlayers = [];
-    db.collection('players').orderBy('points','desc').onSnapshot(snap=>{
-      allPlayers = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-      render(allPlayers);
-    });
-
-    $q.addEventListener('input', () => {
-      const term = $q.value.trim().toLowerCase();
-      const filtered = term ? allPlayers.filter(p => (p.name||'').toLowerCase().includes(term)) : allPlayers;
-      render(filtered);
-    });
-
-    function render(players){
-      const [first, second, third, ...rest] = players;
-      $podium.innerHTML = '';
-      const stages = [
-        { who: second, medal:'🥈 PRATA',  cls:'silver' },
-        { who: first,  medal:'🏆 OURO',   cls:'gold'   },
-        { who: third,  medal:'🥉 BRONZE', cls:'bronze' }
-      ];
-      stages.forEach(st => {
-        const p = st.who;
-        const name = p?.name || '—';
-        const pts  = p?.points ?? '—';
-        const photo= p?.photoUrl || '';
-        const html = `
-          <div class="stage">
-            <div class="medal">${st.medal}</div>
-            ${LAUREL}
-            ${photo ? `<img class="avatar" src="${photo}" alt="${name}">` : `<div class="avatar"></div>`}
-            <div class="name">${name.toUpperCase()}</div>
-            <div class="points">${pts} pts</div>
-            <div class="pedestal ${st.cls}"></div>
-          </div>`;
-        const wrap = document.createElement('div'); wrap.innerHTML = html; $podium.appendChild(wrap.firstElementChild);
-      });
-
-      [...$list.querySelectorAll('.row:not(.header)')].forEach(el=>el.remove());
-      rest.forEach((p, idx) => {
-        const row = document.createElement('div');
-        row.className = 'row';
-        row.innerHTML = `
-          <div>${idx+4}</div>
-          <div>${p.photoUrl ? `<img class="mini" src="${p.photoUrl}" alt="${p.name}"/>` : `<div class="mini"></div>`}</div>
-          <div>${p.name||''}</div>
-          <div>${p.points||0}</div>
-          <span class="status">${p.status||''}</span>
-          <span class="badges">${(p.badges||[]).map(b=>`<span class="badge">${b}</span>`).join(' ')}</span>
-        `;
-        $list.appendChild(row);
-      });
-
-      if(players.length === 0){
-        $podium.innerHTML = `
-          <div class="stage"><div class="name">Sem atletas</div><div class="pedestal silver"></div></div>
-          <div class="stage"><div class="name">Cadastre no Admin</div><div class="pedestal gold"></div></div>
-          <div class="stage"><div class="name">Sem atletas</div><div class="pedestal bronze"></div></div>
-        `;
+        el.innerHTML = top.map((p, i) =>
+          `<div class="posicao">
+             <strong>${i+1}º</strong> ${p.name ?? '-'} — ${p.points ?? 0} pts
+           </div>`).join("");
+      } catch (e) {
+        console.error(e);
+        el.innerHTML = "<p>Erro ao carregar pódio.</p>";
       }
     }
-  </script>
-</body>
-</html>
+
+    async function carregarRanking() {
+      const el = document.querySelector('#ranking');
+      try {
+        const q =
