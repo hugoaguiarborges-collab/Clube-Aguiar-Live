@@ -45,5 +45,26 @@
   </div>
 
   <script src="script.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1) Título
+    const title =
+      document.querySelector('.card h1, .card h2, .header-title, .title, h1, h2');
+    if (title) title.textContent = 'Fez seu treino?';
+
+    // 2) Subtítulo / texto explicativo
+    const subtitle =
+      document.querySelector('.card p, .subtitle, .lead, .description, main p');
+    if (subtitle) {
+      subtitle.textContent =
+        'Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!';
+    }
+
+    // 3) Texto do botão de envio
+    const btn =
+      document.querySelector('button[type="submit"], .btn-primary, .btn');
+    if (btn) btn.textContent = 'Confirmar treino';
+  });
+</script>
 </body>
 </html>
