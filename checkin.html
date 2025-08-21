@@ -51,7 +51,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // === SEU FIREBASE ===
+  // === Firebase ===
   const firebaseConfig = {
     apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
     authDomain: "clube-aguiar-live.firebaseapp.com",
@@ -69,11 +69,8 @@
   const $msg  = document.getElementById('msg');
 
   const slug = s => (s||'').toLowerCase().normalize('NFD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
-  const norm = s => (s==null?'':String(s))
-                    .trim()
-                    .toLowerCase()
-                    .normalize('NFD')
-                    .replace(/[\u0300-\u036f]/g,''); // remove acentos
+  const norm = s => (s==null?'':String(s)).trim().toLowerCase()
+                  .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
   // Carrega nomes da coleção players
   db.collection('players').orderBy('name').get().then(snap=>{
@@ -91,21 +88,16 @@
 
   async function getCfg(){
     const d = await db.collection('meta').doc('checkin').get();
-    // Estrutura aceita:
-    //  - code: "FOCO"
-    //  - codes: ["FOCO","AG18","FORCA"]
     if (!d.exists) return null;
     const data = d.data() || {};
     const pointsPerCheckin = parseInt(data.pointsPerCheckin||'3',10) || 3;
     const mediaBonus = parseInt(data.mediaBonus||'10',10) || 10;
 
-    // normaliza para uma lista de códigos válidos
+    // aceita code (string) e/ou codes (array)
     let list = [];
     if (Array.isArray(data.codes)) list = data.codes.map(norm);
     if (data.code) list.push(norm(data.code));
-
-    // remove duplicados
-    list = Array.from(new Set(list)).filter(Boolean);
+    list = Array.from(new Set(list)).filter(Boolean); // únicos
 
     return { pointsPerCheckin, mediaBonus, list };
   }
@@ -129,7 +121,6 @@
         return;
       }
 
-      // validação tolerante (case-insensitive, sem acento, sem espaços)
       const isValid = cfg.list.includes(typed);
       if(!isValid){
         $msg.className='err';
@@ -141,7 +132,7 @@
       const pts = cfg.pointsPerCheckin;
       const todayKey = new Date().toISOString().slice(0,10);
 
-      // garante doc do player
+      // garante doc da jogadora
       await db.collection('players').doc(playerId).set(
         { name, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
         { merge:true }
@@ -161,12 +152,12 @@
         pointsAdded: pts
       }, { merge:true });
 
-      // segue para o bônus
+      // vai para o bônus
       location.href = `bonus.html?name=${encodeURIComponent(name)}`;
-    }catch(e){
+    } catch (e) {
       console.error(e);
-      $msg.className='err';
-      $msg.textContent='Erro ao registrar. Tente novamente.';
+      $msg.className = 'err';
+      $msg.textContent = 'Erro ao registrar: ' + (e && e.message ? e.message : 'tente novamente.');
     }
   });
 </script>
