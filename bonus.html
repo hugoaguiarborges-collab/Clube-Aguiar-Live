@@ -58,7 +58,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // === CONFIG DO SEU FIREBASE (igual aos outros arquivos) ===
+  // === SEU FIREBASE ===
   const firebaseConfig = {
     apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
     authDomain: "clube-aguiar-live.firebaseapp.com",
@@ -99,13 +99,10 @@
     return doc.exists ? doc.data() : { mediaBonus:10 };
   }
 
-  // ======== CONFIGURE AQUI o Cloudinary (GRÁTIS) ========
-  const cloudName    = "SEU_CLOUD_NAME_AQUI";      // ex.: dabc12345
-  const uploadPreset = "SEU_UPLOAD_PRESET_AQUI";   // ex.: checkin_unsigned
-  // ======================================================
-
+  // ======== Cloudinary (GRÁTIS) — já configurado ========
+  const cloudName    = "dj6gmz0pa";
+  const uploadPreset = "checkin_unsigned";
   async function uploadToCloudinary(file){
-    // Para foto ou vídeo; usa endpoint "auto"
     const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
     const form = new FormData();
     form.append('file', file);
@@ -113,7 +110,7 @@
     // opcional: form.append('folder', 'checkins-uploads');
     const res = await fetch(url, { method:'POST', body: form });
     if(!res.ok) throw new Error('Falha no upload Cloudinary');
-    return await res.json(); // retorna { secure_url, resource_type, ... }
+    return await res.json(); // { secure_url, ... }
   }
 
   $send.addEventListener('click', async ()=>{
@@ -126,17 +123,14 @@
       const cfg = await getCfg();
       const bonus = parseInt(cfg.mediaBonus||'10',10) || 10;
 
-      // 1) Upload na Cloudinary (grátis)
       const result = await uploadToCloudinary(f);
       const mediaURL = result.secure_url;
 
-      // 2) Soma pontos do bônus na jogadora
       await db.collection('players').doc(playerId).update({
         points: firebase.firestore.FieldValue.increment(bonus),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      // 3) Atualiza progresso do dia
       await db.collection('progress_public').doc(`${playerId}_${todayKey}`).set({
         hasMedia: true,
         mediaURL,
@@ -149,7 +143,7 @@
     }catch(e){
       console.error(e);
       $msg.className='err';
-      $msg.textContent='Erro ao enviar. Verifique suas chaves Cloudinary e tente novamente.';
+      $msg.textContent='Erro ao enviar. Tente novamente.';
     }
   });
 
