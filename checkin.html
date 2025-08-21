@@ -5,94 +5,146 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Check-in — Desafio 40+</title>
 
-  <!-- Seu CSS principal (mantém a identidade visual do site) -->
+  <!-- Bootstrap (garante que a página não fique "crua" se o CSS local não carregar) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Seu CSS (carrego os dois nomes para cobrir variações do projeto) -->
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* Ajuste leve para manter o look dark/azulado caso seu CSS não aplique */
+    body { background: #0e1b2b; color: #e7eef7; }
+    .card-dark { background: #12243a; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+    .text-dim { color: #9fb3c8; }
+    .link-soft { color: #7cc7ff; text-decoration: none; }
+    .link-soft:hover { text-decoration: underline; }
+    .btn-primary { background: #2f6bff; border: none; }
+    .btn-primary:hover { background: #2757cf; }
+    label { color: #cfe2f3; }
+    .form-control, .form-select { background: #0f2035; border-color: #1e385a; color: #e7eef7; }
+    .form-control::placeholder { color: #7190b3; }
+  </style>
 </head>
 <body>
 
-  <main class="container container-narrow py-6">
-    <section class="card card-elevated p-5 mx-auto" style="max-width: 720px;">
-      <header class="text-center mb-4">
-        <h1 class="mb-2">Fez seu treino?</h1>
-        <p class="text-muted">
-          Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!
-        </p>
-      </header>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="card-dark p-4 p-md-5">
+          <h1 class="text-center mb-3">Fez seu treino?</h1>
+          <p class="text-center text-dim mb-4">
+            Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!
+          </p>
 
-      <!-- Mensagens -->
-      <div id="message" class="mb-3"></div>
+          <div id="message" class="mb-3"></div>
 
-      <!-- Formulário -->
-      <form id="checkin-form" autocomplete="off">
-        <div class="form-group mb-3">
-          <label for="name">Seu nome</label>
-          <select id="name" class="form-control" required>
-            <option value="">Selecione seu nome</option>
-            <!-- nomes serão carregados pelo script do projeto;
-                 se não vierem, o fallback abaixo preenche pela coleção "ranking" -->
-          </select>
+          <form id="checkin-form" autocomplete="off">
+            <div class="mb-3">
+              <label for="name" class="form-label">Seu nome</label>
+              <select id="name" class="form-select" required>
+                <option value="">Selecione seu nome</option>
+                <!-- Seu script deve preencher; se não preencher, o fallback abaixo preenche -->
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <label for="code" class="form-label">Código do treino</label>
+              <input id="code" type="text" class="form-control" placeholder="Ex.: FOCO" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Confirmar treino</button>
+          </form>
+
+          <div class="text-center mt-4">
+            <a href="index.html" class="link-soft">← Voltar ao ranking</a>
+          </div>
+          <p id="session" class="text-center text-dim mt-2">Sessão ativa (UID anônimo: ...)</p>
         </div>
-
-        <div class="form-group mb-4">
-          <label for="code">Código do treino</label>
-          <input id="code" type="text" class="form-control" placeholder="Ex.: FOCO" required />
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100">
-          Confirmar treino
-        </button>
-      </form>
-
-      <div class="mt-4 text-center">
-        <a href="index.html" class="link-soft">← Voltar ao ranking</a>
       </div>
+    </div>
+  </div>
 
-      <p id="session" class="text-center text-dim mt-2">Sessão ativa (UID anônimo: ...)</p>
-    </section>
-  </main>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Firebase do seu projeto (NÃO remover) -->
+  <!-- Firebase compat (garante firebase.firestore() no estilo antigo) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- SUA inicialização do Firebase (chaves do projeto, etc.) -->
   <script src="firebase-init.js"></script>
 
-  <!-- Script original do projeto (NÃO remover) -->
+  <!-- Scripts do seu projeto (qualquer um que existir vai rodar; os que não existirem só darão 404 no console, sem quebrar a página) -->
   <script src="script.js"></script>
+  <script src="checkin.js"></script>
+  <script src="app.js"></script>
 
-  <!-- Fallback seguro: se a lista de nomes não vier do script original,
-       preenche a partir da coleção "ranking" sem conflitar -->
+  <!-- Fallback seguro:
+       - Assina anonimamente se ainda não estiver
+       - Preenche nomes a partir de "ranking" (ou "players" se não existir)
+       - Mostra UID ativo -->
   <script>
-    (function () {
-      const tryFillNamesFromRanking = async () => {
-        if (!window.firebase || !firebase.firestore) return;
-        const select = document.getElementById('name');
-        // se já foi preenchido pelo seu script, não faz nada
-        if (!select || select.options.length > 1) return;
+    (async function () {
+      try {
+        // Garante login anônimo (se já estiver logado, ignora erro)
+        try { await firebase.auth().signInAnonymously(); } catch (_) {}
+        const user = firebase.auth().currentUser || (await new Promise(res => {
+          const unsub = firebase.auth().onAuthStateChanged(u => { if (u) { unsub(); res(u); } });
+        }));
+        document.getElementById('session').textContent = 'Sessão ativa (UID anônimo: ' + (user?.uid?.slice(0,6) || '...') + '...)';
+      } catch (e) {
+        console.warn('Auth anônima não inicializada:', e);
+      }
 
+      const select = document.getElementById('name');
+      if (!select) return;
+
+      // Se seu script já populou, não faz nada
+      if (select.options.length > 1) return;
+
+      const db = firebase.firestore();
+
+      async function fillFrom(colName) {
         try {
-          const db = firebase.firestore();
-          const snap = await db.collection('ranking').orderBy('points', 'desc').get();
-          const names = [];
+          let q = db.collection(colName);
+          // se existir "ranking" geralmente tem "points"
+          try { q = q.orderBy('points', 'desc'); } catch (_) {}
+          const snap = await q.get();
+          const added = new Set();
           snap.forEach(doc => {
             const d = doc.data() || {};
             const n = d.name || doc.id;
-            if (n && !names.includes(n)) names.push(n);
+            if (n && !added.has(n)) {
+              const opt = document.createElement('option');
+              opt.value = n;
+              opt.textContent = n;
+              select.appendChild(opt);
+              added.add(n);
+            }
           });
-          names.forEach(n => {
-            const opt = document.createElement('option');
-            opt.value = n;
-            opt.textContent = n;
-            select.appendChild(opt);
-          });
+          return added.size;
         } catch (e) {
-          // mantém silencioso para não poluir a UI
-          console.warn('Fallback de nomes falhou:', e);
+          return 0;
         }
-      };
+      }
 
-      // tenta preencher 2x: logo após carregar e um pouco depois
-      document.addEventListener('DOMContentLoaded', () => {
-        tryFillNamesFromRanking();
-        setTimeout(tryFillNamesFromRanking, 1200);
-      });
+      // tenta ranking -> players
+      let count = await fillFrom('ranking');
+      if (!count) count = await fillFrom('players');
+      if (!count) console.warn('Nenhum nome encontrado em "ranking" ou "players". Se seus nomes estão em outra coleção, me diga qual é que eu ajusto aqui.');
+
+      // Exibe mensagens amigáveis do seu script (se ele já cuida disso, ignore)
+      const form = document.getElementById('checkin-form');
+      const message = document.getElementById('message');
+      if (form && message) {
+        form.addEventListener('submit', () => {
+          // deixa seu script cuidar do envio;
+          // aqui só limpamos mensagens antigas
+          message.innerHTML = '';
+        });
+      }
     })();
   </script>
 </body>
