@@ -5,155 +5,201 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Check-in — Desafio 40+</title>
 
-  <!-- Inicializa Firebase -->
-  <script type="module" src="./firebase-init.js"></script>
+  <!-- Firebase v8 (simples no HTML) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
   <style>
-    body {
-      background:#0b1b34;
-      color:#fff;
-      font-family:system-ui, Arial;
+    :root{
+      --bg:#081a34;
+      --card:#0f2547;
+      --card2:#132c55;
+      --text:#e7f1ff;
+      --muted:#9bb7e0;
+      --accent:#2f5bff;
+      --input:#0d2142;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
       margin:0;
-      padding:0;
+      font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background:var(--bg);
+      color:var(--text);
     }
-    .card {
-      max-width:640px;
-      margin:40px auto;
-      padding:24px;
-      background:#112244;
-      border-radius:16px;
+    .wrap{
+      max-width:680px; margin:48px auto; padding:0 20px;
     }
-    h1 { margin-top:0; }
-    label { display:block; margin:12px 0 6px; }
-    select, input, button {
-      width:100%;
-      padding:12px;
-      border-radius:12px;
-      border:0;
-      font-size:16px;
+    .card{
+      background:linear-gradient(180deg, var(--card), var(--card2));
+      border-radius:18px; padding:24px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
     }
-    select, input {
-      background:#0f1f3a;
-      color:#fff;
+    h1{margin:0 0 10px; font-weight:800}
+    .sub{color:var(--muted); margin:0 0 18px}
+    label{display:block; margin:14px 0 8px; font-weight:700}
+    select,input,button{
+      width:100%; padding:12px 14px; border-radius:12px; border:0; font-size:16px;
     }
-    button {
-      background:#2f5bff;
-      color:#fff;
-      font-weight:600;
-      cursor:pointer;
-      margin-top:14px;
+    select,input{ background:var(--input); color:var(--text); }
+    button{
+      background:var(--accent); color:#fff; font-weight:800; cursor:pointer; margin-top:14px;
+      box-shadow:0 6px 16px rgba(47,91,255,.35);
     }
-    a { color:#9ec3ff; }
-    #msg { margin-top:10px; font-weight:600; }
+    .msg{margin-top:12px; font-weight:800}
+    a{color:#9ec3ff}
+    .row{display:grid; grid-template-columns:1fr; gap:12px}
+    .foot{margin-top:14px; color:var(--muted); font-size:14px}
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Fez o treino de hoje?</h1>
-    <p>Selecione seu <strong>nome</strong> e informe o <strong>código</strong> da aula.</p>
+  <div class="wrap">
+    <div class="card">
+      <h1>Fazer check-in</h1>
+      <p class="sub">Selecione seu nome e digite o código da aula de hoje.</p>
 
-    <label for="nomes">Seu nome (igual ao ranking)</label>
-    <select id="nomes"><option>Carregando…</option></select>
+      <div class="row">
+        <div>
+          <label for="nomes">Seu nome</label>
+          <select id="nomes"><option>Carregando…</option></select>
+        </div>
 
-    <label for="codigo">Código do treino</label>
-    <input id="codigo" type="text" placeholder="Ex.: FOCO" />
+        <div>
+          <label for="codigo">Código do treino</label>
+          <input id="codigo" type="text" placeholder="Ex.: FOCO" autocomplete="one-time-code" />
+        </div>
+      </div>
 
-    <button id="btnCheckin">Fazer check-in</button>
-    <div id="msg"></div>
+      <button id="btnCheckin">Fazer check-in</button>
+      <div id="msg" class="msg"></div>
 
-    <p style="margin-top:16px;"><a href="./index.html">← Voltar ao ranking</a></p>
+      <p class="foot" style="margin-top:18px;"><a href="./index.html">← Voltar ao ranking</a></p>
+    </div>
   </div>
 
-  <!-- Script de carregar nomes e registrar check-in -->
-  <script type="module">
-    import {
-      getFirestore, collection, getDocs, query, orderBy,
-      addDoc, serverTimestamp, doc, getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-    import { getApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+  <script>
+    // 1) Inicializa Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+      authDomain: "clube-aguiar-live.firebaseapp.com",
+      projectId: "clube-aguiar-live",
+      storageBucket: "clube-aguiar-live.appspot.com",
+      messagingSenderId: "694025911850",
+      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
-    const db = getFirestore(getApp());
+    // 2) Auth anônima (silenciosa)
+    firebase.auth().signInAnonymously().catch(function(){});
 
-    const nomesSelect = document.querySelector('#nomes');
-    const inputCodigo  = document.querySelector('#codigo');
-    const btnCheckin   = document.querySelector('#btnCheckin');
-    const msg          = document.querySelector('#msg');
+    const db = firebase.firestore();
 
-    function normalizeCode(s) {
-      return String(s || '')
-        .trim()
-        .toLowerCase()
+    // helpers
+    const $ = (sel)=>document.querySelector(sel);
+    const nomesSelect = $('#nomes');
+    const inputCodigo = $('#codigo');
+    const btn = $('#btnCheckin');
+    const msg = $('#msg');
+
+    // Normaliza código (remove acentos/maiúsculas/espaços extras)
+    function normalize(s){
+      return String(s||'').trim().toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // remove acentos
     }
 
-    async function carregarNomes() {
-      try {
-        const q = query(collection(db, "ranking"), orderBy("name"));
-        const snap = await getDocs(q);
+    async function carregarNomes(){
+      try{
+        const snap = await db.collection('players').orderBy('name').get();
         const nomes = [];
-        snap.forEach(d => {
+        snap.forEach(d=>{
           const x = d.data();
-          if (x?.name) nomes.push(x.name);
+          if (x && x.name) nomes.push(x.name);
         });
 
-        if (!nomes.length) throw new Error("Nenhum nome encontrado");
-        nomesSelect.innerHTML = nomes.map(n => `<option value="${n}">${n}</option>`).join("");
-        localStorage.setItem("nomesRanking", JSON.stringify(nomes));
-      } catch (err) {
-        console.error("Falha ao carregar nomes:", err);
-        const cache = localStorage.getItem("nomesRanking");
+        if (!nomes.length) {
+          nomesSelect.innerHTML = `<option>Nenhuma atleta cadastrada</option>`;
+          return;
+        }
+
+        nomesSelect.innerHTML = nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
+        // cache local (fallback caso o Firestore falhe)
+        localStorage.setItem('nomesPlayers', JSON.stringify(nomes));
+      }catch(e){
+        console.error('Falha ao carregar nomes', e);
+        const cache = localStorage.getItem('nomesPlayers');
         if (cache) {
           const nomes = JSON.parse(cache);
-          nomesSelect.innerHTML = nomes.map(n => `<option value="${n}">${n}</option>`).join("");
+          nomesSelect.innerHTML = nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
         } else {
           nomesSelect.innerHTML = `<option>Erro ao carregar nomes</option>`;
         }
       }
     }
 
-    async function validarCodigo(code) {
-      const id = normalizeCode(code).replace(/\s+/g, '-'); // "FOCO" → "foco"
-      const ref = doc(db, "codes", id);
-      const snap = await getDoc(ref);
-      return snap.exists();
-    }
+    async function registrarCheckin(){
+      msg.textContent = '';
+      msg.style.color = '';
 
-    async function registrarCheckin() {
-      msg.textContent = "";
-      const name = nomesSelect.value;
-      const code = inputCodigo.value;
+      const name = nomesSelect?.value;
+      const codeUser = inputCodigo?.value;
 
-      if (!name || !code) {
-        msg.textContent = "Selecione o nome e informe o código.";
-        msg.style.color = "salmon";
+      if (!name || !codeUser) {
+        msg.textContent = 'Selecione o nome e informe o código.';
+        msg.style.color = 'salmon';
         return;
       }
 
-      if (!(await validarCodigo(code))) {
-        msg.textContent = "Código inválido.";
-        msg.style.color = "salmon";
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "checkins"), {
-          name,
-          userId: null,
-          code: normalizeCode(code),
-          points: 1,
-          createdAt: serverTimestamp()
-        });
-        msg.textContent = "✅ Check-in registrado!";
-        msg.style.color = "limegreen";
-        inputCodigo.value = "";
-      } catch (e) {
+      // 1) Lê código do dia em meta/checkin
+      let cfg;
+      try{
+        const snap = await db.collection('meta').doc('checkin').get();
+        if (!snap.exists) {
+          msg.textContent = 'Configuração de check-in não encontrada.';
+          msg.style.color = 'salmon';
+          return;
+        }
+        cfg = snap.data(); // { code, points }
+      }catch(e){
         console.error(e);
-        msg.textContent = "Erro ao registrar. Tente novamente.";
-        msg.style.color = "salmon";
+        msg.textContent = 'Erro ao ler configuração do check-in.';
+        msg.style.color = 'salmon';
+        return;
+      }
+
+      const codeOfDay = cfg?.code;
+      const points = Number(cfg?.points) || 1;
+
+      if (normalize(codeUser) !== normalize(codeOfDay)) {
+        msg.textContent = 'Código inválido.';
+        msg.style.color = 'salmon';
+        return;
+      }
+
+      // 2) Grava o check-in (APENAS os campos permitidos pelas regras)
+      try{
+        await db.collection('checkins').add({
+          name: name,
+          userId: null,
+          code: normalize(codeUser),
+          points: points,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        msg.textContent = '✅ Check-in registrado!';
+        msg.style.color = 'limegreen';
+        inputCodigo.value = '';
+
+        // (opcional) rolar pra mensagem
+        msg.scrollIntoView({behavior:'smooth', block:'center'});
+      }catch(e){
+        console.error(e);
+        msg.textContent = 'Erro ao registrar. Tente novamente.';
+        msg.style.color = 'salmon';
       }
     }
 
-    btnCheckin.addEventListener("click", registrarCheckin);
+    btn.addEventListener('click', registrarCheckin);
     carregarNomes();
   </script>
 </body>
