@@ -1,182 +1,183 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Check-in — Desafio 40+</title>
-
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Check-in — Desafio 40+ Play</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#081a34; --card:#0f2547; --card2:#132c55; --text:#e7f1ff; --muted:#9bb7e0;
-      --accent:#2f5bff; --input:#0d2142;
+      --bg:#0c1b2e;
+      --card:#11233c;
+      --muted:#9fb3c8;
+      --text:#e9f2ff;
+      --brand:#3a69ff;
+      --brand-2:#5886ff;
+      --ring:rgba(88,134,255,.35);
+      --ok:#19c37d;
+      --warn:#ffcc00;
+      --err:#ff5c5c;
     }
-    *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text)}
-    .wrap{max-width:680px; margin:48px auto; padding:0 20px}
-    .card{background:linear-gradient(180deg,var(--card),var(--card2)); border-radius:18px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    h1{margin:0 0 10px; font-weight:800}
-    .sub{color:var(--muted); margin:0 0 18px}
-    label{display:block; margin:14px 0 8px; font-weight:700}
-    select,input,button{width:100%; padding:12px 14px; border-radius:12px; border:0; font-size:16px}
-    select,input{background:var(--input); color:var(--text)}
-    button{background:var(--accent); color:#fff; font-weight:800; cursor:pointer; margin-top:14px; box-shadow:0 6px 16px rgba(47,91,255,.35)}
-    .msg{margin-top:12px; font-weight:800}
-    a{color:#9ec3ff}
-    .row{display:grid; grid-template-columns:1fr; gap:12px}
-    .muted{color:var(--muted)}
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 800px at 15% -10%, #16335a 0%, transparent 60%),
+        radial-gradient(1000px 600px at 110% 0%, #0f2a54 0%, transparent 60%),
+        var(--bg);
+      color:var(--text);
+      min-height:100dvh;
+      display:flex;align-items:center;justify-content:center;
+      padding:32px 16px;
+    }
+    .wrap{width:100%;max-width:720px}
+    header{text-align:center;margin-bottom:24px}
+    header h1{margin:0;font-size:clamp(24px,4vw,32px)}
+    .card{
+      background:linear-gradient(180deg,#12253f,#0f2037);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      box-shadow:0 18px 60px -30px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+      padding:22px;
+    }
+    label{display:block;margin-bottom:8px;font-weight:600}
+    select{
+      width:100%;padding:12px 14px;border-radius:12px;
+      background:#0e1d33;border:1px solid rgba(255,255,255,.08);
+      color:var(--text);outline:none
+    }
+    select:focus{box-shadow:0 0 0 4px var(--ring)}
+    button.primary{
+      width:100%;margin-top:14px;padding:14px 16px;border-radius:14px;border:0;
+      color:#fff;font-weight:700;letter-spacing:.2px;cursor:pointer;
+      background:linear-gradient(90deg,var(--brand),var(--brand-2));
+      box-shadow:0 14px 40px -18px var(--ring);
+    }
+    .msg{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:600}
+    .msg.ok{background:rgba(25,195,125,.12);color:#bdf2dc;border:1px solid rgba(25,195,125,.35)}
+    .msg.warn{background:rgba(255,204,0,.08);color:#ffe9a6;border:1px solid rgba(255,204,0,.35)}
+    .msg.err{background:rgba(255,92,92,.10);color:#ffb3b3;border:1px solid rgba(255,92,92,.35)}
+    footer{margin-top:18px;text-align:center;font-size:14px;color:var(--muted)}
   </style>
 </head>
 <body>
   <div class="wrap">
+    <header>
+      <h1>Check-in da aula de <span id="todayLabel"></span></h1>
+    </header>
+
     <div class="card">
-      <h1>Fez seu treino?</h1>
-      <p class="sub">Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!</p>
-
-      <div class="row">
-        <div>
-          <label for="nomes">Seu nome</label>
-          <select id="nomes"><option>Carregando…</option></select>
-        </div>
-
-        <div>
-          <label for="codigo">Código do treino</label>
-          <input id="codigo" type="text" placeholder="Ex.: FOCO" autocomplete="one-time-code" />
-        </div>
-      </div>
-
-      <button id="btnCheckin" disabled>Confirmar treino</button>
-      <div id="msg" class="msg"></div>
-
-      <p style="margin-top:18px;"><a href="./index.html">← Voltar ao ranking</a></p>
-      <p id="authInfo" class="muted"></p>
+      <label for="playerSel">Seu nome</label>
+      <select id="playerSel">
+        <option value="">Carregando nomes...</option>
+      </select>
+      <button class="primary" id="checkBtn">Fazer check-in</button>
+      <div id="feedback"></div>
     </div>
+
+    <footer>
+      Sessão anônima: <span id="uid">---</span>
+    </footer>
   </div>
 
-  <script>
-    // 1) Firebase
+  <!-- Firebase (CDN) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, collection, getDocs, query, orderBy, doc, updateDoc,
+      addDoc, serverTimestamp, increment
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
       authDomain: "clube-aguiar-live.firebaseapp.com",
       projectId: "clube-aguiar-live",
-      storageBucket: "clube-aguiar-live.appspot.com",
+      storageBucket: "clube-aguiar-live.firebasestorage.app",
       messagingSenderId: "694025911850",
       appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
     };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    // Espera login anônimo para habilitar o botão (regras exigem request.auth != null para somar pontos)
-    const btn = document.querySelector('#btnCheckin');
-    const authInfo = document.querySelector('#authInfo');
-    firebase.auth().signInAnonymously().catch(()=>{});
-    firebase.auth().onAuthStateChanged(u=>{
-      if(u){
-        btn.disabled = false;
-        authInfo.textContent = `Sessão ativa (UID anônimo: ${u.uid.substring(0,6)}…)`;
-      }else{
-        btn.disabled = true;
-        authInfo.textContent = `Iniciando sessão anônima…`;
-      }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const playerSel = document.getElementById('playerSel');
+    const checkBtn = document.getElementById('checkBtn');
+    const feedback = document.getElementById('feedback');
+    const uidEl = document.getElementById('uid');
+    const todayLabel = document.getElementById('todayLabel');
+
+    // Data de hoje
+    const today = new Date();
+    const d = String(today.getDate()).padStart(2,'0');
+    const m = String(today.getMonth()+1).padStart(2,'0');
+    const y = today.getFullYear();
+    const todayStr = `${d}/${m}/${y}`;
+    todayLabel.textContent = todayStr;
+
+    signInAnonymously(auth).catch(console.error);
+    onAuthStateChanged(auth, user=>{
+      uidEl.textContent = user?.uid?.slice(0,8) + '…' || '---';
     });
 
-    // helpers
-    const $ = (sel)=>document.querySelector(sel);
-    const nomesSelect = $('#nomes'), inputCodigo = $('#codigo'), msg = $('#msg');
-
-    function normalizeId(s){
-      return String(s||"").trim().toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-        .replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+    // Carregar jogadores
+    async function loadPlayers() {
+      const q = query(collection(db,"players"), orderBy("name","asc"));
+      const snap = await getDocs(q);
+      playerSel.innerHTML = '<option value="">Selecione seu nome</option>';
+      snap.forEach(docu=>{
+        const p = docu.data();
+        const opt = document.createElement('option');
+        opt.value = docu.id;
+        opt.textContent = p.name || '(sem nome)';
+        playerSel.appendChild(opt);
+      });
     }
-    const normalizeText=(s)=>String(s||'').trim().toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    loadPlayers();
 
-    async function carregarNomes(){
-      try{
-        const snap = await db.collection('players').orderBy('name').get();
-        const nomes = [];
-        snap.forEach(d=>{ const x=d.data(); if(x && x.name) nomes.push(x.name); });
-        if (!nomes.length) { nomesSelect.innerHTML = `<option>Nenhuma atleta cadastrada</option>`; return; }
-        nomesSelect.innerHTML = nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
-        localStorage.setItem('nomesPlayers', JSON.stringify(nomes));
-      }catch(e){
-        const cache = localStorage.getItem('nomesPlayers');
-        if (cache) {
-          const nomes = JSON.parse(cache);
-          nomesSelect.innerHTML = nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
-        } else {
-          nomesSelect.innerHTML = `<option>Erro ao carregar nomes</option>`;
-        }
-      }
+    function setMsg(text,kind='ok'){
+      feedback.className = 'msg ' + kind;
+      feedback.textContent = text;
     }
 
-    async function registrarCheckin(){
-      msg.textContent = ''; msg.style.color = '';
-
-      // Garante auth (regras da soma de pontos exigem auth != null)
-      const u = firebase.auth().currentUser;
-      if (!u) { msg.textContent = 'Espere um instante… ativando sessão.'; msg.style.color='salmon'; return; }
-
-      const name = nomesSelect?.value, codeUser = inputCodigo?.value;
-      if(!name || !codeUser){ msg.textContent='Selecione o nome e informe o código.'; msg.style.color='salmon'; return; }
-
-      // Lê configuração do dia
-      let cfg;
-      try{
-        const snap = await db.collection('meta').doc('checkin').get();
-        if(!snap.exists){ msg.textContent='Configuração de check-in não encontrada.'; msg.style.color='salmon'; return; }
-        cfg = snap.data(); // { code, points }
-      }catch(e){ msg.textContent='Erro ao ler configuração.'; msg.style.color='salmon'; return; }
-
-      const codeOfDay = cfg?.code, points = Number(cfg?.points)||1;
-      if (normalizeText(codeUser) !== normalizeText(codeOfDay)){
-        msg.textContent = 'Código inválido.'; msg.style.color = 'salmon'; return;
-      }
-
-      // 1) cria /checkins
-      try{
-        await db.collection('checkins').add({
-          name,
-          userId: u.uid,
-          code: normalizeText(codeUser),
-          points,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }catch(e){
-        console.error('CHECKIN_CREATE', e);
-        msg.textContent = `Erro ao registrar (CHECKIN_CREATE): ${e.code || e.message}`;
-        msg.style.color = 'salmon';
-        return;
-      }
-
-      // 2) soma pontos em players/{id}
-      const playerId = normalizeId(name);
-      try{
-        await db.runTransaction(async (t)=>{
-          const ref = db.collection('players').doc(playerId);
-          const snap = await t.get(ref);
-          const cur = Number((snap.data()||{}).points||0);
-          t.set(ref, { points: cur + points }, { merge:true }); // set(merge) => update
-        });
-
-        msg.textContent = `🎉 Parabéns! Você somou ${points} ponto(s).`;
-        msg.style.color = 'limegreen';
-        inputCodigo.value = '';
-        msg.scrollIntoView({behavior:'smooth', block:'center'});
-      }catch(e){
-        console.error('POINTS_UPDATE', e);
-        msg.textContent = `Check-in lançado, mas houve erro ao somar (POINTS_UPDATE): ${e.code || e.message}`;
-        msg.style.color = 'salmon';
-      }
+    async function addCheckin(playerDocId, playerName){
+      await addDoc(collection(db,'checkins'),{
+        playerId: playerDocId,
+        playerName,
+        dateLabel: todayStr,
+        createdAt: serverTimestamp(),
+        pointsGranted: 5
+      });
+      const ref = doc(db,'players',playerDocId);
+      await updateDoc(ref,{ points: increment(5) });
     }
 
-    document.querySelector('#btnCheckin').addEventListener('click', registrarCheckin);
-    carregarNomes();
+    checkBtn.addEventListener('click', async ()=>{
+      const pid = playerSel.value;
+      const pname = playerSel.options[playerSel.selectedIndex]?.text || '';
+
+      if(!pid){ setMsg('Selecione seu nome.','warn'); return; }
+
+      checkBtn.disabled = true;
+      try{
+        await addCheckin(pid,pname);
+        localStorage.setItem('lastPlayerDocId',pid);
+        localStorage.setItem('lastPlayerName',pname);
+        setMsg('✅ Check-in realizado! +5 pontos.','ok');
+
+        // Redireciona p/ upload.html após 1,2s
+        setTimeout(()=>{ window.location.href="/upload.html"; },1200);
+
+      }catch(err){
+        console.error(err);
+        setMsg('Erro ao registrar check-in.','err');
+      }finally{
+        checkBtn.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>
