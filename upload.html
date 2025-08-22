@@ -1,314 +1,132 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Enviar foto/vídeo — Desafio 40+ Play</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Envie sua mídia — Desafio 40+</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0c1b2e;
-      --card:#11233c;
-      --muted:#9fb3c8;
-      --text:#e9f2ff;
-      --brand:#3a69ff;
-      --brand-2:#5886ff;
-      --ok:#19c37d;
-      --warn:#ffcc00;
-      --err:#ff5c5c;
-      --ring:rgba(88,134,255,.35);
+      --bg-1:#0b1e33; --card:#0f2b52; --stroke:#29486d;
+      --text:#e6f0ff; --muted:#a9c5ff; --brand:#3b82f6; --brand-2:#6aa6ff; --ok:#22c55e; --err:#ef4444;
     }
     *{box-sizing:border-box}
     body{
-      margin:0;
-      font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
-      background:
-        radial-gradient(1200px 800px at 15% -10%, #16335a 0%, transparent 60%),
-        radial-gradient(1000px 600px at 110% 0%, #0f2a54 0%, transparent 60%),
-        var(--bg);
-      color:var(--text);
-      min-height:100dvh;
-      display:flex;align-items:center;justify-content:center;
-      padding:32px 16px;
+      margin:0; min-height:100vh; display:grid; place-items:center; color:var(--text);
+      font-family:Poppins,system-ui; background:radial-gradient(1200px 600px at 70% -10%, #16345c 0%, #0b1e33 60%, #081628 100%);
     }
-    .wrap{width:100%;max-width:880px}
-    header{
-      display:flex;align-items:center;justify-content:space-between;
-      margin-bottom:18px
+    .card{width:min(720px,92vw); background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
+      border:1px solid var(--stroke); border-radius:18px; padding:28px 24px;
+      box-shadow:0 20px 40px rgba(0,0,0,.35)}
+    h1{margin:0 0 6px; text-align:center; font-size:30px}
+    p.muted{margin:0 0 22px; text-align:center; color:var(--muted)}
+    input[type=file]{width:100%; background:#0d2750; color:var(--text); border:1px solid var(--stroke);
+      border-radius:12px; padding:10px 12px}
+    button{
+      width:100%; height:48px; border:0; border-radius:12px; margin-top:16px;
+      background:linear-gradient(180deg,var(--brand),var(--brand-2)); color:#fff; font-weight:700; cursor:pointer
     }
-    header h1{font-size:clamp(22px,3vw,28px);margin:0}
-    header a.btn-link{
-      text-decoration:none;color:#fff;background:linear-gradient(90deg,var(--brand),var(--brand-2));
-      padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:0 6px 22px -8px var(--ring)
-    }
-    .card{
-      background:linear-gradient(180deg, #12253f, #0f2037);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;
-      box-shadow:0 18px 60px -30px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
-      padding:22px;
-    }
-    .grid{display:grid;gap:16px}
-    @media(min-width:760px){ .grid{grid-template-columns:1.2fr .8fr} }
-    .muted{color:var(--muted);font-size:14px}
-    label{display:block;margin:10px 0 8px 2px;font-weight:600}
-    select,input[type="file"]{
-      width:100%;background:#0e1d33;border:1px solid rgba(255,255,255,.08);
-      color:var(--text);padding:12px 14px;border-radius:12px;outline:none
-    }
-    select:focus,input[type="file"]:focus{box-shadow:0 0 0 4px var(--ring)}
-    .hint{font-size:12px;color:#b9c7da;margin-top:6px}
-    button.primary{
-      width:100%;margin-top:14px;padding:14px 16px;border-radius:14px;border:0;
-      color:#fff;font-weight:700;letter-spacing:.2px;cursor:pointer;
-      background:linear-gradient(90deg,var(--brand),var(--brand-2));
-      box-shadow:0 14px 40px -18px var(--ring);
-    }
-    .badge{
-      display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;
-      background:#0d223a;border:1px solid rgba(255,255,255,.06);color:#cfe2ff
-    }
-    .msg{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:600}
-    .msg.ok{background:rgba(25,195,125,.12);color:#bdf2dc;border:1px solid rgba(25,195,125,.35)}
-    .msg.warn{background:rgba(255,204,0,.08);color:#ffe9a6;border:1px solid rgba(255,204,0,.35)}
-    .msg.err{background:rgba(255,92,92,.10);color:#ffb3b3;border:1px solid rgba(255,92,92,.35)}
-    .progress{height:10px;background:#0b1930;border-radius:999px;overflow:hidden;margin-top:10px;border:1px solid rgba(255,255,255,.05)}
-    .bar{height:100%;width:0;background:linear-gradient(90deg,#31a36f,#19c37d);transition:width .2s}
-    footer{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
-    code.k{background:#0b1930;border:1px solid rgba(255,255,255,.08);padding:4px 8px;border-radius:8px}
+    .msg{margin-top:12px; padding:10px 12px; border-radius:10px}
+    .ok{background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.35)}
+    .err{background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.35)}
+    .link{display:inline-block; margin-top:14px; color:var(--muted); text-decoration:none}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Enviar foto ou vídeo da aula de <span id="todayLabel"></span></h1>
-      <a class="btn-link" href="/index.html">Voltar ao ranking</a>
-    </header>
+  <main class="card">
+    <h1>Ganhe +10 pontos!</h1>
+    <p class="muted">Envie uma <strong>foto ou vídeo</strong> da <strong>aula de hoje</strong>. Mídias antigas fazem perder pontos.</p>
 
-    <div class="card grid">
-      <section>
-        <p class="muted">Ganhe <strong>+10 pontos</strong> enviando UMA foto ou vídeo da <strong>aula de hoje</strong>. Conteúdos de outras datas podem resultar em <strong>perda de pontos</strong>.</p>
+    <input id="file" type="file" accept="image/*,video/*" />
+    <button id="send">Enviar mídia</button>
+    <div id="msg"></div>
+    <a class="link" href="index.html">← Voltar ao ranking</a>
+  </main>
 
-        <div id="whoRow">
-          <label for="playerSel">Seu nome</label>
-          <select id="playerSel">
-            <option value="">Carregando nomes...</option>
-          </select>
-          <div class="hint">Se o seu nome não aparecer, atualize a página.</div>
-        </div>
-
-        <label for="file">Arquivo (foto ou vídeo)</label>
-        <input id="file" type="file" accept="image/*,video/*">
-        <div class="hint">Dica: prefira vídeos curtos. Tamanho máximo recomendado: 50 MB.</div>
-
-        <button class="primary" id="sendBtn">Enviar agora</button>
-        <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
-        <div id="feedback"></div>
-      </section>
-
-      <aside>
-        <div class="badge">✅ Regras rápidas</div>
-        <ul class="muted" style="margin-top:12px">
-          <li>Precisa ser da <strong>aula de hoje</strong>.</li>
-          <li>Envie apenas <strong>1 arquivo</strong> por dia.</li>
-          <li>Ganhe <strong>+10 pontos</strong> automaticamente após o envio.</li>
-        </ul>
-        <div style="margin-top:12px" class="muted">
-          💡 Dica: depois do check-in, você já cai nesta tela.  
-          Caso feche, volte pelo botão no topo: <code class="k">Enviar foto/vídeo</code>.
-        </div>
-      </aside>
-    </div>
-
-    <footer class="muted">
-      Sessão anônima: <code class="k" id="uid">...</code>
-    </footer>
-  </div>
-
-  <!-- Firebase (CDN, modular) -->
   <script type="module">
-    // ====== Firebase SDKs ======
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, orderBy, doc, getDoc, updateDoc,
-      where, addDoc, serverTimestamp, increment
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+      getFirestore, doc, updateDoc, increment, addDoc, collection, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-    // ====== SUA CONFIG FIREBASE (a que você já usa) ======
+    // Firebase (mesmo de antes)
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
       authDomain: "clube-aguiar-live.firebaseapp.com",
       projectId: "clube-aguiar-live",
-      storageBucket: "clube-aguiar-live.firebasestorage.app",
+      storageBucket: "clube-aguiar-live.appspot.com",
       messagingSenderId: "694025911850",
       appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
     };
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
 
-    // ====== Cloudinary (SEU CLOUD NAME + PRESET) ======
+    // Cloudinary (unsigned)
     const CLOUD_NAME = "dj6gmz0pa";
     const UPLOAD_PRESET = "aguiar_unsigned";
-    const CLOUD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+    const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
 
-    // ====== App ======
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+    const $file = document.getElementById('file');
+    const $btn  = document.getElementById('send');
+    const $msg  = document.getElementById('msg');
 
-    const playerSel = document.getElementById('playerSel');
-    const fileInput = document.getElementById('file');
-    const sendBtn = document.getElementById('sendBtn');
-    const feedback = document.getElementById('feedback');
-    const bar = document.getElementById('bar');
-    const uidEl = document.getElementById('uid');
-    const todayLabel = document.getElementById('todayLabel');
+    const urlParams = new URLSearchParams(location.search);
+    const playerId  = urlParams.get('pid') || '';
+    const playerName= decodeURIComponent(urlParams.get('name') || '');
 
-    // Label do dia (ex.: 21/08/2025)
-    const today = new Date();
-    const d = String(today.getDate()).padStart(2,'0');
-    const m = String(today.getMonth()+1).padStart(2,'0');
-    const y = today.getFullYear();
-    const todayStr = `${d}/${m}/${y}`;
-    todayLabel.textContent = todayStr;
-
-    // Sign-in anônimo
-    signInAnonymously(auth).catch(console.error);
-    onAuthStateChanged(auth, user=>{
-      uidEl.textContent = user?.uid?.slice(0,8) + '…' || '---';
-    });
-
-    // Tenta reaproveitar seleção do check-in
-    const cachedId = localStorage.getItem('lastPlayerDocId');
-    const cachedName = localStorage.getItem('lastPlayerName');
-
-    // Carrega atletas
-    async function loadPlayers() {
-      try {
-        // Busca todos e ordena pelo campo 'name'
-        const q = query(collection(db, "players"), orderBy("name","asc"));
-        const snap = await getDocs(q);
-        playerSel.innerHTML = '<option value="">Selecione seu nome</option>';
-
-        snap.forEach(docu=>{
-          const p = docu.data();
-          const opt = document.createElement('option');
-          opt.value = docu.id;
-          opt.textContent = p.name || '(sem nome)';
-          playerSel.appendChild(opt);
-        });
-
-        // Se vier do check-in, pré-seleciona
-        if (cachedId && [...playerSel.options].some(o=>o.value===cachedId)) {
-          playerSel.value = cachedId;
-        }
-      } catch(err){
-        console.error(err);
-        setMsg('Não foi possível carregar os nomes. Tente recarregar a página.', 'err');
-      }
-    }
-    loadPlayers();
-
-    function setMsg(text, kind='ok'){
-      feedback.className = 'msg ' + kind;
-      feedback.textContent = text;
-    }
-
-    function progress(p){ bar.style.width = `${p}%`; }
+    function toast(t, ok=false){ $msg.className='msg ' + (ok?'ok':'err'); $msg.textContent=t; }
 
     async function uploadToCloudinary(file){
       const fd = new FormData();
       fd.append('file', file);
       fd.append('upload_preset', UPLOAD_PRESET);
-      // Contexto útil para consulta futura
-      fd.append('context', `player=${playerSel.options[playerSel.selectedIndex].text}|date=${todayStr}`);
+      fd.append('folder', 'desafio40mais');
+      fd.append('tags', 'desafio40plus,checkin');
+      // contexto opcional
+      fd.append('context', `caption=Aluno(a): ${playerName}`);
 
-      // XHR só para exibir progresso
-      const xhr = new XMLHttpRequest();
-      const url = CLOUD_URL;
-
-      return new Promise((resolve, reject)=>{
-        xhr.open('POST', url);
-        xhr.upload.addEventListener('progress', (e)=>{
-          if(e.lengthComputable){
-            const p = Math.round((e.loaded/e.total)*100);
-            progress(p);
-          }
-        });
-        xhr.onreadystatechange = ()=>{
-          if(xhr.readyState===4){
-            try{
-              const res = JSON.parse(xhr.responseText);
-              if(xhr.status>=200 && xhr.status<300 && res.secure_url){
-                resolve(res);
-              }else{
-                reject(res.error || res);
-              }
-            }catch(e){ reject(e); }
-          }
-        };
-        xhr.send(fd);
-      });
+      const res = await fetch(UPLOAD_URL, { method:'POST', body:fd });
+      if(!res.ok) throw new Error('Falha no upload Cloudinary');
+      return res.json(); // {secure_url, resource_type, ...}
     }
 
-    async function addProofAndPoints(playerDocId, playerName, cloudRes){
-      // registra prova
-      await addDoc(collection(db,'proofs'),{
-        playerId: playerDocId,
-        playerName,
-        url: cloudRes.secure_url,
-        resourceType: cloudRes.resource_type, // image | video | raw
-        publicId: cloudRes.public_id,
-        createdAt: serverTimestamp(),
-        dateLabel: todayStr,
-        pointsGranted: 10
-      });
-
-      // soma +10
-      const ref = doc(db, 'players', playerDocId);
-      await updateDoc(ref, { points: increment(10) });
-    }
-
-    sendBtn.addEventListener('click', async ()=>{
-      setMsg('', ''); progress(0);
-
-      const pid = playerSel.value;
-      const pname = playerSel.options[playerSel.selectedIndex]?.text || '';
-
-      if(!pid){ setMsg('Selecione seu nome.', 'warn'); return; }
-      const file = fileInput.files?.[0];
-      if(!file){ setMsg('Escolha uma foto ou vídeo.', 'warn'); return; }
-
-      // Limite de ~50 MB
-      const max = 50*1024*1024;
-      if(file.size>max){
-        setMsg('Arquivo muito grande. Envie até 50 MB.', 'warn'); return;
-      }
-
-      sendBtn.disabled = true;
+    $btn.addEventListener('click', async ()=>{
+      $msg.textContent=''; $msg.className='';
+      const file = $file.files?.[0];
+      if(!file){ toast('Selecione uma foto ou um vídeo.'); return; }
+      if(!playerId){ toast('Sessão inválida (sem atleta). Volte ao check-in.'); return; }
 
       try{
-        setMsg('Enviando para o Cloudinary…');
-        const cloudRes = await uploadToCloudinary(file);
+        $btn.disabled = true;
+        const up = await uploadToCloudinary(file);
 
-        setMsg('Registrando +10 pontos…');
+        // Salva registro de upload (para auditoria)
+        await addDoc(collection(db,'uploads'),{
+          playerId, playerName, url: up.secure_url, type: up.resource_type,
+          createdAt: serverTimestamp(), points: 10
+        });
 
-        // Garante cache para próximas páginas
-        localStorage.setItem('lastPlayerDocId', pid);
-        localStorage.setItem('lastPlayerName', pname);
+        // Tenta somar +10 pontos no ranking
+        let pointsOk = true;
+        try{
+          await updateDoc(doc(db,'ranking',playerId),{ points: increment(10) });
+        }catch(_){ pointsOk = false; }
 
-        await addProofAndPoints(pid, pname, cloudRes);
+        if(pointsOk){
+          toast('Parabéns! Upload recebido e +10 pontos somados!', true);
+        }else{
+          toast('Upload recebido! Seus +10 pontos serão validados pela equipe.', true);
+        }
 
-        setMsg('🎉 Parabéns! Upload recebido e +10 pontos somados ao seu ranking.', 'ok');
-        fileInput.value = '';
-        progress(100);
-      }catch(err){
-        console.error(err);
-        setMsg('Falha no envio. Tente novamente em instantes.', 'err');
-        progress(0);
+        setTimeout(()=>location.href='index.html', 1200);
+
+      }catch(e){
+        console.error(e);
+        toast('Erro ao enviar sua mídia.');
       }finally{
-        sendBtn.disabled = false;
+        $btn.disabled = false;
       }
     });
   </script>
