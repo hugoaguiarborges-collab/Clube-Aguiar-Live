@@ -1,174 +1,168 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
   <title>Check-in — Desafio 40+</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    :root{
-      --bg-1:#0b1e33; --card:#0f2b52; --stroke:#29486d;
-      --text:#e6f0ff; --muted:#a9c5ff; --brand:#3b82f6; --brand-2:#6aa6ff; --ok:#22c55e; --err:#ef4444;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; min-height:100vh; display:grid; place-items:center; color:var(--text);
-      font-family:Poppins,system-ui; background:radial-gradient(1200px 600px at 70% -10%, #16345c 0%, #0b1e33 60%, #081628 100%);
-    }
-    .card{width:min(720px,92vw); background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
-      border:1px solid var(--stroke); border-radius:18px; padding:28px 24px;
-      box-shadow:0 20px 40px rgba(0,0,0,.35)}
-    h1{margin:0 0 6px; text-align:center; font-size:34px}
-    p.muted{margin:0 0 22px; text-align:center; color:var(--muted)}
-    label{display:block; margin:12px 0 8px; font-weight:600}
-    select, input{
-      width:100%; height:48px; background:#0d2750; color:var(--text); border:1px solid var(--stroke);
-      border-radius:12px; padding:0 14px; outline:none;
-    }
-    button{
-      width:100%; height:48px; border:0; border-radius:12px; margin-top:16px;
-      background:linear-gradient(180deg,var(--brand),var(--brand-2)); color:#fff; font-weight:700; cursor:pointer
-    }
-    .row{display:grid; gap:14px}
-    .msg{margin-top:12px; padding:10px 12px; border-radius:10px}
-    .ok{background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.35)}
-    .err{background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.35)}
-    .link{display:inline-block; margin-top:14px; color:var(--muted); text-decoration:none}
+    :root{--bg:#0b1b2b;--panel:#12263a;--line:#18354f;--txt:#e8f1fb;--muted:#9bb5cf;--accent:#6aa5ff;--error:#ff6b6b;--ok:#33d69f}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu}
+    .wrap{max-width:720px;margin:40px auto;padding:0 16px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.2);padding:24px}
+    h1{font-size:32px;margin:0 0 10px;text-align:center}
+    p.muted{color:var(--muted);text-align:center;margin-top:0}
+    label{display:block;margin:18px 0 6px}
+    input, select{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0f2032;color:var(--txt);font-size:16px}
+    .btn{margin-top:16px;width:100%;background:var(--accent);color:#061525;border:0;padding:14px;border-radius:12px;font-weight:700;font-size:16px}
+    .msg{margin-top:16px;padding:12px;border-radius:10px;display:none}
+    .msg.ok{display:block;background:#0f2b1e;border:1px solid #1b7c59;color:#b8f3da}
+    .msg.err{display:block;background:#2b0f12;border:1px solid #923639;color:var(--error)}
+    .link{display:inline-block;margin-top:14px;color:var(--accent);text-decoration:none}
   </style>
 </head>
 <body>
-  <main class="card">
-    <h1>Fez seu treino?</h1>
-    <p class="muted">Não dê vacilo! Escolha seu nome, digite o Código-treino informado na aula de hoje e garanta seus pontos!</p>
+  <div class="wrap">
+    <div class="card">
+      <h1>Fez seu treino?</h1>
+      <p class="muted">Escolha seu nome, digite o Código-treino de hoje e garanta seus pontos!</p>
 
-    <div class="row">
-      <label for="sel">Seu nome</label>
-      <select id="sel" disabled>
-        <option>Carregando nomes…</option>
+      <label>Seu nome</label>
+      <select id="selNome">
+        <option value="" selected disabled>Carregando nomes…</option>
       </select>
 
-      <label for="code">Código do treino</label>
-      <input id="code" placeholder="Ex.: FOCO" autocomplete="one-time-code" />
+      <label>Código do treino</label>
+      <input id="inpCodigo" placeholder="Ex.: forca" />
 
-      <button id="go">Confirmar treino</button>
-      <div id="msg"></div>
+      <button id="btn" class="btn">Confirmar treino</button>
+
+      <div id="msg" class="msg"></div>
+
       <a class="link" href="index.html">← Voltar ao ranking</a>
-      <small id="anon" class="muted"></small>
+      <p class="muted" id="sessao"></p>
     </div>
-  </main>
+  </div>
 
-  <!-- Firebase -->
+  <!-- Firebase + Check-in -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    // ======== CONFIGURE AQUI O SEU PROJETO FIREBASE ========
+    const firebaseConfig = {
+      apiKey: "COLE_SUA_API_KEY_AQUI",
+      authDomain: "SEU_PROJETO.firebaseapp.com",
+      projectId: "SEU_PROJETO",
+      storageBucket: "SEU_PROJETO.appspot.com",
+      messagingSenderId: "XXXXXXXXXXXX",
+      appId: "1:XXXXXXXXXXXX:web:XXXXXXXXXXXXXX"
+    };
+    // =======================================================
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp,
-      doc, updateDoc, increment, limit
-    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+      getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import {
       getAuth, signInAnonymously, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
-      authDomain: "clube-aguiar-live.firebaseapp.com",
-      projectId: "clube-aguiar-live",
-      storageBucket: "clube-aguiar-live.appspot.com",
-      messagingSenderId: "694025911850",
-      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
-    };
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
-    const auth= getAuth(app);
+    const auth = getAuth(app);
 
-    const $sel = document.getElementById('sel');
-    const $code= document.getElementById('code');
-    const $go  = document.getElementById('go');
-    const $msg = document.getElementById('msg');
-    const $anon= document.getElementById('anon');
+    const selNome = document.getElementById('selNome');
+    const inpCodigo = document.getElementById('inpCodigo');
+    const btn = document.getElementById('btn');
+    const msg = document.getElementById('msg');
+    const sessao = document.getElementById('sessao');
 
-    function toast(text, ok=false){
-      $msg.className = 'msg ' + (ok?'ok':'err');
-      $msg.textContent = text;
-    }
+    // Utilidades
+    const todayStr = () => {
+      const d=new Date();
+      const yyyy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+    const strip = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    const idFromName = n => strip(n).replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-');
 
-    // 1) Login anônimo (necessário para regras do Firestore)
-    signInAnonymously(auth).catch(console.error);
-    onAuthStateChanged(auth,(user)=>{
-      if(user){ $anon.textContent = `Sessão ativa (UID anônimo: ${user.uid.slice(0,8)}…)`; }
+    // Sessão anônima (mostra UID útil p/ debug)
+    signInAnonymously(auth).catch(()=>{});
+    onAuthStateChanged(auth, (u)=>{
+      if(u) sessao.textContent = `Sessão ativa (UID: ${u.uid.slice(0,8)}… )`;
     });
 
-    // 2) Carregar atletas (coleção 'ranking')
-    async function loadPlayers(){
-      try{
-        const qs = await getDocs(query(collection(db,'ranking'), orderBy('name','asc')));
-        const opts = qs.docs.map(d=>({ id:d.id, ...d.data() }));
-        if(!opts.length){
-          $sel.innerHTML = `<option>Nenhuma atleta cadastrada</option>`;
-        }else{
-          $sel.innerHTML = `<option disabled selected>Selecione seu nome</option>` +
-            opts.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
-          $sel.disabled = false;
-        }
-      }catch(e){
-        console.error(e);
-        toast('Erro ao carregar nomes do ranking.');
+    // Carrega todas as atletas
+    async function carregarNomes(){
+      selNome.innerHTML = `<option value="" selected disabled>Selecionar…</option>`;
+      const q = query(collection(db,'athletes'), orderBy('name'));
+      const snap = await getDocs(q);
+      let count=0;
+      snap.forEach(docu=>{
+        const a = docu.data();
+        const o = document.createElement('option');
+        o.value = a.name;
+        o.textContent = a.name;
+        selNome.appendChild(o);
+        count++;
+      });
+      if(!count){
+        const o = document.createElement('option');
+        o.value = '';
+        o.textContent = 'Nenhuma atleta cadastrada';
+        selNome.appendChild(o);
       }
     }
-    loadPlayers();
 
-    // 3) Obter o código de treino mais recente (coleção 'codes', orderBy createdAt desc limit 1)
-    async function getTodayCode(){
-      const qs = await getDocs(query(collection(db,'codes'), orderBy('createdAt','desc'), limit(1)));
-      if(qs.empty) return null;
-      return { id: qs.docs[0].id, ...qs.docs[0].data() }; // {code, points}
+    // Busca o código do dia
+    async function getDailyCode(){
+      const ref = doc(db,'settings','dailyCode');
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return null;
+      const d = snap.data();
+      if(!d.active) return null;
+      if(String(d.date) !== todayStr()) return null;
+      return String(d.code||'');
     }
 
-    // 4) Check-in
-    $go.addEventListener('click', async ()=>{
-      $msg.textContent = ''; $msg.className = '';
-      const playerId = $sel.value;
-      const codeIn   = ($code.value||'').trim().toUpperCase();
+    async function confirmar(){
+      msg.className='msg'; msg.style.display='none';
+      const nome = selNome.value;
+      const codigoDigitado = strip(inpCodigo.value);
+      if(!nome){msg.className='msg err'; msg.textContent='Selecione seu nome.'; msg.style.display='block'; return;}
+      if(!codigoDigitado){msg.className='msg err'; msg.textContent='Digite o código do treino.'; msg.style.display='block'; return;}
 
-      if(!playerId){ toast('Selecione seu nome.'); return; }
-      if(!codeIn){ toast('Informe o Código-treino.'); return; }
+      const codeHoje = await getDailyCode();
+      if(!codeHoje){msg.className='msg err'; msg.textContent='Não há código publicado para hoje.'; msg.style.display='block'; return;}
 
-      try{
-        const cfg = await getTodayCode();
-        if(!cfg){ toast('Não há código publicado para hoje.'); return; }
-
-        if(codeIn !== String(cfg.code||'').trim().toUpperCase()){
-          toast('Código incorreto. Tente novamente.'); return;
-        }
-
-        // registra o check-in
-        await addDoc(collection(db,'checkins'),{
-          userId: playerId,
-          code: codeIn,
-          points: Number(cfg.points||0),
-          createdAt: serverTimestamp()
-        });
-
-        // soma pontos no ranking
-        await updateDoc(doc(db,'ranking',playerId),{
-          points: increment(Number(cfg.points||0))
-        }).catch(()=>{}); // se regras bloquearem, apenas ignora
-
-        toast(`Parabéns! Você somou ${cfg.points||0} ponto(s).`, true);
-
-        // redireciona para upload para +10 pontos
-        const playerName = encodeURIComponent($sel.options[$sel.selectedIndex].textContent);
-        setTimeout(()=>{
-          window.location.href = `upload.html?pid=${encodeURIComponent(playerId)}&name=${playerName}`;
-        }, 900);
-
-      }catch(e){
-        console.error(e);
-        toast('Erro ao registrar seu check-in.');
+      if(codigoDigitado !== strip(codeHoje)){
+        msg.className='msg err'; msg.textContent='Código inválido.'; msg.style.display='block'; return;
       }
-    });
+
+      const id = idFromName(nome);
+      const athleteRef = doc(db,'athletes', id);
+      const aSnap = await getDoc(athleteRef);
+      if(!aSnap.exists()){
+        msg.className='msg err'; msg.textContent='Atleta não encontrada.'; msg.style.display='block'; return;
+      }
+
+      // Evitar duplicado no mesmo dia
+      const chkId = `${id}-${todayStr()}`;
+      const chkRef = doc(db,'checkins', chkId);
+      const cSnap = await getDoc(chkRef);
+      if(cSnap.exists()){
+        msg.className='msg err'; msg.textContent='Você já fez check-in hoje.'; msg.style.display='block'; return;
+      }
+
+      // Grava check-in e soma 1 ponto
+      await setDoc(chkRef, {
+        athleteId: id, name: nome, date: todayStr(), createdAt: serverTimestamp(), code: codeHoje
+      });
+      await updateDoc(athleteRef, { points: increment(1) });
+
+      msg.className='msg ok'; msg.textContent='Check-in confirmado! +1 ponto 👏'; msg.style.display='block';
+      inpCodigo.value='';
+    }
+
+    btn.addEventListener('click', confirmar);
+    carregarNomes();
   </script>
 </body>
 </html>
