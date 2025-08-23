@@ -1,298 +1,211 @@
-<!doctype html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — Desafio 40+</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
-    :root{--bg:#0a133a;--card:#0b2a63;--card2:#0f2f6b;--text:#e6efff;--muted:#9bb7e0;--accent:#2a5cff;--ok:#29d17a;--err:#ff6b6b}
+    :root {
+      --muted:#a7b6d0;
+      --ok:#16a34a;
+      --err:#dc2626;
+    }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;color:var(--text);
-      background:radial-gradient(900px 480px at 70% 30%,#102640 0%,transparent 70%),#0a133a}
-    header{background:#0b2a63;padding:14px 20px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
-    header .wrap{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:14px}
-    .brand{font-weight:900}
-    .wrap-main{max-width:1080px;margin:26px auto;padding:0 14px}
-    .card{background:linear-gradient(180deg,var(--card),var(--card2));border-radius:16px;padding:18px;box-shadow:0 14px 40px rgba(0,0,0,.35);margin-bottom:16px}
-    h2{margin:4px 0 14px}
-    label{display:block;margin:10px 0 6px;color:var(--muted)}
-    input,select{width:100%;padding:12px 14px;border-radius:10px;border:0;background:#0f3a7c;color:#e6efff}
-    button{padding:12px 14px;border-radius:10px;border:0;background:#3d6cff;color:#fff;font-weight:800;cursor:pointer}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .muted{color:var(--muted)}
-    .ok{color:var(--ok)} .err{color:var(--err)}
-    .btn-danger{background:#d94c4c}
-    .btn-ghost{background:#123a88}
-    .hidden{display:none}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    thead th{background:#0f2f6b;padding:10px;text-align:left}
-    tbody td{padding:10px;border-bottom:1px solid rgba(229,241,255,.07)}
-    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between}
-    .spacer{flex:1}
-    a.link{color:#9cc0ff;text-decoration:none}
-    .pill{background:#0f2f6b;padding:6px 10px;border-radius:999px}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#0e2345,#0a1a33);
+      color:#e6efff;
+      font-family:Poppins,Arial,Helvetica,sans-serif
+    }
+    header{
+      padding:16px;
+      text-align:center;
+      background:#0e2345;
+      box-shadow:0 2px 8px rgba(0,0,0,.25)
+    }
+    .wrap{max-width:760px;margin:24px auto;padding:0 14px}
+    .card{
+      background:rgba(255,255,255,0.05);
+      border-radius:14px;
+      padding:18px;
+      margin-bottom:24px;
+      box-shadow:0 6px 16px rgba(0,0,0,.12)
+    }
+    h1{margin:0 0 8px;color:var(--muted)}
+    label{display:block;font-size:14px;color:#b0c4ff;margin:10px 0 6px}
+    input,select{
+      width:100%;
+      padding:12px;
+      border:1px solid #2947ad;
+      background:#0d2144;
+      color:#e6efff;
+      border-radius:12px;
+      margin-bottom:14px;
+      font-size:14px;
+    }
+    button{
+      background:linear-gradient(180deg,#3d66ff,#224ad6);
+      color:#fff;
+      border:0;
+      border-radius:12px;
+      padding:14px;
+      cursor:pointer;
+      font-size:15px;
+      font-weight:bold;
+      width:100%
+    }
+    button:hover{opacity:0.9}
+    .status {margin:8px 0 0 0; font-size:13px;}
+    small{font-size:12px;line-height:1.4}
+    a{color:#6da4ff;text-decoration:none}
   </style>
 </head>
 <body>
   <header>
-    <div class="wrap">
-      <div class="brand">Admin — Desafio 40+</div>
-      <div class="spacer"></div>
-      <div id="who" class="pill muted">Checando sessão…</div>
-      <button id="btnLogout" class="btn-ghost hidden">Sair</button>
-    </div>
+    <h2>Admin — Desafio 40+</h2>
   </header>
+  <div class="wrap">
+    <!-- Seção: Adicionar aluna -->
+    <div class="card">
+      <h1>Adicionar nova aluna</h1>
+      <form id="formAddAluna">
+        <label for="nomeAluna">Nome da aluna:</label>
+        <input type="text" id="nomeAluna" name="nomeAluna" required />
+        <button type="submit">Adicionar</button>
+        <div id="statusAddAluna" class="status"></div>
+      </form>
+    </div>
 
-  <main class="wrap-main">
+    <!-- Seção: Adicionar código do treino do dia -->
+    <div class="card">
+      <h1>Adicionar código do treino do dia</h1>
+      <form id="formCodigoTreino">
+        <label for="codigoTreino">Código do treino:</label>
+        <input type="text" id="codigoTreino" name="codigoTreino" required />
+        <button type="submit">Salvar</button>
+        <div id="statusCodigoTreino" class="status"></div>
+      </form>
+    </div>
 
-    <!-- BLOCO DE LOGIN -->
-    <section id="secLogin" class="card">
-      <h2>Entrar</h2>
-      <div class="row">
-        <div>
-          <label>E-mail</label>
-          <input id="email" type="email" placeholder="clubeenvelhecerbem@gmail.com" />
-        </div>
-        <div>
-          <label>Senha</label>
-          <input id="pass" type="password" placeholder="•••••••" />
-        </div>
-      </div>
-      <div style="margin-top:12px;display:flex;gap:10px">
-        <button id="btnLogin">Entrar</button>
-      </div>
-      <div id="msgLogin" class="muted" style="margin-top:8px"></div>
-      <div class="muted" style="margin-top:8px">Se der “domínio não autorizado”, adicione <b>desafio40mais.vercel.app</b> em Firebase → Authentication → Domínios autorizados.</div>
-    </section>
+    <!-- Seção: Editar pontuação das alunas -->
+    <div class="card">
+      <h1>Editar Pontuação das Alunas</h1>
+      <form id="formEditarPontos">
+        <label for="selectAluna">Selecione a aluna:</label>
+        <select id="selectAluna" name="selectAluna" required>
+          <option value="">Carregando...</option>
+        </select>
+        <label for="pontosEditar">Quantidade de pontos (use negativo para retirar):</label>
+        <input type="number" id="pontosEditar" name="pontosEditar" required placeholder="Ex: 5 ou -2" />
+        <button type="submit">Atualizar Pontos</button>
+        <div id="statusEditarPontos" class="status"></div>
+      </form>
+    </div>
 
-    <!-- BLOCO DE NÃO-ADMIN -->
-    <section id="secNaoAdmin" class="card hidden">
-      <h2>Acesso negado</h2>
-      <div class="err">Você entrou, mas seu usuário não é administrador.</div>
-      <div class="muted" style="margin-top:8px">Peça para incluir seu UID nas regras ou saia e entre com a conta de admin.</div>
-    </section>
+    <p style="margin-top:16px">
+      <a href="index.html">← Voltar ao ranking</a>
+    </p>
+  </div>
 
-    <!-- PAINEL ADMIN (só aparece para UID autorizado) -->
-    <section id="secAdmin" class="hidden">
-
-      <section class="card">
-        <div class="topbar">
-          <h2>Código do treino de hoje</h2>
-          <button id="btnPublish" class="btn-ghost">Publicar ranking</button>
-        </div>
-        <div class="row">
-          <div>
-            <label>Código (ex.: foco)</label>
-            <input id="code" placeholder="foco" />
-          </div>
-          <div>
-            <label>Pontos por check-in</label>
-            <input id="points" type="number" value="3" />
-          </div>
-        </div>
-        <div style="margin-top:12px">
-          <button id="btnSalvarCodigo">Salvar código</button>
-          <span id="msgCodigo" class="muted"></span>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Adicionar / editar atleta</h2>
-        <div class="row">
-          <div>
-            <label>Nome (obrigatório)</label>
-            <input id="athNome" placeholder="Ex.: Maria Silva" />
-          </div>
-          <div>
-            <label>Foto (URL pública — opcional)</label>
-            <input id="athFoto" placeholder="https://..." />
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Pontos iniciais</label>
-            <input id="athPontos" type="number" value="0" />
-          </div>
-          <div>
-            <label>Status</label>
-            <input id="athStatus" placeholder="Ex.: Em alta" />
-          </div>
-        </div>
-        <div style="margin-top:12px">
-          <button id="btnSalvarAtleta">Salvar atleta</button>
-          <span id="msgAtleta" class="muted"></span>
-        </div>
-
-        <table id="tbl" style="margin-top:16px">
-          <thead><tr><th>Nome</th><th>Pontos</th><th>Status</th><th>Selos</th><th>ID</th></tr></thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </section>
-
-    </section>
-
-  </main>
-
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script>
-    // === SUA CONFIG ===
+    // Configuração do Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
-      authDomain: "clube-aguiar-live.firebaseapp.com",
-      projectId: "clube-aguiar-live",
-      storageBucket: "clube-aguiar-live.firebasestorage.app",
-      messagingSenderId: "694025911850",
-      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+      // COLOQUE SUA CONFIG AQUI
+      apiKey: "SUA_API_KEY",
+      authDomain: "SEU_AUTH_DOMAIN",
+      projectId: "SEU_PROJECT_ID",
+      storageBucket: "SEU_STORAGE_BUCKET",
+      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+      appId: "SEU_APP_ID"
     };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db   = firebase.firestore();
+    const db = firebase.firestore();
 
-    // === UID do admin (o mesmo que está nas REGRAS) ===
-    const ADMIN_UID = "Lklp9zwhhcSMgrWttuSiEk2D5I02";
-
-    // Helpers
-    const $ = s => document.querySelector(s);
-    const on = (el, ev, fn) => el.addEventListener(ev, fn);
-    const who   = $("#who");
-    const secLogin = $("#secLogin");
-    const secNao  = $("#secNaoAdmin");
-    const secAdmin= $("#secAdmin");
-    const msgLogin= $("#msgLogin");
-    const btnLogout=$("#btnLogout");
-
-    function show(el){ el.classList.remove("hidden"); }
-    function hide(el){ el.classList.add("hidden"); }
-
-    // Estado da sessão
-    let unsubRanking = null; // para desmontar listener quando sair
-
-    auth.onAuthStateChanged(async user => {
-      if (!user) {
-        who.textContent = "Não logado";
-        show(secLogin); hide(secNao); hide(secAdmin);
-        btnLogout.classList.add("hidden");
-        // desmonta listener se existia
-        if (unsubRanking) { unsubRanking(); unsubRanking = null; }
-        return;
-      }
-
-      who.textContent = user.email || "(sem e-mail)";
-      btnLogout.classList.remove("hidden");
-
-      // Checa se é admin
-      if (user.uid !== ADMIN_UID) {
-        hide(secLogin); hide(secAdmin); show(secNao);
-        if (unsubRanking) { unsubRanking(); unsubRanking = null; }
-        return;
-      }
-
-      // Agora sim: admin autenticado -> mostra painel e liga os listeners
-      hide(secLogin); hide(secNao); show(secAdmin);
-
-      // Carregar código do dia
+    // Função para adicionar aluna
+    document.getElementById("formAddAluna").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const nome = document.getElementById("nomeAluna").value.trim();
+      const status = document.getElementById("statusAddAluna");
+      if (!nome) return;
+      status.textContent = "Adicionando...";
       try {
-        const snap = await db.collection("codes").doc("today").get(); // <=== colecao codes/today
-        if (snap.exists) {
-          const d = snap.data();
-          $("#code").value   = d.code || "";
-          $("#points").value = d.points ?? 3;
+        await db.collection("usuarios").add({ nome, pontos: 0 });
+        status.textContent = "Aluna adicionada com sucesso!";
+        document.getElementById("formAddAluna").reset();
+        carregarAlunasEditar(); // Atualiza lista de alunas na edição de pontos
+      } catch (err) {
+        status.textContent = "Erro ao adicionar: " + err.message;
+      }
+    });
+
+    // Função para salvar código do treino
+    document.getElementById("formCodigoTreino").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const codigo = document.getElementById("codigoTreino").value.trim();
+      const status = document.getElementById("statusCodigoTreino");
+      if (!codigo) return;
+      status.textContent = "Salvando...";
+      try {
+        await db.collection("config").doc("treino_do_dia").set({ codigo });
+        status.textContent = "Código do treino salvo!";
+        document.getElementById("formCodigoTreino").reset();
+      } catch (err) {
+        status.textContent = "Erro ao salvar: " + err.message;
+      }
+    });
+
+    // Função para carregar alunas no select de edição de pontos
+    async function carregarAlunasEditar() {
+      const select = document.getElementById("selectAluna");
+      select.innerHTML = "<option value=''>Carregando...</option>";
+      try {
+        const snap = await db.collection("usuarios").get();
+        if (snap.empty) {
+          select.innerHTML = "<option value=''>Nenhuma aluna cadastrada</option>";
+          return;
         }
-      } catch(e){ console.warn(e); }
-
-      // Listar atletas do ranking
-      if (unsubRanking) { unsubRanking(); }
-      unsubRanking = db.collection("ranking") // <=== colecao ranking
-        .orderBy("points","desc")
-        .onSnapshot(snap=>{
-          const tbody = $("#tbody");
-          tbody.innerHTML = "";
-          snap.forEach(doc=>{
-            const d = doc.data();
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${d.name || "-"}</td>
-              <td>${d.points ?? 0}</td>
-              <td>${d.status || "-"}</td>
-              <td>${(d.badges||[]).join(" ")}</td>
-              <td>${doc.id}</td>
-            `;
-            tbody.appendChild(tr);
-          });
-        }, err=>{
-          console.error(err);
+        select.innerHTML = "";
+        snap.forEach(doc => {
+          const usuario = doc.data();
+          const opt = document.createElement("option");
+          opt.value = doc.id;
+          opt.textContent = `${usuario.nome} (atual: ${usuario.pontos ?? 0} pts)`;
+          select.appendChild(opt);
         });
-    });
-
-    // Login / Logout
-    on($("#btnLogin"), "click", async ()=>{
-      msgLogin.textContent = "Entrando…";
-      try{
-        await auth.signInWithEmailAndPassword($("#email").value.trim(), $("#pass").value);
-        msgLogin.textContent = "";
-      }catch(e){
-        msgLogin.textContent = "Erro: " + e.message;
+      } catch (err) {
+        select.innerHTML = "<option value=''>Erro ao carregar</option>";
       }
-    });
+    }
+    carregarAlunasEditar();
 
-    on(btnLogout, "click", async ()=>{
-      try{ await auth.signOut(); }catch(e){ alert(e.message); }
-    });
-
-    // Salvar código do dia
-    on($("#btnSalvarCodigo"), "click", async ()=>{
-      $("#msgCodigo").textContent = "Salvando…";
-      try{
-        await db.collection("codes").doc("today").set({   // <=== codes/today
-          code: $("#code").value.trim(),
-          points: parseInt($("#points").value||"0",10),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, {merge:true});
-        $("#msgCodigo").textContent = "Salvo ✓";
-        $("#msgCodigo").className = "ok";
-      }catch(e){
-        $("#msgCodigo").textContent = "Erro: " + e.message;
-        $("#msgCodigo").className = "err";
-      }
-    });
-
-    // Publicar ranking (opcional — aqui só força um read pra validar sessão)
-    on($("#btnPublish"), "click", async ()=>{
-      try{
-        await db.collection("ranking").limit(1).get(); // teste de permissão
-        alert("Ranking pronto/online (permite leitura)!");
-      }catch(e){
-        alert("Erro ao publicar: " + e.message);
-      }
-    });
-
-    // Salvar atleta
-    on($("#btnSalvarAtleta"), "click", async ()=>{
-      $("#msgAtleta").textContent = "Salvando…";
-      try{
-        const name = $("#athNome").value.trim();
-        if (!name) { $("#msgAtleta").textContent = "Informe o nome."; return; }
-
-        // Id baseado no nome (pode usar outro critério se preferir)
-        const id = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-
-        await db.collection("ranking").doc(id).set({   // <=== ranking/{id}
-          name,
-          photo: $("#athFoto").value.trim() || null,
-          points: parseInt($("#athPontos").value||"0", 10),
-          status: $("#athStatus").value.trim() || null,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, {merge:true});
-
-        $("#msgAtleta").textContent = "Atleta salva ✓";
-        $("#msgAtleta").className = "ok";
-        $("#athNome").value = ""; $("#athFoto").value=""; $("#athPontos").value="0"; $("#athStatus").value="";
-      }catch(e){
-        $("#msgAtleta").textContent = "Erro: " + e.message;
-        $("#msgAtleta").className = "err";
+    // Função para editar pontos da aluna
+    document.getElementById("formEditarPontos").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const select = document.getElementById("selectAluna");
+      const alunaId = select.value;
+      const pontos = parseInt(document.getElementById("pontosEditar").value, 10);
+      const status = document.getElementById("statusEditarPontos");
+      if (!alunaId || isNaN(pontos)) return;
+      status.textContent = "Atualizando...";
+      try {
+        const docRef = db.collection("usuarios").doc(alunaId);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+          status.textContent = "Aluna não encontrada!";
+          return;
+        }
+        const atual = docSnap.data().pontos ?? 0;
+        await docRef.update({ pontos: atual + pontos });
+        status.textContent = "Pontuação atualizada com sucesso!";
+        document.getElementById("formEditarPontos").reset();
+        carregarAlunasEditar(); // Atualiza lista com pontuação nova
+      } catch (err) {
+        status.textContent = "Erro ao atualizar: " + err.message;
       }
     });
   </script>
