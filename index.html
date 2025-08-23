@@ -1,43 +1,99 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ranking Desafio 40+</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Firebase v8 (compatível, simples de usar no HTML) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
   <style>
-    :root{--bg:#0b1b2b;--panel:#12263a;--line:#18354f;--txt:#e8f1fb;--muted:#9bb5cf;--accent:#6aa5ff}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu}
-    .wrap{max-width:980px;margin:40px auto;padding:0 16px}
-    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-    .btn{background:var(--accent);color:#061525;border:0;padding:12px 16px;border-radius:12px;font-weight:700;text-decoration:none}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.2)}
-    h1{font-size:32px;margin:0 0 8px}
-    h2{font-size:22px;margin:0;padding:20px}
-    table{width:100%;border-collapse:collapse}
-    thead th{background:#0f2032;padding:14px;border-bottom:1px solid var(--line);text-align:left}
-    tbody td{padding:12px;border-bottom:1px solid var(--line)}
-    .foto{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
-    .muted{color:var(--muted)}
-    .center{display:flex;justify-content:center;align-items:center}
-    .err{color:#ff6b6b;font-weight:700;padding:12px}
+    :root{
+      --bg:#081a34;
+      --card:#0f2547;
+      --card2:#132c55;
+      --text:#e7f1ff;
+      --muted:#9bb7e0;
+      --accent:#2f5bff;
+      --thead:#1b345f;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      max-width:1100px; margin:48px auto; padding:0 20px;
+    }
+    .card{
+      background:linear-gradient(180deg, var(--card), var(--card2));
+      border-radius:18px;
+      padding:24px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    h1{
+      margin:0 0 14px; font-weight:800; letter-spacing:.3px; font-size:36px;
+    }
+    .sub{color:var(--muted); margin:0 0 18px}
+    .actions{display:flex; gap:12px; margin:10px 0 24px}
+    .btn{
+      display:inline-block; text-decoration:none; color:#fff; background:var(--accent);
+      padding:10px 16px; border-radius:12px; font-weight:700;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:14px;
+    }
+    thead th{
+      background:var(--thead);
+      color:#cfe0ff;
+      padding:14px 10px; text-align:left; font-weight:700; font-size:14px;
+    }
+    tbody td{
+      padding:12px 10px; border-bottom:1px solid rgba(255,255,255,.06);
+      vertical-align:middle; font-size:15px;
+    }
+    tbody tr:hover{ background:rgba(255,255,255,.03); }
+    .rank{width:46px; text-align:center; font-weight:800}
+    .mini{
+      height:42px; width:42px; border-radius:10px; object-fit:cover; display:block; background:#0b1f3f;
+      border:1px solid rgba(255,255,255,.08)
+    }
+    .badges{display:flex; gap:6px; flex-wrap:wrap}
+    .badge{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:6px 10px; background:#0d2142; border-radius:999px; font-size:14px; border:1px solid rgba(255,255,255,.08)
+    }
+    .empty{
+      padding:22px; text-align:center; color:var(--muted);
+    }
+    .foot{margin-top:14px; color:var(--muted); font-size:14px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="head">
-      <h1>Ranking Desafio 40+</h1>
-      <a class="btn" href="checkin.html">Fazer check-in →</a>
-    </div>
-
     <div class="card">
-      <h2>Ranking Desafio 40+</h2>
-      <div id="erro" class="err" style="display:none"></div>
-      <div style="padding:0 20px 20px">
+      <h1>Ranking Desafio 40+</h1>
+      <p class="sub">Acompanhe a classificação das atletas. Pontos atualizados automaticamente.</p>
+
+      <div class="actions">
+        <a class="btn" href="./checkin.html">Fazer check-in →</a>
+      </div>
+
+      <div id="tableWrap">
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Foto</th>
+              <th class="rank">#</th>
+              <th style="width:70px">Foto</th>
               <th>Nome</th>
               <th>Pontos</th>
               <th>Status</th>
@@ -45,68 +101,16 @@
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="6" class="muted center">Carregando…</td></tr>
+            <tr><td colspan="6" class="empty">Carregando…</td></tr>
           </tbody>
         </table>
       </div>
+
+      <div class="foot">Dica: tire um print e compartilhe com o time! 💙</div>
     </div>
   </div>
 
-  <!-- Firebase + Ranking -->
-  <script type="module">
-    // ======== CONFIGURE AQUI O SEU PROJETO FIREBASE ========
+  <script>
+    // 1) Inicializa Firebase
     const firebaseConfig = {
-      apiKey: "COLE_SUA_API_KEY_AQUI",
-      authDomain: "SEU_PROJETO.firebaseapp.com",
-      projectId: "SEU_PROJETO",
-      storageBucket: "SEU_PROJETO.appspot.com",
-      messagingSenderId: "XXXXXXXXXXXX",
-      appId: "1:XXXXXXXXXXXX:web:XXXXXXXXXXXXXX"
-    };
-    // =======================================================
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, query, orderBy, onSnapshot, limit
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
-
-    const tbody = document.getElementById('tbody');
-    const erro  = document.getElementById('erro');
-
-    function render(rows){
-      if(!rows.length){
-        tbody.innerHTML = `<tr><td colspan="6" class="muted center">Sem atletas cadastradas.</td></tr>`;
-        return;
-      }
-      tbody.innerHTML = rows.map((a,idx)=>`
-        <tr>
-          <td>${idx+1}</td>
-          <td>${a.photo ? `<img class="foto" src="${a.photo}" alt="">` : '-'}</td>
-          <td>${a.name ?? ''}</td>
-          <td>${a.points ?? 0}</td>
-          <td>${a.status ?? ''}</td>
-          <td>${Array.isArray(a.badges)? a.badges.join(' ') : ''}</td>
-        </tr>
-      `).join('');
-    }
-
-    try{
-      const q = query(collection(db,'athletes'), orderBy('points','desc'), limit(100));
-      onSnapshot(q, (snap)=>{
-        const rows = [];
-        snap.forEach(doc=>rows.push(doc.data()));
-        render(rows);
-      }, (err)=>{
-        erro.style.display='block';
-        erro.textContent = 'Erro ao carregar ranking.';
-      });
-    }catch(e){
-      erro.style.display='block';
-      erro.textContent = 'Erro ao carregar ranking.';
-    }
-  </script>
-</body>
-</html>
+      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZB_
