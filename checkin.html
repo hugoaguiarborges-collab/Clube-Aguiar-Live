@@ -121,12 +121,17 @@
         select.innerHTML = "<option value=''>-- Escolha seu nome --</option>";
 
         // Supondo que o JSON tenha formato { "usuarios": [ { "nome": "Paula Silva", "pontos": 10 } ] }
-        dados.usuarios.forEach(usuario => {
-          const opt = document.createElement("option");
-          opt.value = usuario.nome;
-          opt.textContent = usuario.nome;
-          select.appendChild(opt);
-        });
+        if (dados.usuarios && Array.isArray(dados.usuarios)) {
+          dados.usuarios.forEach(usuario => {
+            const opt = document.createElement("option");
+            opt.value = usuario.nome;
+            opt.textContent = usuario.nome;
+            select.appendChild(opt);
+          });
+        } else {
+          // Se não houver nomes, mostra erro
+          select.innerHTML = "<option value=''>Nenhum nome encontrado</option>";
+        }
 
       } catch (erro) {
         console.error("Erro ao carregar nomes:", erro);
