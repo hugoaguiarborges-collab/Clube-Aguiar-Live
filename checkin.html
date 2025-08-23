@@ -1,167 +1,205 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Check-in — Desafio 40+</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Firebase v8 (simples no HTML) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
   <style>
-    :root{--bg:#0b1b2b;--panel:#12263a;--line:#18354f;--txt:#e8f1fb;--muted:#9bb5cf;--accent:#6aa5ff;--error:#ff6b6b;--ok:#33d69f}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu}
-    .wrap{max-width:720px;margin:40px auto;padding:0 16px}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.2);padding:24px}
-    h1{font-size:32px;margin:0 0 10px;text-align:center}
-    p.muted{color:var(--muted);text-align:center;margin-top:0}
-    label{display:block;margin:18px 0 6px}
-    input, select{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0f2032;color:var(--txt);font-size:16px}
-    .btn{margin-top:16px;width:100%;background:var(--accent);color:#061525;border:0;padding:14px;border-radius:12px;font-weight:700;font-size:16px}
-    .msg{margin-top:16px;padding:12px;border-radius:10px;display:none}
-    .msg.ok{display:block;background:#0f2b1e;border:1px solid #1b7c59;color:#b8f3da}
-    .msg.err{display:block;background:#2b0f12;border:1px solid #923639;color:var(--error)}
-    .link{display:inline-block;margin-top:14px;color:var(--accent);text-decoration:none}
+    :root{
+      --bg:#081a34;
+      --card:#0f2547;
+      --card2:#132c55;
+      --text:#e7f1ff;
+      --muted:#9bb7e0;
+      --accent:#2f5bff;
+      --input:#0d2142;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      max-width:680px; margin:48px auto; padding:0 20px;
+    }
+    .card{
+      background:linear-gradient(180deg, var(--card), var(--card2));
+      border-radius:18px; padding:24px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    h1{margin:0 0 10px; font-weight:800}
+    .sub{color:var(--muted); margin:0 0 18px}
+    label{display:block; margin:14px 0 8px; font-weight:700}
+    select,input,button{
+      width:100%; padding:12px 14px; border-radius:12px; border:0; font-size:16px;
+    }
+    select,input{ background:var(--input); color:var(--text); }
+    button{
+      background:var(--accent); color:#fff; font-weight:800; cursor:pointer; margin-top:14px;
+      box-shadow:0 6px 16px rgba(47,91,255,.35);
+    }
+    .msg{margin-top:12px; font-weight:800}
+    a{color:#9ec3ff}
+    .row{display:grid; grid-template-columns:1fr; gap:12px}
+    .foot{margin-top:14px; color:var(--muted); font-size:14px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>Fez seu treino?</h1>
-      <p class="muted">Escolha seu nome, digite o Código-treino de hoje e garanta seus pontos!</p>
+      <h1>Fazer check-in</h1>
+      <p class="sub">Selecione seu nome e digite o código da aula de hoje.</p>
 
-      <label>Seu nome</label>
-      <select id="selNome">
-        <option value="" selected disabled>Carregando nomes…</option>
-      </select>
+      <div class="row">
+        <div>
+          <label for="nomes">Seu nome</label>
+          <select id="nomes"><option>Carregando…</option></select>
+        </div>
 
-      <label>Código do treino</label>
-      <input id="inpCodigo" placeholder="Ex.: forca" />
+        <div>
+          <label for="codigo">Código do treino</label>
+          <input id="codigo" type="text" placeholder="Ex.: FOCO" autocomplete="one-time-code" />
+        </div>
+      </div>
 
-      <button id="btn" class="btn">Confirmar treino</button>
-
+      <button id="btnCheckin">Fazer check-in</button>
       <div id="msg" class="msg"></div>
 
-      <a class="link" href="index.html">← Voltar ao ranking</a>
-      <p class="muted" id="sessao"></p>
+      <p class="foot" style="margin-top:18px;"><a href="./index.html">← Voltar ao ranking</a></p>
     </div>
   </div>
 
-  <!-- Firebase + Check-in -->
-  <script type="module">
-    // ======== CONFIGURE AQUI O SEU PROJETO FIREBASE ========
+  <script>
+    // 1) Inicializa Firebase
     const firebaseConfig = {
-      apiKey: "COLE_SUA_API_KEY_AQUI",
-      authDomain: "SEU_PROJETO.firebaseapp.com",
-      projectId: "SEU_PROJETO",
-      storageBucket: "SEU_PROJETO.appspot.com",
-      messagingSenderId: "XXXXXXXXXXXX",
-      appId: "1:XXXXXXXXXXXX:web:XXXXXXXXXXXXXX"
+      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+      authDomain: "clube-aguiar-live.firebaseapp.com",
+      projectId: "clube-aguiar-live",
+      storageBucket: "clube-aguiar-live.appspot.com",
+      messagingSenderId: "694025911850",
+      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
     };
-    // =======================================================
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import {
-      getAuth, signInAnonymously, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    // 2) Auth anônima (silenciosa)
+    firebase.auth().signInAnonymously().catch(function(){});
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
-    const auth = getAuth(app);
+    const db = firebase.firestore();
 
-    const selNome = document.getElementById('selNome');
-    const inpCodigo = document.getElementById('inpCodigo');
-    const btn = document.getElementById('btn');
-    const msg = document.getElementById('msg');
-    const sessao = document.getElementById('sessao');
+    // helpers
+    const $ = (sel)=>document.querySelector(sel);
+    const nomesSelect = $('#nomes');
+    const inputCodigo = $('#codigo');
+    const btn = $('#btnCheckin');
+    const msg = $('#msg');
 
-    // Utilidades
-    const todayStr = () => {
-      const d=new Date();
-      const yyyy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
-      return `${yyyy}-${mm}-${dd}`;
-    };
-    const strip = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
-    const idFromName = n => strip(n).replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-');
+    // Normaliza código (remove acentos/maiúsculas/espaços extras)
+    function normalize(s){
+      return String(s||'').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // remove acentos
+    }
 
-    // Sessão anônima (mostra UID útil p/ debug)
-    signInAnonymously(auth).catch(()=>{});
-    onAuthStateChanged(auth, (u)=>{
-      if(u) sessao.textContent = `Sessão ativa (UID: ${u.uid.slice(0,8)}… )`;
-    });
-
-    // Carrega todas as atletas
     async function carregarNomes(){
-      selNome.innerHTML = `<option value="" selected disabled>Selecionar…</option>`;
-      const q = query(collection(db,'athletes'), orderBy('name'));
-      const snap = await getDocs(q);
-      let count=0;
-      snap.forEach(docu=>{
-        const a = docu.data();
-        const o = document.createElement('option');
-        o.value = a.name;
-        o.textContent = a.name;
-        selNome.appendChild(o);
-        count++;
-      });
-      if(!count){
-        const o = document.createElement('option');
-        o.value = '';
-        o.textContent = 'Nenhuma atleta cadastrada';
-        selNome.appendChild(o);
+      try{
+        const snap = await db.collection('players').orderBy('name').get();
+        const nomes = [];
+        snap.forEach(d=>{
+          const x = d.data();
+          if (x && x.name) nomes.push(x.name);
+        });
+
+        if (!nomes.length) {
+          nomesSelect.innerHTML = `<option>Nenhuma atleta cadastrada</option>`;
+          return;
+        }
+
+        nomesSelect.innerHTML = nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
+        // cache local (fallback caso o Firestore falhe)
+        localStorage.setItem('nomesPlayers', JSON.stringify(nomes));
+      }catch(e){
+        console.error('Falha ao carregar nomes', e);
+        const cache = localStorage.getItem('nomesPlayers');
+        if (cache) {
+          const nomes = JSON.parse(cache);
+          nomesSelect.innerHTML = nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
+        } else {
+          nomesSelect.innerHTML = `<option>Erro ao carregar nomes</option>`;
+        }
       }
     }
 
-    // Busca o código do dia
-    async function getDailyCode(){
-      const ref = doc(db,'settings','dailyCode');
-      const snap = await getDoc(ref);
-      if(!snap.exists()) return null;
-      const d = snap.data();
-      if(!d.active) return null;
-      if(String(d.date) !== todayStr()) return null;
-      return String(d.code||'');
+    async function registrarCheckin(){
+      msg.textContent = '';
+      msg.style.color = '';
+
+      const name = nomesSelect?.value;
+      const codeUser = inputCodigo?.value;
+
+      if (!name || !codeUser) {
+        msg.textContent = 'Selecione o nome e informe o código.';
+        msg.style.color = 'salmon';
+        return;
+      }
+
+      // 1) Lê código do dia em meta/checkin
+      let cfg;
+      try{
+        const snap = await db.collection('meta').doc('checkin').get();
+        if (!snap.exists) {
+          msg.textContent = 'Configuração de check-in não encontrada.';
+          msg.style.color = 'salmon';
+          return;
+        }
+        cfg = snap.data(); // { code, points }
+      }catch(e){
+        console.error(e);
+        msg.textContent = 'Erro ao ler configuração do check-in.';
+        msg.style.color = 'salmon';
+        return;
+      }
+
+      const codeOfDay = cfg?.code;
+      const points = Number(cfg?.points) || 1;
+
+      if (normalize(codeUser) !== normalize(codeOfDay)) {
+        msg.textContent = 'Código inválido.';
+        msg.style.color = 'salmon';
+        return;
+      }
+
+      // 2) Grava o check-in (APENAS os campos permitidos pelas regras)
+      try{
+        await db.collection('checkins').add({
+          name: name,
+          userId: null,
+          code: normalize(codeUser),
+          points: points,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        msg.textContent = '✅ Check-in registrado!';
+        msg.style.color = 'limegreen';
+        inputCodigo.value = '';
+
+        // (opcional) rolar pra mensagem
+        msg.scrollIntoView({behavior:'smooth', block:'center'});
+      }catch(e){
+        console.error(e);
+        msg.textContent = 'Erro ao registrar. Tente novamente.';
+        msg.style.color = 'salmon';
+      }
     }
 
-    async function confirmar(){
-      msg.className='msg'; msg.style.display='none';
-      const nome = selNome.value;
-      const codigoDigitado = strip(inpCodigo.value);
-      if(!nome){msg.className='msg err'; msg.textContent='Selecione seu nome.'; msg.style.display='block'; return;}
-      if(!codigoDigitado){msg.className='msg err'; msg.textContent='Digite o código do treino.'; msg.style.display='block'; return;}
-
-      const codeHoje = await getDailyCode();
-      if(!codeHoje){msg.className='msg err'; msg.textContent='Não há código publicado para hoje.'; msg.style.display='block'; return;}
-
-      if(codigoDigitado !== strip(codeHoje)){
-        msg.className='msg err'; msg.textContent='Código inválido.'; msg.style.display='block'; return;
-      }
-
-      const id = idFromName(nome);
-      const athleteRef = doc(db,'athletes', id);
-      const aSnap = await getDoc(athleteRef);
-      if(!aSnap.exists()){
-        msg.className='msg err'; msg.textContent='Atleta não encontrada.'; msg.style.display='block'; return;
-      }
-
-      // Evitar duplicado no mesmo dia
-      const chkId = `${id}-${todayStr()}`;
-      const chkRef = doc(db,'checkins', chkId);
-      const cSnap = await getDoc(chkRef);
-      if(cSnap.exists()){
-        msg.className='msg err'; msg.textContent='Você já fez check-in hoje.'; msg.style.display='block'; return;
-      }
-
-      // Grava check-in e soma 1 ponto
-      await setDoc(chkRef, {
-        athleteId: id, name: nome, date: todayStr(), createdAt: serverTimestamp(), code: codeHoje
-      });
-      await updateDoc(athleteRef, { points: increment(1) });
-
-      msg.className='msg ok'; msg.textContent='Check-in confirmado! +1 ponto 👏'; msg.style.display='block';
-      inpCodigo.value='';
-    }
-
-    btn.addEventListener('click', confirmar);
+    btn.addEventListener('click', registrarCheckin);
     carregarNomes();
   </script>
 </body>
