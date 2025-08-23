@@ -1,205 +1,141 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Check-in — Desafio 40+</title>
-
-  <!-- Firebase v8 (simples no HTML) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#081a34;
-      --card:#0f2547;
-      --card2:#132c55;
-      --text:#e7f1ff;
-      --muted:#9bb7e0;
-      --accent:#2f5bff;
-      --input:#0d2142;
+    :root {
+      --muted:#a7b6d0;
+      --ok:#16a34a;
+      --err:#dc2626;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
       margin:0;
-      font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-      background:var(--bg);
-      color:var(--text);
+      background:linear-gradient(180deg,#0e2345,#0a1a33);
+      color:#e6efff;
+      font-family:Poppins,Arial,Helvetica,sans-serif
+    }
+    header{
+      padding:16px;
+      text-align:center;
+      background:#0e2345;
+      box-shadow:0 2px 8px rgba(0,0,0,.25)
     }
     .wrap{
-      max-width:680px; margin:48px auto; padding:0 20px;
+      max-width:760px;
+      margin:24px auto;
+      padding:0 14px
     }
     .card{
-      background:linear-gradient(180deg, var(--card), var(--card2));
-      border-radius:18px; padding:24px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      background:#255,255,255,0.05;
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 6px 16px rgba(0,0,0,.12)
     }
-    h1{margin:0 0 10px; font-weight:800}
-    .sub{color:var(--muted); margin:0 0 18px}
-    label{display:block; margin:14px 0 8px; font-weight:700}
-    select,input,button{
-      width:100%; padding:12px 14px; border-radius:12px; border:0; font-size:16px;
+    h1{margin:0 0 8px;color:var(--muted)}
+    label{display:block;font-size:14px;color:#b0c4ff;margin:10px 0 6px}
+    input,select{
+      width:100%;
+      padding:12px;
+      border:1px solid #2947ad;
+      background:#0d2144;
+      color:#e6efff;
+      border-radius:12px;
+      margin-bottom:14px;
+      font-size:14px;
     }
-    select,input{ background:var(--input); color:var(--text); }
     button{
-      background:var(--accent); color:#fff; font-weight:800; cursor:pointer; margin-top:14px;
-      box-shadow:0 6px 16px rgba(47,91,255,.35);
+      background:linear-gradient(180deg,#3d66ff,#224ad6);
+      color:#fff;
+      border:0;
+      border-radius:12px;
+      padding:14px;
+      cursor:pointer;
+      font-size:15px;
+      font-weight:bold;
+      width:100%
     }
-    .msg{margin-top:12px; font-weight:800}
-    a{color:#9ec3ff}
-    .row{display:grid; grid-template-columns:1fr; gap:12px}
-    .foot{margin-top:14px; color:var(--muted); font-size:14px}
+    button:hover{opacity:0.9}
+    small{font-size:12px;line-height:1.4}
+    a{color:#6da4ff;text-decoration:none}
   </style>
 </head>
 <body>
+  <header>
+    <h2>Check-in — Desafio 40+</h2>
+  </header>
   <div class="wrap">
     <div class="card">
-      <h1>Fazer check-in</h1>
-      <p class="sub">Selecione seu nome e digite o código da aula de hoje.</p>
+      <h1>Fez o treino de hoje?</h1>
+      <p>
+        Este check-in só deve ser feito se você realmente realizou o treino de hoje.  
+        Para contar no ranking, informe o <b>código da aula</b> (enviado no grupo).  
+      </p>
 
-      <div class="row">
-        <div>
-          <label for="nomes">Seu nome</label>
-          <select id="nomes"><option>Carregando…</option></select>
-        </div>
+      <form id="checkinForm" enctype="multipart/form-data">
+        <!-- Seleção do nome -->
+        <label for="nome">Selecione seu nome (igual ao ranking):</label>
+        <select id="nome" name="nome" required>
+          <option value="">Carregando nomes...</option>
+        </select>
 
-        <div>
-          <label for="codigo">Código do treino</label>
-          <input id="codigo" type="text" placeholder="Ex.: FOCO" autocomplete="one-time-code" />
-        </div>
-      </div>
+        <!-- Código do treino -->
+        <label for="codigo">Código do treino:</label>
+        <input type="text" id="codigo" name="codigo" placeholder="Ex.: AG18" required />
 
-      <button id="btnCheckin">Fazer check-in</button>
-      <div id="msg" class="msg"></div>
+        <!-- Upload de foto/vídeo -->
+        <label for="arquivo">
+          Foto ou vídeo do treino (máx. 10 MB)  
+          <br>
+          <small style="color:#FFD700; font-weight:bold;">
+            ➜ Enviando foto/vídeo da aula de hoje (mostrando você e a TV com a aula), você ganha +5 pontos.  
+            Atenção: usar imagens de outras aulas pode acarretar em perda de pontos.
+          </small>
+        </label>
+        <input type="file" id="arquivo" name="arquivo" accept="image/*,video/*" />
 
-      <p class="foot" style="margin-top:18px;"><a href="./index.html">← Voltar ao ranking</a></p>
+        <!-- Botão -->
+        <button type="submit">Fazer check-in</button>
+      </form>
+
+      <p style="margin-top:16px">
+        <a href="index.html">← Voltar ao ranking</a>
+      </p>
     </div>
   </div>
 
   <script>
-    // 1) Inicializa Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
-      authDomain: "clube-aguiar-live.firebaseapp.com",
-      projectId: "clube-aguiar-live",
-      storageBucket: "clube-aguiar-live.appspot.com",
-      messagingSenderId: "694025911850",
-      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    // Buscar os nomes direto do ranking (sample_data.json ou Firestore)
+    async function carregarNomes() {
+      try {
+        // Caminho do JSON do ranking (ajuste se o nome estiver em outro arquivo)
+        const resposta = await fetch("sample_data.json");
+        const dados = await resposta.json();
 
-    // 2) Auth anônima (silenciosa)
-    firebase.auth().signInAnonymously().catch(function(){});
+        const select = document.getElementById("nome");
+        select.innerHTML = "<option value=''>-- Escolha seu nome --</option>";
 
-    const db = firebase.firestore();
-
-    // helpers
-    const $ = (sel)=>document.querySelector(sel);
-    const nomesSelect = $('#nomes');
-    const inputCodigo = $('#codigo');
-    const btn = $('#btnCheckin');
-    const msg = $('#msg');
-
-    // Normaliza código (remove acentos/maiúsculas/espaços extras)
-    function normalize(s){
-      return String(s||'').trim().toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // remove acentos
-    }
-
-    async function carregarNomes(){
-      try{
-        const snap = await db.collection('players').orderBy('name').get();
-        const nomes = [];
-        snap.forEach(d=>{
-          const x = d.data();
-          if (x && x.name) nomes.push(x.name);
+        // Supondo que o JSON tenha formato { "usuarios": [ { "nome": "Paula Silva", "pontos": 10 } ] }
+        dados.usuarios.forEach(usuario => {
+          const opt = document.createElement("option");
+          opt.value = usuario.nome;
+          opt.textContent = usuario.nome;
+          select.appendChild(opt);
         });
 
-        if (!nomes.length) {
-          nomesSelect.innerHTML = `<option>Nenhuma atleta cadastrada</option>`;
-          return;
-        }
-
-        nomesSelect.innerHTML = nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
-        // cache local (fallback caso o Firestore falhe)
-        localStorage.setItem('nomesPlayers', JSON.stringify(nomes));
-      }catch(e){
-        console.error('Falha ao carregar nomes', e);
-        const cache = localStorage.getItem('nomesPlayers');
-        if (cache) {
-          const nomes = JSON.parse(cache);
-          nomesSelect.innerHTML = nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
-        } else {
-          nomesSelect.innerHTML = `<option>Erro ao carregar nomes</option>`;
-        }
+      } catch (erro) {
+        console.error("Erro ao carregar nomes:", erro);
+        document.getElementById("nome").innerHTML =
+          "<option value=''>Erro ao carregar nomes</option>";
       }
     }
 
-    async function registrarCheckin(){
-      msg.textContent = '';
-      msg.style.color = '';
-
-      const name = nomesSelect?.value;
-      const codeUser = inputCodigo?.value;
-
-      if (!name || !codeUser) {
-        msg.textContent = 'Selecione o nome e informe o código.';
-        msg.style.color = 'salmon';
-        return;
-      }
-
-      // 1) Lê código do dia em meta/checkin
-      let cfg;
-      try{
-        const snap = await db.collection('meta').doc('checkin').get();
-        if (!snap.exists) {
-          msg.textContent = 'Configuração de check-in não encontrada.';
-          msg.style.color = 'salmon';
-          return;
-        }
-        cfg = snap.data(); // { code, points }
-      }catch(e){
-        console.error(e);
-        msg.textContent = 'Erro ao ler configuração do check-in.';
-        msg.style.color = 'salmon';
-        return;
-      }
-
-      const codeOfDay = cfg?.code;
-      const points = Number(cfg?.points) || 1;
-
-      if (normalize(codeUser) !== normalize(codeOfDay)) {
-        msg.textContent = 'Código inválido.';
-        msg.style.color = 'salmon';
-        return;
-      }
-
-      // 2) Grava o check-in (APENAS os campos permitidos pelas regras)
-      try{
-        await db.collection('checkins').add({
-          name: name,
-          userId: null,
-          code: normalize(codeUser),
-          points: points,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        msg.textContent = '✅ Check-in registrado!';
-        msg.style.color = 'limegreen';
-        inputCodigo.value = '';
-
-        // (opcional) rolar pra mensagem
-        msg.scrollIntoView({behavior:'smooth', block:'center'});
-      }catch(e){
-        console.error(e);
-        msg.textContent = 'Erro ao registrar. Tente novamente.';
-        msg.style.color = 'salmon';
-      }
-    }
-
-    btn.addEventListener('click', registrarCheckin);
+    // Executa quando a página abrir
     carregarNomes();
   </script>
 </body>
