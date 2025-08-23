@@ -3,51 +3,142 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Teste de Login — Desafio 40+</title>
+  <title>Admin — Desafio 40+</title>
   <style>
-    :root{--bg:#0a133a;--card:#0b2a63;--text:#e6efff;--ok:#29d17a;--err:#ff6b6b}
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;
-      background:radial-gradient(900px 480px at 70% 30%,#102640 0%,transparent 70%),#0a133a;color:var(--text)}
-    .wrap{max-width:520px;margin:40px auto;padding:24px;background:#0b2a63;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
-    h1{margin:0 0 18px} label{display:block;margin:12px 0 6px} input{width:100%;padding:12px 14px;border-radius:10px;border:0;background:#0f3a7c;color:#e6efff}
-    button{width:100%;padding:12px 14px;border-radius:10px;border:0;background:#3d6cff;color:#fff;font-weight:700;margin-top:12px;cursor:pointer}
-    .row{display:flex;gap:10px}.row>*{flex:1}
-    .ok{color:var(--ok)} .err{color:var(--err)} .muted{opacity:.75;font-size:.9rem}
-    .card{background:#0f2f6b;padding:14px;border-radius:10px;margin-top:14px}
+    :root{--bg:#0a133a;--card:#0b2a63;--card2:#0f2f6b;--text:#e6efff;--muted:#9bb7e0;--accent:#2a5cff;--ok:#29d17a;--err:#ff6b6b}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;color:var(--text);
+      background:radial-gradient(900px 480px at 70% 30%,#102640 0%,transparent 70%),#0a133a}
+    header{background:#0b2a63;padding:14px 20px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    header .wrap{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:14px}
+    .brand{font-weight:900}
+    .wrap-main{max-width:1080px;margin:26px auto;padding:0 14px}
+    .card{background:linear-gradient(180deg,var(--card),var(--card2));border-radius:16px;padding:18px;box-shadow:0 14px 40px rgba(0,0,0,.35);margin-bottom:16px}
+    h2{margin:4px 0 14px}
+    label{display:block;margin:10px 0 6px;color:var(--muted)}
+    input,select{width:100%;padding:12px 14px;border-radius:10px;border:0;background:#0f3a7c;color:#e6efff}
+    button{padding:12px 14px;border-radius:10px;border:0;background:#3d6cff;color:#fff;font-weight:800;cursor:pointer}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .muted{color:var(--muted)}
+    .ok{color:var(--ok)} .err{color:var(--err)}
+    .btn-danger{background:#d94c4c}
+    .btn-ghost{background:#123a88}
+    .hidden{display:none}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    thead th{background:#0f2f6b;padding:10px;text-align:left}
+    tbody td{padding:10px;border-bottom:1px solid rgba(229,241,255,.07)}
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .spacer{flex:1}
+    a.link{color:#9cc0ff;text-decoration:none}
+    .pill{background:#0f2f6b;padding:6px 10px;border-radius:999px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Teste de Login</h1>
-
-    <div id="status" class="card muted">Checando sessão…</div>
-
-    <div id="form">
-      <label>E-mail</label>
-      <input id="email" type="email" placeholder="seu@email.com" />
-      <label>Senha</label>
-      <input id="pass" type="password" placeholder="•••••••" />
-      <button id="btnLogin">Entrar</button>
+  <header>
+    <div class="wrap">
+      <div class="brand">Admin — Desafio 40+</div>
+      <div class="spacer"></div>
+      <div id="who" class="pill muted">Checando sessão…</div>
+      <button id="btnLogout" class="btn-ghost hidden">Sair</button>
     </div>
+  </header>
 
-    <div id="logado" style="display:none">
-      <div class="card">
-        <div>Logado como: <b id="who"></b></div>
-      </div>
+  <main class="wrap-main">
+
+    <!-- BLOCO DE LOGIN -->
+    <section id="secLogin" class="card">
+      <h2>Entrar</h2>
       <div class="row">
-        <button id="btnLogout">Sair</button>
+        <div>
+          <label>E-mail</label>
+          <input id="email" type="email" placeholder="clubeenvelhecerbem@gmail.com" />
+        </div>
+        <div>
+          <label>Senha</label>
+          <input id="pass" type="password" placeholder="•••••••" />
+        </div>
       </div>
-    </div>
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button id="btnLogin">Entrar</button>
+      </div>
+      <div id="msgLogin" class="muted" style="margin-top:8px"></div>
+      <div class="muted" style="margin-top:8px">Se der “domínio não autorizado”, adicione <b>desafio40mais.vercel.app</b> em Firebase → Authentication → Domínios autorizados.</div>
+    </section>
 
-    <div id="msg" class="muted"></div>
-  </div>
+    <!-- BLOCO DE NÃO-ADMIN -->
+    <section id="secNaoAdmin" class="card hidden">
+      <h2>Acesso negado</h2>
+      <div class="err">Você entrou, mas seu usuário não é administrador.</div>
+      <div class="muted" style="margin-top:8px">Peça para incluir seu UID nas regras ou saia e entre com a conta de admin.</div>
+    </section>
 
-  <!-- Firebase v8 (igual aos seus arquivos) -->
+    <!-- PAINEL ADMIN (só aparece para UID autorizado) -->
+    <section id="secAdmin" class="hidden">
+
+      <section class="card">
+        <div class="topbar">
+          <h2>Código do treino de hoje</h2>
+          <button id="btnPublish" class="btn-ghost">Publicar ranking</button>
+        </div>
+        <div class="row">
+          <div>
+            <label>Código (ex.: foco)</label>
+            <input id="code" placeholder="foco" />
+          </div>
+          <div>
+            <label>Pontos por check-in</label>
+            <input id="points" type="number" value="3" />
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <button id="btnSalvarCodigo">Salvar código</button>
+          <span id="msgCodigo" class="muted"></span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Adicionar / editar atleta</h2>
+        <div class="row">
+          <div>
+            <label>Nome (obrigatório)</label>
+            <input id="athNome" placeholder="Ex.: Maria Silva" />
+          </div>
+          <div>
+            <label>Foto (URL pública — opcional)</label>
+            <input id="athFoto" placeholder="https://..." />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Pontos iniciais</label>
+            <input id="athPontos" type="number" value="0" />
+          </div>
+          <div>
+            <label>Status</label>
+            <input id="athStatus" placeholder="Ex.: Em alta" />
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <button id="btnSalvarAtleta">Salvar atleta</button>
+          <span id="msgAtleta" class="muted"></span>
+        </div>
+
+        <table id="tbl" style="margin-top:16px">
+          <thead><tr><th>Nome</th><th>Pontos</th><th>Status</th><th>Selos</th><th>ID</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </section>
+
+    </section>
+
+  </main>
+
+  <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script>
-    // === SUA CONFIG (conforme você me passou) ===
+    // === SUA CONFIG ===
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
       authDomain: "clube-aguiar-live.firebaseapp.com",
@@ -58,43 +149,152 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db   = firebase.firestore();
 
+    // === UID do admin (o mesmo que está nas REGRAS) ===
+    const ADMIN_UID = "Lklp9zwhhcSMgrWttuSiEk2D5I02";
+
+    // Helpers
     const $ = s => document.querySelector(s);
-    const statusEl = $("#status"), formEl = $("#form"), logadoEl = $("#logado"), whoEl = $("#who"), msgEl = $("#msg");
+    const on = (el, ev, fn) => el.addEventListener(ev, fn);
+    const who   = $("#who");
+    const secLogin = $("#secLogin");
+    const secNao  = $("#secNaoAdmin");
+    const secAdmin= $("#secAdmin");
+    const msgLogin= $("#msgLogin");
+    const btnLogout=$("#btnLogout");
 
-    function setMsg(text, cls="") { msgEl.className = cls; msgEl.textContent = text; }
+    function show(el){ el.classList.remove("hidden"); }
+    function hide(el){ el.classList.add("hidden"); }
 
-    auth.onAuthStateChanged(u => {
-      if (u) {
-        statusEl.textContent = "Sessão ativa ✅";
-        formEl.style.display = "none";
-        logadoEl.style.display = "";
-        whoEl.textContent = u.email || "(anônimo)";
-      } else {
-        statusEl.textContent = "Não logado";
-        formEl.style.display = "";
-        logadoEl.style.display = "none";
-        whoEl.textContent = "";
+    // Estado da sessão
+    let unsubRanking = null; // para desmontar listener quando sair
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        who.textContent = "Não logado";
+        show(secLogin); hide(secNao); hide(secAdmin);
+        btnLogout.classList.add("hidden");
+        // desmonta listener se existia
+        if (unsubRanking) { unsubRanking(); unsubRanking = null; }
+        return;
       }
-      setMsg("");
+
+      who.textContent = user.email || "(sem e-mail)";
+      btnLogout.classList.remove("hidden");
+
+      // Checa se é admin
+      if (user.uid !== ADMIN_UID) {
+        hide(secLogin); hide(secAdmin); show(secNao);
+        if (unsubRanking) { unsubRanking(); unsubRanking = null; }
+        return;
+      }
+
+      // Agora sim: admin autenticado -> mostra painel e liga os listeners
+      hide(secLogin); hide(secNao); show(secAdmin);
+
+      // Carregar código do dia
+      try {
+        const snap = await db.collection("codes").doc("today").get(); // <=== colecao codes/today
+        if (snap.exists) {
+          const d = snap.data();
+          $("#code").value   = d.code || "";
+          $("#points").value = d.points ?? 3;
+        }
+      } catch(e){ console.warn(e); }
+
+      // Listar atletas do ranking
+      if (unsubRanking) { unsubRanking(); }
+      unsubRanking = db.collection("ranking") // <=== colecao ranking
+        .orderBy("points","desc")
+        .onSnapshot(snap=>{
+          const tbody = $("#tbody");
+          tbody.innerHTML = "";
+          snap.forEach(doc=>{
+            const d = doc.data();
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${d.name || "-"}</td>
+              <td>${d.points ?? 0}</td>
+              <td>${d.status || "-"}</td>
+              <td>${(d.badges||[]).join(" ")}</td>
+              <td>${doc.id}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }, err=>{
+          console.error(err);
+        });
     });
 
-    $("#btnLogin").onclick = async () => {
-      setMsg("Entrando…");
-      const email = $("#email").value.trim();
-      const pass  = $("#pass").value;
-      try {
-        await auth.signInWithEmailAndPassword(email, pass);
-        setMsg("Login OK", "ok");
-      } catch (e) {
-        setMsg(`Erro ao logar: ${e.message}`, "err");
+    // Login / Logout
+    on($("#btnLogin"), "click", async ()=>{
+      msgLogin.textContent = "Entrando…";
+      try{
+        await auth.signInWithEmailAndPassword($("#email").value.trim(), $("#pass").value);
+        msgLogin.textContent = "";
+      }catch(e){
+        msgLogin.textContent = "Erro: " + e.message;
       }
-    };
+    });
 
-    $("#btnLogout").onclick = async () => {
-      try { await auth.signOut(); setMsg("Saiu da sessão", "ok"); } 
-      catch(e){ setMsg(e.message, "err"); }
-    };
+    on(btnLogout, "click", async ()=>{
+      try{ await auth.signOut(); }catch(e){ alert(e.message); }
+    });
+
+    // Salvar código do dia
+    on($("#btnSalvarCodigo"), "click", async ()=>{
+      $("#msgCodigo").textContent = "Salvando…";
+      try{
+        await db.collection("codes").doc("today").set({   // <=== codes/today
+          code: $("#code").value.trim(),
+          points: parseInt($("#points").value||"0",10),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, {merge:true});
+        $("#msgCodigo").textContent = "Salvo ✓";
+        $("#msgCodigo").className = "ok";
+      }catch(e){
+        $("#msgCodigo").textContent = "Erro: " + e.message;
+        $("#msgCodigo").className = "err";
+      }
+    });
+
+    // Publicar ranking (opcional — aqui só força um read pra validar sessão)
+    on($("#btnPublish"), "click", async ()=>{
+      try{
+        await db.collection("ranking").limit(1).get(); // teste de permissão
+        alert("Ranking pronto/online (permite leitura)!");
+      }catch(e){
+        alert("Erro ao publicar: " + e.message);
+      }
+    });
+
+    // Salvar atleta
+    on($("#btnSalvarAtleta"), "click", async ()=>{
+      $("#msgAtleta").textContent = "Salvando…";
+      try{
+        const name = $("#athNome").value.trim();
+        if (!name) { $("#msgAtleta").textContent = "Informe o nome."; return; }
+
+        // Id baseado no nome (pode usar outro critério se preferir)
+        const id = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+
+        await db.collection("ranking").doc(id).set({   // <=== ranking/{id}
+          name,
+          photo: $("#athFoto").value.trim() || null,
+          points: parseInt($("#athPontos").value||"0", 10),
+          status: $("#athStatus").value.trim() || null,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, {merge:true});
+
+        $("#msgAtleta").textContent = "Atleta salva ✓";
+        $("#msgAtleta").className = "ok";
+        $("#athNome").value = ""; $("#athFoto").value=""; $("#athPontos").value="0"; $("#athStatus").value="";
+      }catch(e){
+        $("#msgAtleta").textContent = "Erro: " + e.message;
+        $("#msgAtleta").className = "err";
+      }
+    });
   </script>
 </body>
 </html>
