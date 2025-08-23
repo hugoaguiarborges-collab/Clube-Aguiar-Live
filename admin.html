@@ -1,325 +1,392 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Admin — Desafio 40+</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Firebase v8 (direto no HTML) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
   <style>
-    :root{--bg:#0b1b2b;--panel:#12263a;--line:#18354f;--txt:#e8f1fb;--muted:#9bb5cf;--accent:#6aa5ff;--error:#ff6b6b;--ok:#33d69f}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu}
-    .wrap{max-width:1100px;margin:30px auto;padding:0 16px}
-    h1{margin:0 0 12px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.2);padding:20px}
-    label{display:block;margin:12px 0 6px}
-    input, select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0f2032;color:var(--txt)}
-    .btn{margin-top:12px;background:var(--accent);color:#061525;border:0;padding:12px 16px;border-radius:10px;font-weight:700}
-    .btn.out{background:#2c3e50;color:#fff}
+    :root{
+      --bg:#081a34; --card:#0f2547; --card2:#132c55; --text:#e7f1ff; --muted:#9bb7e0; --accent:#2f5bff; --input:#0d2142; --ok:#8ef0a0; --err:#ff9b9b; --thead:#1b345f;
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text)}
+    header{background:#0b2a63; padding:16px 20px; font-weight:800; box-shadow:0 6px 20px rgba(0,0,0,.35)}
+    .wrap{max-width:1100px; margin:26px auto; padding:0 20px}
+    .card{background:linear-gradient(180deg,var(--card),var(--card2)); border-radius:18px; padding:22px; box-shadow:0 10px 30px rgba(0,0,0,.35); margin-bottom:18px}
+    h2{margin:0 0 14px; font-size:20px}
     .muted{color:var(--muted)}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left}
-    .err{color:var(--error);font-weight:700}
-    .ok{color:var(--ok);font-weight:700}
-    .hide{display:none}
-    .foto{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
-    .row{display:flex;gap:8px;align-items:center}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    label{display:block; margin:10px 0 6px; font-weight:700}
+    input,select,button{width:100%; padding:12px 14px; border-radius:12px; border:0; font-size:16px}
+    input,select{background:var(--input); color:var(--text)}
+    button{background:var(--accent); color:#fff; font-weight:800; cursor:pointer; box-shadow:0 6px 16px rgba(47,91,255,.35)}
+    .btn-sm{padding:10px 12px; font-size:14px}
+    .ok{color:var(--ok); font-weight:800}
+    .err{color:var(--err); white-space:pre-wrap}
+    table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:14px}
+    thead th{background:var(--thead); color:#cfe0ff; padding:10px; text-align:left; font-size:14px}
+    tbody td{padding:10px; border-bottom:1px solid rgba(255,255,255,.07)}
+    .badges{display:flex; gap:6px; flex-wrap:wrap}
+    .badge{padding:6px 10px; background:#0d2142; border-radius:999px; border:1px solid rgba(255,255,255,.08)}
+    .hidden{display:none}
+    .actions{display:flex; gap:10px}
+    .grid-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
+    a.btn{display:inline-block; text-decoration:none; text-align:center}
   </style>
-  <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Admin — Desafio 40+</h1>
-    <p class="muted">Faça login para gerenciar atletas, pontos, selos e publicar o código do dia.</p>
+  <header>Admin — Desafio 40+</header>
 
-    <!-- Login -->
-    <div id="boxLogin" class="card">
-      <h2>Login</h2>
-      <label>E-mail</label><input id="email" type="email" placeholder="seu@email.com">
-      <label>Senha</label><input id="senha" type="password" placeholder="********">
-      <button id="btnLogin" class="btn">Entrar</button>
-      <span id="loginMsg" class="err"></span>
+  <div class="wrap">
+    <!-- STATUS DE LOGIN -->
+    <div class="card">
+      <div id="loginStatus" class="muted">Conectando…</div>
+      <div id="loginErr" class="err hidden"></div>
+      <div id="loginWho" class="muted hidden"></div>
+      <div id="logoutArea" class="hidden" style="margin-top:10px">
+        <a id="goRanking" class="btn btn-sm" href="./index.html">← Voltar ao ranking</a>
+        <button id="btnLogout" class="btn btn-sm" style="width:auto">Sair</button>
+      </div>
     </div>
 
-    <div id="boxAdmin" class="hide">
-      <div class="row" style="justify-content:space-between;margin:8px 0 16px">
-        <div class="muted" id="who"></div>
-        <button id="btnLogout" class="btn out">Sair</button>
+    <!-- CONTEÚDO ADMIN (aparece só após login aprovado) -->
+    <div id="adminArea" class="hidden">
+
+      <!-- Código do treino de hoje -->
+      <div class="card">
+        <h2>Código do treino de hoje</h2>
+        <div class="grid-3">
+          <div>
+            <label for="inpCode">Código (ex.: AG18)</label>
+            <input id="inpCode" type="text" placeholder="AG18"/>
+          </div>
+          <div>
+            <label for="inpPoints">Pontos por check-in</label>
+            <input id="inpPoints" type="number" min="0" value="1"/>
+          </div>
+          <div style="display:flex; align-items:flex-end">
+            <button id="btnSaveCode">Salvar código</button>
+          </div>
+        </div>
+        <div id="msgCode" class="muted" style="margin-top:8px"></div>
       </div>
 
-      <div class="grid">
-        <!-- CÓDIGO DO DIA -->
-        <div class="card">
-          <h2>Código do dia</h2>
-          <label>Data (YYYY-MM-DD)</label>
-          <input id="cdData" placeholder="2025-08-21">
-          <label>Código (sem acento; ex.: forca)</label>
-          <input id="cdCodigo" placeholder="forca">
-          <div class="row">
-            <label style="margin:10px 0 0">Ativo?</label>
-            <select id="cdAtivo">
-              <option value="true">Sim</option>
-              <option value="false">Não</option>
-            </select>
-          </div>
-          <button id="btnSalvarCodigo" class="btn">Publicar / Salvar</button>
-          <div id="cdMsg" class="muted"></div>
-        </div>
-
-        <!-- ADICIONAR/EDITAR ATLETA -->
+      <div class="row">
+        <!-- Adicionar / editar atleta -->
         <div class="card">
           <h2>Adicionar / editar atleta</h2>
-          <label>Nome</label><input id="aNome" placeholder="Ex.: Lúcia Silva">
-          <label>Foto (URL pública — opcional)</label>
-          <div class="row">
-            <input id="aFoto" placeholder="https://...">
-            <button id="btnUpload" class="btn" type="button">Enviar foto (Cloudinary)</button>
+          <label for="inpName">Nome</label>
+          <input id="inpName" type="text" placeholder="Ex.: Lúcia Gama"/>
+
+          <label for="inpPhoto">Foto (URL pública — opcional)</label>
+          <input id="inpPhoto" type="url" placeholder="https://…"/>
+
+          <div class="grid-3">
+            <div>
+              <label for="inpInitPoints">Pontos iniciais</label>
+              <input id="inpInitPoints" type="number" value="0"/>
+            </div>
+            <div>
+              <label for="inpStatus">Status</label>
+              <input id="inpStatus" type="text" placeholder="Ex.: Em alta"/>
+            </div>
+            <div>
+              <label for="inpBadges">Selos (emojis separados por espaço)</label>
+              <input id="inpBadges" type="text" placeholder="🥇 🔥 💧"/>
+            </div>
           </div>
-          <label>Pontos iniciais</label><input id="aPontos" type="number" value="0">
-          <label>Status</label><input id="aStatus" placeholder="Ex.: Em alta">
-          <label>Selos (emojis separados por espaço)</label><input id="aSelos" placeholder="🥇 🔥 💧">
-          <button id="btnSalvarAtleta" class="btn">Salvar atleta</button>
-          <div id="aMsg" class="muted"></div>
+
+          <div class="actions" style="margin-top:12px">
+            <button id="btnSavePlayer">Salvar atleta</button>
+          </div>
+          <div id="msgPlayer" class="muted" style="margin-top:8px"></div>
         </div>
 
-        <!-- PONTUAR / STATUS / SELOS -->
+        <!-- Pontuar / status / selos -->
         <div class="card">
           <h2>Pontuar / status / selos</h2>
-          <label>Selecione a atleta</label>
-          <select id="pSel"><option>Carregando…</option></select>
+          <label for="selPlayer">Selecione a atleta</label>
+          <select id="selPlayer"><option>Carregando…</option></select>
 
-          <div class="row" style="gap:12px">
-            <div style="flex:1">
-              <label>Alterar pontos (+ ou −)</label><input id="pDelta" type="number" value="1">
-              <button id="btnAplicarPontos" class="btn">Aplicar</button>
+          <div class="grid-3" style="margin-top:10px">
+            <div>
+              <label for="inpDelta">Alterar pontos (+ ou −)</label>
+              <input id="inpDelta" type="number" value="1"/>
             </div>
-            <div style="flex:1">
-              <label>Novo status</label><input id="pStatus" placeholder="Ex.: Em alta">
-              <button id="btnDefinirStatus" class="btn">Definir</button>
+            <div style="display:flex; align-items:flex-end">
+              <button id="btnApplyPoints">Aplicar</button>
+            </div>
+            <div></div>
+          </div>
+
+          <div class="grid-3" style="margin-top:10px">
+            <div>
+              <label for="inpNewStatus">Novo status</label>
+              <input id="inpNewStatus" type="text" placeholder="Ex.: Em alta"/>
+            </div>
+            <div style="display:flex; align-items:flex-end">
+              <button id="btnSetStatus">Definir</button>
+            </div>
+            <div></div>
+          </div>
+
+          <div class="grid-3" style="margin-top:10px">
+            <div>
+              <label for="inpBadge">Selo (emoji)</label>
+              <input id="inpBadge" type="text" placeholder="🔥"/>
+            </div>
+            <div style="display:flex; align-items:flex-end">
+              <button id="btnAddBadge" class="btn btn-sm">Adicionar</button>
+            </div>
+            <div style="display:flex; align-items:flex-end">
+              <button id="btnRemoveBadge" class="btn btn-sm">Remover</button>
             </div>
           </div>
 
-          <div class="row" style="gap:12px">
-            <div style="flex:1">
-              <label>Selo (emoji)</label><input id="pSelo" placeholder="🔥">
-              <button id="btnAddSelo" class="btn">Adicionar</button>
-            </div>
-            <div style="flex:1">
-              <label>Remover selo (emoji)</label><input id="pSeloRem" placeholder="🔥">
-              <button id="btnRemSelo" class="btn">Remover</button>
-            </div>
-          </div>
-          <div id="pMsg" class="muted"></div>
-        </div>
-
-        <!-- LISTA RÁPIDA -->
-        <div class="card">
-          <h2>Atletas (visualização rápida)</h2>
-          <table>
-            <thead><tr><th>Foto</th><th>Nome</th><th>Pontos</th><th>Status</th><th>Selos</th></tr></thead>
-            <tbody id="tbQuick"><tr><td colspan="5" class="muted">Carregando…</td></tr></tbody>
-          </table>
+          <div id="msgOps" class="muted" style="margin-top:8px"></div>
         </div>
       </div>
-    </div>
+
+      <!-- Lista rápida -->
+      <div class="card">
+        <h2>Atletas (visualização rápida)</h2>
+        <table>
+          <thead>
+            <tr><th>Nome</th><th>Pontos</th><th>Status</th><th>Selos</th></tr>
+          </thead>
+          <tbody id="tbodyQuick">
+            <tr><td colspan="4" class="muted">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /adminArea -->
   </div>
 
-  <!-- Firebase + Lógica Admin -->
-  <script type="module">
-    // ======== CONFIGURE AQUI O SEU PROJETO FIREBASE ========
+  <script>
+    // ====== CONFIG DO SEU FIREBASE ======
     const firebaseConfig = {
-      apiKey: "COLE_SUA_API_KEY_AQUI",
-      authDomain: "SEU_PROJETO.firebaseapp.com",
-      projectId: "SEU_PROJETO",
-      storageBucket: "SEU_PROJETO.appspot.com",
-      messagingSenderId: "XXXXXXXXXXXX",
-      appId: "1:XXXXXXXXXXXX:web:XXXXXXXXXXXXXX"
+      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+      authDomain: "clube-aguiar-live.firebaseapp.com",
+      projectId: "clube-aguiar-live",
+      storageBucket: "clube-aguiar-live.appspot.com",
+      messagingSenderId: "694025911850",
+      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
     };
-    // =======================================================
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, query, orderBy, getDocs, doc, setDoc, getDoc, updateDoc,
-      onSnapshot, increment, arrayUnion, arrayRemove
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import {
-      getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    // ====== CREDENCIAIS DO ADMIN (o que você definiu no Firebase Auth) ======
+    const ADMIN_EMAIL = "clubeenvelhecerbem@gmail.com";
+    const ADMIN_PASS  = "112233hugo";
+    const ADMIN_UID   = "Lklp9zwhhcSMgrWttuSiEk2D5I02"; // deve estar nas suas regras Firestore
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
-    const auth = getAuth(app);
+    const db = firebase.firestore();
 
-    // ---------- UI refs
-    const boxLogin = document.getElementById('boxLogin');
-    const boxAdmin = document.getElementById('boxAdmin');
-    const loginMsg = document.getElementById('loginMsg');
-    const who = document.getElementById('who');
-    const email = document.getElementById('email');
-    const senha = document.getElementById('senha');
-    document.getElementById('btnLogin').onclick = async ()=>{
-      loginMsg.textContent='';
-      try{
-        await signInWithEmailAndPassword(auth, email.value, senha.value);
-      }catch(e){ loginMsg.textContent='Falha no login.'; }
-    };
-    document.getElementById('btnLogout').onclick = ()=>signOut(auth);
+    // Helpers de DOM
+    const $ = (id)=>document.getElementById(id);
+    const loginStatus = $("loginStatus"), loginErr=$("loginErr"), loginWho=$("loginWho"), adminArea=$("adminArea"), logoutArea=$("logoutArea");
 
-    onAuthStateChanged(auth, (u)=>{
-      if(u){
-        boxLogin.classList.add('hide'); boxAdmin.classList.remove('hide');
-        who.textContent = `Logado como: ${u.email || u.uid}`;
-        carregarTudo();
-      }else{
-        boxAdmin.classList.add('hide'); boxLogin.classList.remove('hide');
+    // ====== LOGIN (e bloqueio de acesso) ======
+    loginStatus.textContent = "Fazendo login do admin…";
+    firebase.auth().signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASS)
+      .then(cred=>{
+        const uid = cred.user && cred.user.uid;
+        loginWho.textContent = `Logado como ${cred.user.email || uid}`;
+        loginWho.classList.remove("hidden");
+        $("btnLogout").onclick = ()=>firebase.auth().signOut();
+        logoutArea.classList.remove("hidden");
+
+        if (uid !== ADMIN_UID) {
+          loginStatus.innerHTML = "❌ Acesso negado";
+          loginErr.textContent = "Este usuário não está autorizado nas regras do Firestore (UID diferente).";
+          loginErr.classList.remove("hidden");
+          return firebase.auth().signOut();
+        }
+
+        loginStatus.innerHTML = "✅ Login efetuado.";
+        adminArea.classList.remove("hidden");
+
+        // Carrega dados iniciais do ADM
+        initAdmin();
+      })
+      .catch(err=>{
+        loginStatus.innerHTML = "❌ Erro ao logar";
+        loginErr.textContent = JSON.stringify(err, null, 2);
+        loginErr.classList.remove("hidden");
+      });
+
+    firebase.auth().onAuthStateChanged(u=>{
+      if (!u) {
+        adminArea.classList.add("hidden");
+        loginWho.classList.add("hidden");
+        logoutArea.classList.add("hidden");
+        loginStatus.textContent = "Deslogado.";
       }
     });
 
-    // ---------- Utilidades
-    const strip = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
-    const idFromName = n => strip(n).replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-');
-    const todayStr = () => {
-      const d=new Date(); const yyyy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
-      return `${yyyy}-${mm}-${dd}`;
-    };
+    // ====== FUNÇÕES DO ADM ======
+    const normalizeId = (s)=>String(s||"").trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")   // remove acentos
+      .replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,""); // slug
 
-    // ---------- Cloudinary Upload (opcional)
-    const fotoInput = document.getElementById('aFoto');
-    document.getElementById('btnUpload').addEventListener('click', ()=>{
-      const widget = cloudinary.createUploadWidget({
-        cloudName: 'dj6gmz0pa',
-        uploadPreset: 'checkin_unsigned',
-        sources: ['local','url','camera'],
-        multiple: false,
-        maxFiles: 1
-      }, (err, result)=>{
-        if(!err && result && result.event === "success"){
-          fotoInput.value = result.info.secure_url;
+    async function initAdmin(){
+      // meta/checkin
+      try{
+        const meta = await db.collection("meta").doc("checkin").get();
+        if (meta.exists) {
+          const d = meta.data();
+          $("inpCode").value = d.code || "";
+          $("inpPoints").value = Number(d.points || 1);
         }
-      });
-      widget.open();
-    });
+      }catch(e){ /* silencioso */ }
 
-    // ---------- Código do dia
-    const cdData = document.getElementById('cdData');
-    const cdCodigo = document.getElementById('cdCodigo');
-    const cdAtivo = document.getElementById('cdAtivo');
-    const cdMsg = document.getElementById('cdMsg');
-    cdData.value = todayStr();
+      $("btnSaveCode").onclick = async ()=>{
+        const code = $("inpCode").value.trim();
+        const points = Number($("inpPoints").value||1);
+        if (!code) { $("msgCode").textContent = "Informe o código."; return; }
+        try{
+          await db.collection("meta").doc("checkin").set({ code, points }, { merge:true });
+          $("msgCode").textContent = "✅ Código atualizado.";
+          $("msgCode").className = "ok";
+        }catch(e){
+          $("msgCode").textContent = "Erro ao salvar.";
+          $("msgCode").className = "err";
+        }
+      };
 
-    document.getElementById('btnSalvarCodigo').onclick = async ()=>{
-      cdMsg.textContent='Salvando…';
+      // Salvar atleta
+      $("btnSavePlayer").onclick = async ()=>{
+        const name = $("inpName").value.trim();
+        if (!name){ $("msgPlayer").textContent = "Informe o nome."; $("msgPlayer").className="err"; return; }
+        const id = normalizeId(name);
+        const photoUrl = $("inpPhoto").value.trim();
+        const points = Number($("inpInitPoints").value||0);
+        const status = $("inpStatus").value.trim();
+        const badges = $("inpBadges").value.trim().split(/\s+/).filter(Boolean);
+
+        const data = { name, points, status, badges };
+        if (photoUrl) data.photoUrl = photoUrl;
+
+        try{
+          await db.collection("players").doc(id).set(data, { merge:true });
+          $("msgPlayer").textContent = "✅ Atleta salva.";
+          $("msgPlayer").className = "ok";
+          // recarrega listas
+          loadPlayersSelect();
+          loadQuick();
+        }catch(e){
+          $("msgPlayer").textContent = "Erro ao salvar atleta.";
+          $("msgPlayer").className = "err";
+        }
+      };
+
+      // Operações
+      $("btnApplyPoints").onclick = ()=>updatePoints();
+      $("btnSetStatus").onclick = ()=>setStatus();
+      $("btnAddBadge").onclick = ()=>toggleBadge("add");
+      $("btnRemoveBadge").onclick = ()=>toggleBadge("remove");
+
+      loadPlayersSelect();
+      loadQuick();
+    }
+
+    async function loadPlayersSelect(){
+      const sel = $("selPlayer");
+      sel.innerHTML = `<option>Carregando…</option>`;
       try{
-        await setDoc(doc(db,'settings','dailyCode'), {
-          date: cdData.value, code: strip(cdCodigo.value), active: (cdAtivo.value==='true')
-        }, { merge:true });
-        cdMsg.textContent='Código do dia salvo.';
-      }catch(e){ cdMsg.textContent='Erro ao salvar código.'; }
-    };
-
-    // ---------- Adicionar / editar atleta
-    const aMsg   = document.getElementById('aMsg');
-    document.getElementById('btnSalvarAtleta').onclick = async ()=>{
-      aMsg.textContent='Salvando…';
-      try{
-        const nome  = document.getElementById('aNome').value;
-        const foto  = document.getElementById('aFoto').value || null;
-        const pontos= Number(document.getElementById('aPontos').value||0);
-        const status= document.getElementById('aStatus').value || '';
-        const selos = (document.getElementById('aSelos').value||'').trim();
-        const id = idFromName(nome);
-        await setDoc(doc(db,'athletes',id), {
-          name: nome, photo: foto, points: pontos, status: status,
-          badges: selos ? selos.split(/\s+/g) : []
-        }, { merge:true });
-        aMsg.textContent='Atleta salva.';
-      }catch(e){ aMsg.textContent='Erro ao salvar atleta.'; }
-    };
-
-    // ---------- Pontuar / status / selos
-    const pSel = document.getElementById('pSel');
-    const pMsg = document.getElementById('pMsg');
-
-    document.getElementById('btnAplicarPontos').onclick = async ()=>{
-      pMsg.textContent='Aplicando…';
-      try{
-        const nome = pSel.value; if(!nome) throw 0;
-        const id = idFromName(nome);
-        const delta = Number(document.getElementById('pDelta').value||0);
-        await updateDoc(doc(db,'athletes',id), { points: increment(delta) });
-        pMsg.textContent='Pontos atualizados.';
-      }catch(e){ pMsg.textContent='Erro ao aplicar pontos.'; }
-    };
-    document.getElementById('btnDefinirStatus').onclick = async ()=>{
-      pMsg.textContent='Salvando…';
-      try{
-        const nome = pSel.value; if(!nome) throw 0;
-        const id = idFromName(nome);
-        const status = document.getElementById('pStatus').value||'';
-        await updateDoc(doc(db,'athletes',id), { status });
-        pMsg.textContent='Status atualizado.';
-      }catch(e){ pMsg.textContent='Erro ao atualizar status.'; }
-    };
-    document.getElementById('btnAddSelo').onclick = async ()=>{
-      pMsg.textContent='Salvando…';
-      try{
-        const nome = pSel.value; if(!nome) throw 0;
-        const id = idFromName(nome);
-        const selo = (document.getElementById('pSelo').value||'').trim();
-        if(!selo){ pMsg.textContent='Informe um selo.'; return; }
-        await updateDoc(doc(db,'athletes',id), { badges: arrayUnion(selo) });
-        pMsg.textContent='Selo adicionado.';
-      }catch(e){ pMsg.textContent='Erro ao adicionar selo.'; }
-    };
-    document.getElementById('btnRemSelo').onclick = async ()=>{
-      pMsg.textContent='Removendo…';
-      try{
-        const nome = pSel.value; if(!nome) throw 0;
-        const id = idFromName(nome);
-        const selo = (document.getElementById('pSeloRem').value||'').trim();
-        if(!selo){ pMsg.textContent='Informe o selo a remover.'; return; }
-        await updateDoc(doc(db,'athletes',id), { badges: arrayRemove(selo) });
-        pMsg.textContent='Selo removido.';
-      }catch(e){ pMsg.textContent='Erro ao remover selo.'; }
-    };
-
-    // ---------- Listagens
-    const tbQuick = document.getElementById('tbQuick');
-
-    async function carregarTudo(){
-      // select de atletas e tabela rápida
-      const q = query(collection(db,'athletes'), orderBy('name'));
-      onSnapshot(q, (snap)=>{
-        // select
-        pSel.innerHTML = `<option value="">Selecionar…</option>`;
-        const rows = [];
-        snap.forEach(docu=>{
-          const a = docu.data();
-          const o = document.createElement('option'); o.value=a.name; o.textContent=a.name; pSel.appendChild(o);
-          rows.push(`
-            <tr>
-              <td>${a.photo?`<img class="foto" src="${a.photo}" alt="">`:'-'}</td>
-              <td>${a.name||''}</td>
-              <td>${a.points??0}</td>
-              <td>${a.status||''}</td>
-              <td>${Array.isArray(a.badges)?a.badges.join(' '):''}</td>
-            </tr>
-          `);
+        const snap = await db.collection("players").orderBy("name").get();
+        const opts = [];
+        snap.forEach(doc=>{
+          const d = doc.data();
+          opts.push(`<option value="${doc.id}">${d.name||doc.id}</option>`);
         });
-        tbQuick.innerHTML = rows.length ? rows.join('') : `<tr><td colspan="5" class="muted">Sem atletas.</td></tr>`;
-      }, ()=>{
-        tbQuick.innerHTML = `<tr><td colspan="5" class="err">Erro ao carregar.</td></tr>`;
-      });
+        sel.innerHTML = opts.length? opts.join("") : `<option>Nenhuma atleta</option>`;
+      }catch(e){
+        sel.innerHTML = `<option>Erro ao carregar</option>`;
+      }
+    }
 
-      // carrega código do dia atual (se existir)
+    async function loadQuick(){
+      const tb = $("tbodyQuick");
+      tb.innerHTML = `<tr><td colspan="4" class="muted">Carregando…</td></tr>`;
       try{
-        const c = await getDoc(doc(db,'settings','dailyCode'));
-        if(c.exists()){
-          const d = c.data();
-          cdData.value = d.date || todayStr();
-          cdCodigo.value = d.code || '';
-          cdAtivo.value = String(!!d.active);
-        }
-      }catch(e){}
+        const snap = await db.collection("players").orderBy("points","desc").get();
+        const rows=[];
+        snap.forEach(doc=>{
+          const p=doc.data();
+          rows.push(`<tr>
+            <td>${p.name||doc.id}</td>
+            <td><strong>${Number(p.points||0)}</strong></td>
+            <td>${p.status||""}</td>
+            <td class="badges">${(p.badges||[]).map(b=>`<span class="badge">${b}</span>`).join("")}</td>
+          </tr>`);
+        });
+        tb.innerHTML = rows.length? rows.join("") : `<tr><td colspan="4" class="muted">Sem atletas.</td></tr>`;
+      }catch(e){
+        tb.innerHTML = `<tr><td colspan="4" class="err">Erro.</td></tr>`;
+      }
+    }
+
+    async function updatePoints(){
+      const id = $("selPlayer").value;
+      const delta = Number($("inpDelta").value||0);
+      if (!id || !delta) { $("msgOps").textContent = "Selecione atleta e informe pontos."; $("msgOps").className="err"; return; }
+      try{
+        const ref = db.collection("players").doc(id);
+        await db.runTransaction(async (t)=>{
+          const snap = await t.get(ref);
+          const cur = Number((snap.data()||{}).points||0);
+          t.set(ref, { points: cur + delta }, { merge:true });
+        });
+        $("msgOps").textContent = "✅ Pontos atualizados.";
+        $("msgOps").className = "ok";
+        loadQuick();
+      }catch(e){
+        $("msgOps").textContent = "Erro ao pontuar.";
+        $("msgOps").className = "err";
+      }
+    }
+
+    async function setStatus(){
+      const id = $("selPlayer").value;
+      const status = $("inpNewStatus").value.trim();
+      if (!id) { $("msgOps").textContent = "Selecione a atleta."; $("msgOps").className="err"; return; }
+      try{
+        await db.collection("players").doc(id).set({ status }, { merge:true });
+        $("msgOps").textContent = "✅ Status definido.";
+        $("msgOps").className = "ok";
+        loadQuick();
+      }catch(e){
+        $("msgOps").textContent = "Erro ao definir status.";
+        $("msgOps").className = "err";
+      }
+    }
+
+    async function toggleBadge(mode){
+      const id = $("selPlayer").value;
+      const badge = $("inpBadge").value.trim();
+      if (!id || !badge) { $("msgOps").textContent = "Selecione a atleta e informe o selo."; $("msgOps").className="err"; return; }
+      try{
+        const ref = db.collection("players").doc(id);
+        const snap = await ref.get();
+        const cur = (snap.data()||{}).badges || [];
+        let next = cur.slice();
+        if (mode==="add" && !next.includes(badge)) next.push(badge);
+        if (mode==="remove") next = next.filter(b=>b!==badge);
+        await ref.set({ badges: next }, { merge:true });
+        $("msgOps").textContent = mode==="add" ? "✅ Selo adicionado." : "✅ Selo removido.";
+        $("msgOps").className = "ok";
+        loadQuick();
+      }catch(e){
+        $("msgOps").textContent = "Erro ao atualizar selos.";
+        $("msgOps").className = "err";
+      }
     }
   </script>
 </body>
