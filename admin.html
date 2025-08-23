@@ -1,285 +1,63 @@
-<!doctype html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin — Desafio 40+</title>
+  <meta charset="UTF-8">
+  <title>Admin - Desafio 40+</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+  <script>
+    // 🔥 Configuração Firebase (substitua se já tiver firebase-init.js separado)
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY_AQUI",
+      authDomain: "clube-aguiar-live.firebaseapp.com",
+      projectId: "clube-aguiar-live",
+      storageBucket: "clube-aguiar-live.appspot.com",
+      messagingSenderId: "000000000000",
+      appId: "1:000000000000:web:xxxxxxxxxxxx"
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+  </script>
+
   <style>
-    :root{color-scheme:dark; font-family: system-ui, Arial, sans-serif;}
-    body{background:#0f172a; color:#e2e8f0; margin:0; padding:20px;}
-    .container{max-width:880px; margin:0 auto;}
-    h1{font-size:22px; margin-bottom:16px;}
-    .card{background:#111827; padding:16px; border-radius:12px; margin-bottom:16px; box-shadow: 0 0 0 1px #1f2937;}
-    .card h2{font-size:18px; margin:0 0 12px 0;}
-    input,select,button{padding:10px 12px; border-radius:8px; border:1px solid #374151; background:#0b1220; color:#e2e8f0; outline:none;}
-    input,select{width:100%; margin:6px 0;}
-    button{background:#2563eb; border:none; cursor:pointer;}
-    button:hover{filter:brightness(1.1);}
-    .row{display:flex; gap:8px; align-items:center;}
-    .row input{flex:1;}
-    .msg{margin-top:8px; font-size:14px;}
-    .hint{opacity:.7; font-size:12px; margin-top:6px;}
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    h1 { color: #333; }
+    #conteudo { display: none; }
+    .erro { color: red; }
   </style>
 </head>
 <body>
-  <main class="container">
-    <h1>Admin (simples)</h1>
+  <h1>Área Administrativa</h1>
+  <p id="status">Conectando...</p>
+  <div id="conteudo">
+    <h2>Bem-vindo ao Painel do Admin 🎉</h2>
+    <p>Aqui você vai gerenciar os códigos, pontos e ranking.</p>
+  </div>
+  <p id="erro" class="erro"></p>
 
-    <!-- Login -->
-    <div id="authBox" class="card">
-      <h2>Login</h2>
-      <input id="email" type="email" placeholder="Email" />
-      <input id="senha" type="password" placeholder="Senha" />
-      <button id="btnLogin">Entrar</button>
-      <button id="btnLogout" hidden>Sair</button>
-      <div id="authMsg" class="msg"></div>
-    </div>
+  <script>
+    const ADMIN_EMAIL = "clubeenvelhecerbem@gmail.com";
+    const ADMIN_SENHA = "112233hugo";
+    const ADMIN_UID = "LkLp9zwhhcSMgrWttuSiEk2D5I02"; // seu UID já cadastrado
 
-    <div id="app" hidden>
-      <!-- Código do treino -->
-      <section class="card">
-        <h2>Código do treino de hoje</h2>
-        <input id="codigoTreino" placeholder="Ex.: AG18" />
-        <input id="pontosCheckin" type="number" placeholder="Pontos por check-in" />
-        <button id="btnSalvarCodigo">Salvar código</button>
-        <div id="codigoMsg" class="msg"></div>
-      </section>
-
-      <!-- Adicionar / editar atleta -->
-      <section class="card">
-        <h2>Adicionar / editar atleta</h2>
-        <input id="nome" placeholder="Nome (obrigatório)" />
-        <input id="fotoUrl" placeholder="Foto (URL pública — opcional)" />
-        <input id="pontosIniciais" type="number" placeholder="Pontos (número)" value="0" />
-        <input id="status" placeholder="Status (ex.: Em alta)" />
-        <input id="selos" placeholder="Selos (emojis separados por espaço)" />
-        <button id="btnSalvarAtleta">Salvar atleta</button>
-        <div class="hint">Dica: o nome vira o ID automaticamente.</div>
-        <div id="atletaMsg" class="msg"></div>
-      </section>
-
-      <!-- Pontuar / status / selos -->
-      <section class="card">
-        <h2>Pontuar / status / selos</h2>
-        <label>Selecione a atleta</label>
-        <select id="athleteSelect"></select>
-
-        <div class="row">
-          <input id="deltaPontos" type="number" placeholder="+ ou − (ex.: 2 ou -1)" />
-          <button id="btnAplicarPontos">Aplicar</button>
-        </div>
-
-        <div class="row">
-          <input id="novoStatus" placeholder="Novo status (ex.: Em alta)" />
-          <button id="btnDefinirStatus">Definir</button>
-        </div>
-
-        <div class="row">
-          <input id="seloEmoji" placeholder="Selo (emoji)" />
-          <button id="btnAddSelo">Adicionar</button>
-          <button id="btnRemoverSelo">Remover</button>
-        </div>
-
-        <div id="pontuarMsg" class="msg"></div>
-      </section>
-    </div>
-
-    <div id="globalMsg" class="msg"></div>
-  </main>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, serverTimestamp, increment, arrayUnion, arrayRemove, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    // >>> COLOQUE SEUS DADOS AQUI (públicos, não é senha):
-    const firebaseConfig = {
-      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
-  authDomain: "clube-aguiar-live.firebaseapp.com",
-  projectId: "clube-aguiar-live",
-  storageBucket: "clube-aguiar-live.firebasestorage.app",
-  messagingSenderId: "694025911850",
-  appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
-};
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const $ = (id)=>document.getElementById(id);
-    const show = (el, vis=true)=>{ el.hidden = !vis; };
-    const msg = (el, text, ok=false)=>{ el.textContent = text; el.style.color = ok ? "#17c964" : "#ff4d4f"; };
-
-    // Login
-    $("btnLogin").addEventListener("click", async ()=>{
-      try{
-        const email = $("email").value.trim();
-        const senha = $("senha").value;
-        await signInWithEmailAndPassword(auth, email, senha);
-        msg($("authMsg"), "Logado!", true);
-      }catch(e){ msg($("authMsg"), e.code || e.message); }
-    });
-    $("btnLogout").addEventListener("click", async ()=>{ await signOut(auth); });
-
-    onAuthStateChanged(auth, async (user)=>{
-      if(user){
-        show($("btnLogout"), true);
-        show($("app"), true);
-        show($("authBox"), false);
-        await carregarAtletas();
-        await carregarConfig();
-      }else{
-        show($("btnLogout"), false);
-        show($("app"), false);
-        show($("authBox"), true);
-      }
-    });
-
-    // Auxiliares
-    function slug(str){
-      return str.normalize("NFD")
-        .replace(/\p{Diacritic}/gu,"")
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g,"")
-        .trim()
-        .replace(/\s+/g,"-")
-        .slice(0,60);
-    }
-    function parseSelos(str){
-      if(!str || !str.trim()) return [];
-      return str.trim().split(/\s+/);
-    }
-
-    // Config (código do treino)
-    async function carregarConfig(){
-      try{
-        const ref = doc(db,"config","global");
-        const snap = await getDoc(ref);
-        if(snap.exists()){
-          const d = snap.data();
-          $("codigoTreino").value = d.codigoTreino || "";
-          $("pontosCheckin").value = d.pontosPorCheckin ?? 0;
-          msg($("codigoMsg"), "Código carregado.", true);
+    firebase.auth().signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_SENHA)
+      .then((cred) => {
+        if (cred.user.uid === ADMIN_UID) {
+          document.getElementById("status").innerText = "✅ Admin logado com sucesso!";
+          document.getElementById("conteudo").style.display = "block";
+        } else {
+          document.getElementById("status").innerText = "❌ Acesso negado";
+          document.getElementById("erro").innerText = "Você não é administrador autorizado.";
+          firebase.auth().signOut();
         }
-      }catch(e){ msg($("codigoMsg"), e.code || e.message); }
-    }
-    $("btnSalvarCodigo").addEventListener("click", async ()=>{
-      try{
-        const ref = doc(db,"config","global");
-        const codigoTreino = $("codigoTreino").value.trim();
-        const pontosPorCheckin = Number($("pontosCheckin").value) || 0;
-        await setDoc(ref, { codigoTreino, pontosPorCheckin, updatedAt: serverTimestamp() }, { merge:true });
-        msg($("codigoMsg"), "Código salvo.", true);
-      }catch(e){ msg($("codigoMsg"), e.code || e.message); }
-    });
-
-    // Atletas
-    async function carregarAtletas(){
-      try{
-        const sel = $("athleteSelect");
-        sel.innerHTML = "";
-        const q = query(collection(db,"atletas"), orderBy("nome"));
-        onSnapshot(q, (snap)=>{
-          sel.innerHTML = "";
-          snap.forEach(docSnap=>{
-            const d = docSnap.data();
-            const opt = document.createElement("option");
-            opt.value = docSnap.id;
-            opt.textContent = d.nome || docSnap.id;
-            sel.appendChild(opt);
-          });
-          if(!sel.options.length){
-            const opt = document.createElement("option");
-            opt.textContent = "— nenhum atleta —";
-            opt.value = "";
-            sel.appendChild(opt);
-          }
-        });
-      }catch(e){ msg($("globalMsg"), e.code || e.message); }
-    }
-
-    $("btnSalvarAtleta").addEventListener("click", async ()=>{
-      try{
-        const nome = $("nome").value.trim();
-        if(!nome){ msg($("atletaMsg"), "Preencha o nome."); return; }
-        const id = slug(nome);
-        const ref = doc(db,"atletas", id);
-
-        const fotoUrl = $("fotoUrl").value.trim() || "";
-        const pontos = Number($("pontosIniciais").value) || 0;
-        const status = $("status").value.trim() || "";
-        const selos = parseSelos($("selos").value);
-
-        await setDoc(ref, {
-          nome, fotoUrl, pontos, status, selos,
-          updatedAt: serverTimestamp(),
-          createdAt: serverTimestamp()
-        }, { merge:true });
-
-        msg($("atletaMsg"), "Atleta salva.", true);
-        $("nome").value = ""; $("fotoUrl").value = "";
-        $("pontosIniciais").value = "0"; $("status").value = ""; $("selos").value = "";
-      }catch(e){ msg($("atletaMsg"), e.code || e.message); }
-    });
-
-    // Pontuar
-    $("btnAplicarPontos").addEventListener("click", async ()=>{
-      try{
-        const id = $("athleteSelect").value;
-        if(!id){ msg($("pontuarMsg"), "Escolha a atleta."); return; }
-        const delta = Number($("deltaPontos").value);
-        if(!Number.isFinite(delta) || delta === 0){ msg($("pontuarMsg"), "Informe um número (ex.: 2)."); return; }
-        const ref = doc(db,"atletas", id);
-        await updateDoc(ref, { pontos: increment(delta), updatedAt: serverTimestamp() });
-        msg($("pontuarMsg"), "Pontos atualizados.", true);
-        $("deltaPontos").value = "";
-      }catch(e){ msg($("pontuarMsg"), e.code || e.message); }
-    });
-
-    // Status
-    $("btnDefinirStatus").addEventListener("click", async ()=>{
-      try{
-        const id = $("athleteSelect").value;
-        if(!id){ msg($("pontuarMsg"), "Escolha a atleta."); return; }
-        const novo = $("novoStatus").value.trim();
-        const ref = doc(db,"atletas", id);
-        await updateDoc(ref, { status: novo, updatedAt: serverTimestamp() });
-        msg($("pontuarMsg"), "Status definido.", true);
-        $("novoStatus").value = "";
-      }catch(e){ msg($("pontuarMsg"), e.code || e.message); }
-    });
-
-    // Selos
-    $("btnAddSelo").addEventListener("click", async ()=>{
-      try{
-        const id = $("athleteSelect").value;
-        const selo = $("seloEmoji").value.trim();
-        if(!id || !selo){ msg($("pontuarMsg"), "Informe atleta e selo."); return; }
-        const ref = doc(db,"atletas", id);
-        await updateDoc(ref, { selos: arrayUnion(selo), updatedAt: serverTimestamp() });
-        msg($("pontuarMsg"), "Selo adicionado.", true);
-        $("seloEmoji").value = "";
-      }catch(e){ msg($("pontuarMsg"), e.code || e.message); }
-    });
-
-    $("btnRemoverSelo").addEventListener("click", async ()=>{
-      try{
-        const id = $("athleteSelect").value;
-        const selo = $("seloEmoji").value.trim();
-        if(!id || !selo){ msg($("pontuarMsg"), "Informe atleta e selo."); return; }
-        const ref = doc(db,"atletas", id);
-        await updateDoc(ref, { selos: arrayRemove(selo), updatedAt: serverTimestamp() });
-        msg($("pontuarMsg"), "Selo removido.", true);
-        $("seloEmoji").value = "";
-      }catch(e){ msg($("pontuarMsg"), e.code || e.message); }
-    });
+      })
+      .catch((err) => {
+        document.getElementById("status").innerText = "❌ Erro ao logar";
+        document.getElementById("erro").innerText = err.message;
+      });
   </script>
-<!-- Firebase v8 (precisa ser v8, não v9+) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
-<!-- Seu código do admin -->
-<script src="admin.js"></script>
 </body>
 </html>
