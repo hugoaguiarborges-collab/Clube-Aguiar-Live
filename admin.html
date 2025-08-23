@@ -4,40 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — Desafio 40+</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
-    :root {
-      --muted:#a7b6d0;
-      --ok:#16a34a;
-      --err:#dc2626;
-    }
-    *{box-sizing:border-box}
     body{
       margin:0;
       background:linear-gradient(180deg,#0e2345,#0a1a33);
       color:#e6efff;
-      font-family:Poppins,Arial,Helvetica,sans-serif
+      font-family:Poppins, Arial, Helvetica, sans-serif;
     }
     header{
-      padding:16px;
+      padding:18px;
       text-align:center;
       background:#0e2345;
       box-shadow:0 2px 8px rgba(0,0,0,.25)
     }
     .wrap{max-width:760px;margin:24px auto;padding:0 14px}
     .card{
-      background:rgba(255,255,255,0.05);
+      background:rgba(255,255,255,0.06);
       border-radius:14px;
       padding:18px;
       margin-bottom:24px;
       box-shadow:0 6px 16px rgba(0,0,0,.12)
     }
-    h1{margin:0 0 8px;color:var(--muted)}
-    label{display:block;font-size:14px;color:#b0c4ff;margin:10px 0 6px}
+    h1{margin:0 0 10px;font-size:1.3em;color:#fff;font-weight:800;}
+    label{display:block;font-size:15px;color:#b0c4ff;margin:10px 0 6px}
     input,select{
       width:100%;
       padding:12px;
@@ -46,23 +38,82 @@
       color:#e6efff;
       border-radius:12px;
       margin-bottom:14px;
-      font-size:14px;
+      font-size:15px;
+      font-family:Poppins,Arial,Helvetica,sans-serif;
     }
     button{
       background:linear-gradient(180deg,#3d66ff,#224ad6);
       color:#fff;
       border:0;
       border-radius:12px;
-      padding:14px;
+      padding:12px 18px;
       cursor:pointer;
       font-size:15px;
-      font-weight:bold;
-      width:100%
+      font-weight:600;
+      margin-top:6px;
+      transition:0.2s;
     }
-    button:hover{opacity:0.9}
-    .status {margin:8px 0 0 0; font-size:13px;}
-    small{font-size:12px;line-height:1.4}
-    a{color:#6da4ff;text-decoration:none}
+    button:hover{opacity:0.92}
+    .status {
+      margin:8px 0 0 0;
+      font-size:14px;
+      font-weight:bold;
+      color:#ffd700;
+      min-height:18px;
+      transition:0.2s;
+    }
+    .alunas-list{
+      margin-top:18px;
+      border-radius:12px;
+      background:rgba(44,70,150,0.16);
+      padding:10px;
+    }
+    .aluna-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:8px 0;
+      border-bottom:1px solid #2947ad;
+    }
+    .aluna-nome{
+      font-weight:600;
+      color:#fff;
+      font-size:15px;
+    }
+    .aluna-pontos{
+      font-size:14px;
+      color:#a8e6a6;
+      margin-right:10px;
+    }
+    .aluna-actions{
+      display:flex;
+      gap:8px;
+    }
+    .aluna-edit, .aluna-remove{
+      background:#2549c8;
+      padding:6px 12px;
+      border-radius:8px;
+      font-size:13px;
+      cursor:pointer;
+      border:none;
+      color:#fff;
+      font-weight:600;
+      transition:0.2s;
+    }
+    .aluna-edit:hover{background:#1b357c;}
+    .aluna-remove{background:#c83d3d;}
+    .aluna-remove:hover{background:#8c2020;}
+    .edit-inline{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .edit-inline input{
+      width:70px;
+      padding:4px 8px;
+      font-size:13px;
+      margin-bottom:0;
+    }
   </style>
 </head>
 <body>
@@ -70,7 +121,7 @@
     <h2>Admin — Desafio 40+</h2>
   </header>
   <div class="wrap">
-    <!-- Seção: Adicionar aluna -->
+    <!-- Adicionar nova aluna -->
     <div class="card">
       <h1>Adicionar nova aluna</h1>
       <form id="formAddAluna">
@@ -80,8 +131,7 @@
         <div id="statusAddAluna" class="status"></div>
       </form>
     </div>
-
-    <!-- Seção: Adicionar código do treino do dia -->
+    <!-- Adicionar código do treino do dia -->
     <div class="card">
       <h1>Adicionar código do treino do dia</h1>
       <form id="formCodigoTreino">
@@ -91,31 +141,22 @@
         <div id="statusCodigoTreino" class="status"></div>
       </form>
     </div>
-
-    <!-- Seção: Editar pontuação das alunas -->
+    <!-- Lista das alunas cadastradas -->
     <div class="card">
-      <h1>Editar Pontuação das Alunas</h1>
-      <form id="formEditarPontos">
-        <label for="selectAluna">Selecione a aluna:</label>
-        <select id="selectAluna" name="selectAluna" required>
-          <option value="">Carregando...</option>
-        </select>
-        <label for="pontosEditar">Quantidade de pontos (use negativo para retirar):</label>
-        <input type="number" id="pontosEditar" name="pontosEditar" required placeholder="Ex: 5 ou -2" />
-        <button type="submit">Atualizar Pontos</button>
-        <div id="statusEditarPontos" class="status"></div>
-      </form>
+      <h1>Alunas cadastradas e pontuação</h1>
+      <div id="alunasList" class="alunas-list">
+        Carregando alunas...
+      </div>
+      <div id="statusAlunas" class="status"></div>
     </div>
-
     <p style="margin-top:16px">
       <a href="index.html">← Voltar ao ranking</a>
     </p>
   </div>
-
   <script>
     // Configuração do Firebase
     const firebaseConfig = {
-      // COLOQUE SUA CONFIG AQUI
+      // COLE SUA CONFIG AQUI
       apiKey: "SUA_API_KEY",
       authDomain: "SEU_AUTH_DOMAIN",
       projectId: "SEU_PROJECT_ID",
@@ -126,88 +167,130 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Função para adicionar aluna
+    // Utilitário: mostrar status e sumir depois de 3s
+    function showStatus(id, text, color='#ffd700') {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.style.color = color;
+      if (text) setTimeout(() => { el.textContent = ""; }, 3000);
+    }
+
+    // Adicionar nova aluna
     document.getElementById("formAddAluna").addEventListener("submit", async function(e) {
       e.preventDefault();
       const nome = document.getElementById("nomeAluna").value.trim();
-      const status = document.getElementById("statusAddAluna");
       if (!nome) return;
-      status.textContent = "Adicionando...";
+      showStatus("statusAddAluna", "Adicionando...");
       try {
         await db.collection("usuarios").add({ nome, pontos: 0 });
-        status.textContent = "Aluna adicionada com sucesso!";
+        showStatus("statusAddAluna", "Aluna adicionada com sucesso!", "#a8e6a6");
         document.getElementById("formAddAluna").reset();
-        carregarAlunasEditar(); // Atualiza lista de alunas na edição de pontos
+        carregarAlunas();
       } catch (err) {
-        status.textContent = "Erro ao adicionar: " + err.message;
+        showStatus("statusAddAluna", "Erro: " + err.message, "#ff6060");
       }
     });
 
-    // Função para salvar código do treino
+    // Adicionar código do treino do dia
     document.getElementById("formCodigoTreino").addEventListener("submit", async function(e) {
       e.preventDefault();
       const codigo = document.getElementById("codigoTreino").value.trim();
-      const status = document.getElementById("statusCodigoTreino");
       if (!codigo) return;
-      status.textContent = "Salvando...";
+      showStatus("statusCodigoTreino", "Salvando...");
       try {
         await db.collection("config").doc("treino_do_dia").set({ codigo });
-        status.textContent = "Código do treino salvo!";
+        showStatus("statusCodigoTreino", "Código salvo!", "#a8e6a6");
         document.getElementById("formCodigoTreino").reset();
       } catch (err) {
-        status.textContent = "Erro ao salvar: " + err.message;
+        showStatus("statusCodigoTreino", "Erro: " + err.message, "#ff6060");
       }
     });
 
-    // Função para carregar alunas no select de edição de pontos
-    async function carregarAlunasEditar() {
-      const select = document.getElementById("selectAluna");
-      select.innerHTML = "<option value=''>Carregando...</option>";
+    // Carregar alunas (lista)
+    async function carregarAlunas() {
+      const lista = document.getElementById("alunasList");
+      lista.innerHTML = "Carregando alunas...";
       try {
-        const snap = await db.collection("usuarios").get();
+        const snap = await db.collection("usuarios").orderBy("nome").get();
         if (snap.empty) {
-          select.innerHTML = "<option value=''>Nenhuma aluna cadastrada</option>";
+          lista.innerHTML = "<div style='padding:12px;'>Nenhuma aluna cadastrada</div>";
           return;
         }
-        select.innerHTML = "";
+        lista.innerHTML = "";
         snap.forEach(doc => {
           const usuario = doc.data();
-          const opt = document.createElement("option");
-          opt.value = doc.id;
-          opt.textContent = `${usuario.nome} (atual: ${usuario.pontos ?? 0} pts)`;
-          select.appendChild(opt);
+          const item = document.createElement("div");
+          item.className = "aluna-item";
+          item.innerHTML = `
+            <span class="aluna-nome">${usuario.nome}</span>
+            <span class="aluna-pontos">${usuario.pontos ?? 0} pts</span>
+            <span class="aluna-actions">
+              <button class="aluna-edit" data-id="${doc.id}">Editar pontos</button>
+              <button class="aluna-remove" data-id="${doc.id}">Remover</button>
+            </span>
+          `;
+          lista.appendChild(item);
+        });
+        // Adicionar eventos de editar/remover
+        document.querySelectorAll(".aluna-edit").forEach(btn => {
+          btn.onclick = () => editarPontosInline(btn.dataset.id);
+        });
+        document.querySelectorAll(".aluna-remove").forEach(btn => {
+          btn.onclick = () => removerAluna(btn.dataset.id);
         });
       } catch (err) {
-        select.innerHTML = "<option value=''>Erro ao carregar</option>";
+        lista.innerHTML = "<div style='padding:12px;color:#ff6060;'>Erro ao carregar alunas</div>";
       }
     }
-    carregarAlunasEditar();
+    carregarAlunas();
 
-    // Função para editar pontos da aluna
-    document.getElementById("formEditarPontos").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      const select = document.getElementById("selectAluna");
-      const alunaId = select.value;
-      const pontos = parseInt(document.getElementById("pontosEditar").value, 10);
-      const status = document.getElementById("statusEditarPontos");
-      if (!alunaId || isNaN(pontos)) return;
-      status.textContent = "Atualizando...";
-      try {
-        const docRef = db.collection("usuarios").doc(alunaId);
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-          status.textContent = "Aluna não encontrada!";
-          return;
+    // Editar pontos inline
+    async function editarPontosInline(id) {
+      const lista = document.getElementById("alunasList");
+      const item = Array.from(lista.children).find(div =>
+        div.querySelector(".aluna-edit[data-id='"+id+"']")
+      );
+      if (!item) return;
+      // Buscar dados
+      const doc = await db.collection("usuarios").doc(id).get();
+      const usuario = doc.data();
+      // Troca visual por input rápido
+      item.innerHTML = `
+        <span class="aluna-nome">${usuario.nome}</span>
+        <span class="edit-inline">
+          <input type="number" min="-100" max="100" step="1" value="0" id="editPontosVal" />
+          <button class="aluna-edit" id="confirmEditPontos">Salvar</button>
+          <button class="aluna-remove" id="cancelEditPontos">Cancelar</button>
+        </span>
+      `;
+      document.getElementById("editPontosVal").focus();
+      document.getElementById("confirmEditPontos").onclick = async () => {
+        const val = parseInt(document.getElementById("editPontosVal").value);
+        if (isNaN(val)) return showStatus("statusAlunas", "Digite um valor válido.", "#ff6060");
+        try {
+          await db.collection("usuarios").doc(id).update({
+            pontos: (usuario.pontos ?? 0) + val
+          });
+          showStatus("statusAlunas", "Pontuação atualizada!", "#a8e6a6");
+          carregarAlunas();
+        } catch (err) {
+          showStatus("statusAlunas", "Erro: " + err.message, "#ff6060");
         }
-        const atual = docSnap.data().pontos ?? 0;
-        await docRef.update({ pontos: atual + pontos });
-        status.textContent = "Pontuação atualizada com sucesso!";
-        document.getElementById("formEditarPontos").reset();
-        carregarAlunasEditar(); // Atualiza lista com pontuação nova
+      };
+      document.getElementById("cancelEditPontos").onclick = carregarAlunas;
+    }
+
+    // Remover aluna
+    async function removerAluna(id) {
+      if (!confirm("Tem certeza que deseja remover essa aluna?")) return;
+      try {
+        await db.collection("usuarios").doc(id).delete();
+        showStatus("statusAlunas", "Aluna removida!", "#ff6060");
+        carregarAlunas();
       } catch (err) {
-        status.textContent = "Erro ao atualizar: " + err.message;
+        showStatus("statusAlunas", "Erro: " + err.message, "#ff6060");
       }
-    });
+    }
   </script>
 </body>
 </html>
