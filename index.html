@@ -271,7 +271,7 @@
 <body>
   <div class="top-bar">
     <input class="search-box" placeholder="Search" id="searchInput" oninput="filtrarRanking()"/>
-      <button class="login-btn" onclick="window.location.href='checkin.html'">CHECK-IN</button>
+    <button class="login-btn" onclick="window.location.href='checkin.html'">CHECK-IN</button>
   </div>
   <div class="ranking-box">
     <div class="header">
@@ -285,90 +285,6 @@
       <ul class="ranking-list" id="rankingList"></ul>
     </div>
   </div>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
-      authDomain: "clube-aguiar-live.firebaseapp.com",
-      projectId: "clube-aguiar-live",
-      storageBucket: "clube-aguiar-live.firebasestorage.app",
-      messagingSenderId: "694025911850",
-      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    function seloClass(selo) {
-      if(selo==='Ouro') return 'ouro';
-      if(selo==='Prata') return 'prata';
-      if(selo==='Bronze') return 'bronze';
-      if(selo==='Destaque') return 'destaque';
-      return '';
-    }
-
-    let todasAlunas = [];
-
-    async function renderRanking() {
-      const snap = await db.collection("usuarios").orderBy("pontos","desc").get();
-      todasAlunas = [];
-      snap.forEach(doc => {
-        const d = doc.data();
-        todasAlunas.push({
-          nome: d.nome,
-          pontos: d.pontos ?? 0,
-          selos: Array.isArray(d.selos) ? d.selos : []
-        });
-      });
-      desenharRanking(todasAlunas);
-    }
-
-    function desenharRanking(alunas){
-      // PODIUM
-      let podiumHtml = "";
-      const medalInfos = [
-        {label:"Ouro", cls:"ouro", base:"ouro"},
-        {label:"Prata", cls:"prata", base:"prata"},
-        {label:"Bronze", cls:"bronze", base:"bronze"}
-      ];
-      for(let i=0;i<3;i++){
-        const a = alunas[i];
-        if(!a) continue;
-        podiumHtml += `
-          <div class="podium-card ${medalInfos[i].cls}">
-            <span class="podium-selo ${medalInfos[i].cls}">${medalInfos[i].label}</span>
-            <div class="podium-nome">${a.nome}</div>
-            <div class="podium-pontos">${a.pontos} pts</div>
-            <div class="podium-base ${medalInfos[i].base}"></div>
-          </div>
-        `;
-      }
-      document.getElementById("podiumRow").innerHTML = podiumHtml;
-
-      // LISTA COMPLETA
-      let listHtml = "";
-      for(let i=3;i<alunas.length;i++){
-        const a = alunas[i];
-        listHtml += `
-          <li class="ranking-list-item">
-            <span class="pos-ball">${i+1}</span>
-            <span class="ranking-list-nome">${a.nome}</span>
-            <span class="ranking-list-pontos">${a.pontos} pts</span>
-            <span class="ranking-list-selos">
-              ${a.selos.map(s=>`<span class="ranking-list-selo ${seloClass(s)}">${s}</span>`).join('')}
-            </span>
-          </li>
-        `;
-      }
-      document.getElementById("rankingList").innerHTML = listHtml;
-    }
-
-    function filtrarRanking(){
-      const termo = document.getElementById("searchInput").value.toLowerCase().trim();
-      if(!termo) { desenharRanking(todasAlunas); return;}
-      const filtradas = todasAlunas.filter(a => a.nome.toLowerCase().includes(termo));
-      desenharRanking(filtradas);
-    }
-
-    renderRanking();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
