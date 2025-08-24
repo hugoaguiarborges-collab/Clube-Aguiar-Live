@@ -1,1 +1,27 @@
-
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Perfil da Atleta</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js CDN para o gráfico -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container perfil-container">
+    <h1 id="perfil-nome">Nome da Atleta</h1>
+    <div id="perfil-info">
+      <p><strong>Selos conquistados:</strong> <span id="perfil-selos"></span></p>
+      <p><strong>Histórico de treinos:</strong></p>
+      <ul id="perfil-treinos"></ul>
+    </div>
+    <div class="grafico-evolucao">
+      <h2>Evolução no Ranking</h2>
+      <canvas id="graficoEvolucao" width="400" height="200"></canvas>
+    </div>
+    <button onclick="window.history.back()" class="btn-voltar">Voltar ao Ranking</button>
+  </div>
+  <script src="perfil.js"></script>
+</body>
+</html>
