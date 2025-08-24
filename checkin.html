@@ -254,7 +254,6 @@
     <button class="back-btn" onclick="window.location.href='index.html'">← Voltar ao Ranking</button>
   </div>
   <script>
-    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
       authDomain: "clube-aguiar-live.firebaseapp.com",
@@ -297,6 +296,7 @@
       });
     }
 
+    // PROTEÇÃO: só permite um check-in por código/treino por aluna
     async function doCheckin(){
       const nome = document.getElementById("checkinSelect").value;
       const code = document.getElementById("checkinCode").value;
@@ -313,15 +313,30 @@
         alert("Código do treino inválido!");
         return;
       }
-      // Atualiza Firestore com pontos do dia!
+      // Busca o documento da aluna
       const snap = await db.collection("usuarios").where("nome","==",nome).get();
       if(snap.empty){
         alert("Nome não encontrado.");
         return;
       }
       const docUser = snap.docs[0];
-      const pontosAtuais = docUser.data().pontos ?? 0;
-      await db.collection("usuarios").doc(docUser.id).update({pontos: pontosAtuais + pontosDoCheckin});
+      const dados = docUser.data();
+      const pontosAtuais = dados.pontos ?? 0;
+      const checkinsFeitos = dados.checkinsFeitos ?? []; // array de códigos
+
+      // VERIFICA SE JÁ FEZ CHECK-IN COM ESSE CÓDIGO
+      // Usa o código do treino do dia como identificador único
+      if (checkinsFeitos.includes(checkinCodeOficial)) {
+        alert("Você já fez check-in nesse treino! Só é permitido um por código.");
+        return;
+      }
+
+      // Atualiza Firestore com pontos do dia E registra o código no array
+      await db.collection("usuarios").doc(docUser.id).update({
+        pontos: pontosAtuais + pontosDoCheckin,
+        checkinsFeitos: [...checkinsFeitos, checkinCodeOficial]
+      });
+
       showCheckinSuccess(nome);
       showExtraPointsArea();
     }
