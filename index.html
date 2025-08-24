@@ -7,7 +7,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    /* ... mantém todos os estilos anteriores ... */
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at top,#163869 0%,#061b30 100%);
+      color: #f8f8f8;
+      font-family: Poppins, Arial, sans-serif;
+      margin: 0;
+    }
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -15,105 +21,258 @@
       max-width: 900px;
       margin: 0 auto;
       padding: 30px 35px 0 35px;
-      gap: 18px;
     }
-    .checkin-label {
-      color: #fffde5;
-      font-weight: 700;
-      font-size: 1.06rem;
-      margin-right: 18px;
-      background: rgba(0,0,0,0.09);
-      padding: 8px 16px;
-      border-radius: 13px;
-    }
-    .checkin-box {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .checkin-select {
-      border-radius: 11px;
-      padding: 8px 16px;
-      font-size: 1.09rem;
-      font-family: Poppins, Arial, sans-serif;
-      background: #143869;
-      color: #fffde5;
+    .search-box {
+      background: rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 15px 24px;
+      font-size: 1.25rem;
+      color: #fff;
       border: none;
-      font-weight: 700;
-      box-shadow: 0 2px 8px #0003;
-    }
-    .checkin-input {
-      border-radius: 11px;
-      padding: 8px 16px;
-      font-size: 1.09rem;
+      width: 320px;
       font-family: Poppins, Arial, sans-serif;
-      background: #143869;
-      color: #fffde5;
-      border: none;
+      outline: none;
+      box-shadow: 0 2px 12px #0003;
       font-weight: 700;
-      box-shadow: 0 2px 8px #0003;
-      width: 120px;
     }
-    .checkin-btn {
-      background: linear-gradient(180deg,#ffd700,#e3c300);
-      color: #143869;
-      font-weight: 900;
+    .search-box::placeholder { color: #d2e3ff; }
+    .login-btn {
+      background: linear-gradient(180deg,#3974cb,#183a73);
+      color: #fff;
+      font-weight: 700;
       font-size: 1.13rem;
       border: none;
-      border-radius: 13px;
-      padding: 12px 36px;
+      border-radius: 16px;
+      padding: 14px 44px;
       cursor: pointer;
       letter-spacing: 1px;
       box-shadow: 0 2px 12px #0002;
       transition: background .2s;
     }
-    .checkin-btn:hover { background: linear-gradient(180deg,#e3c300,#ffd700);}
-    .confetti {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      pointer-events: none;
-      z-index: 9999;
-      animation: fadeout 2.5s forwards;
-    }
-    @keyframes fadeout { 100% { opacity: 0; } }
-    .checkin-success {
-      margin-top: 24px;
-      background: linear-gradient(90deg, #ffd700 0%, #ffe066 100%);
-      color: #143869;
-      font-weight: 900;
-      font-size: 1.33rem;
-      border-radius: 20px;
-      padding: 24px 14px;
-      box-shadow: 0 2px 18px #0003;
+    .login-btn:hover { background: linear-gradient(180deg,#183a73,#3974cb);}
+    .ranking-box {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 16px;
       text-align: center;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
+    }
+    .header {
+      margin-top: 38px;
+      margin-bottom: 40px; /* Espaço maior aqui! */
+    }
+    h1 {
+      color: #fffde5;
+      font-size: 3rem;
+      font-weight: 900;
+      margin-bottom: 14px;
+      text-shadow: 0 2px 18px #000b;
       letter-spacing: 1px;
+      line-height: 1.07;
     }
-    .checkin-motivation {
-      margin-top: 12px;
-      font-size: 1.18rem;
-      color: #183a73;
+    .subtitle {
+      color: #e3e3e3;
+      font-size: 1.28rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      line-height: 1.32;
+      text-shadow:0 2px 18px #0006;
+    }
+    /* Pódio */
+    .podium-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      margin-bottom: 48px; /* Espaço maior abaixo do pódio! */
+      margin-top: 0px;
+      position: relative;
+      min-height: 260px;
+      gap: 0;
+    }
+    .podium-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: absolute;
+      min-width: 210px;
+      min-height: 190px;
+      background: rgba(255,255,255,0.09);
+      border-radius: 24px;
+      box-shadow: 0 6px 32px -10px #0008;
+      padding: 20px 12px 12px 12px;
+      z-index: 2;
+      border: 2px solid #143869;
+      transition: top .2s, left .2s;
+    }
+    .podium-card.ouro {
+      left: 50%;
+      transform: translateX(-50%);
+      top: 0px; /* Desceu mais */
+      z-index: 3;
+    }
+    .podium-card.prata {
+      left: 10%;
+      top: 60px; /* Desceu mais */
+      z-index: 2;
+    }
+    .podium-card.bronze {
+      right: 10%;
+      top: 110px; /* Desceu mais */
+      z-index: 2;
+    }
+    /* SEL0S DO PÓDIO - IGUAL AO ADMIN */
+    .podium-selo {
+      display: inline-block;
+      font-family: Poppins, Arial, sans-serif;
       font-weight: 700;
-      margin-bottom: 0;
+      font-size: 1.18rem;
+      border-radius: 19px;
+      padding: 8px 30px;
+      margin-bottom: 10px;
+      margin-top: 0;
+      box-shadow: 0 2px 8px #0002;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg,#ffe066 0%,#ffd700 100%);
+      color: #3c2e00;
+      border: none;
+      text-align: center;
     }
-    /* ... mantém todos os estilos anteriores ... */
+    .podium-selo.prata {
+      background: linear-gradient(90deg,#e0e0e0 0%,#b0b0b0 100%);
+      color: #333;
+    }
+    .podium-selo.bronze {
+      background: linear-gradient(90deg,#bc6c25 0%,#e0b080 100%);
+      color: #fff;
+    }
+    .podium-nome {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #fffde5;
+      text-align: center;
+      margin: 18px 0 0 0;
+      text-shadow: 0 2px 12px #000b;
+      letter-spacing: 1px;
+      word-break: break-word;
+    }
+    .podium-pontos {
+      font-size: 1.10rem;
+      color: #ffd700;
+      font-weight: 700;
+      margin-top: 9px;
+      text-align: center;
+      text-shadow:0 1px 6px #0008;
+    }
+    .podium-base {
+      width: 60px;
+      height: 18px;
+      border-radius: 50%;
+      margin-top: 22px;
+      margin-bottom: 0;
+      box-shadow: 0 8px 32px -8px #000c;
+      position: relative;
+      z-index: 1;
+    }
+    .podium-base.ouro { background: linear-gradient(180deg,#ffe066 0%,#ffd700 70%,#e8c300 100%);}
+    .podium-base.prata { background: linear-gradient(180deg,#e0e0e0 0%,#b0b0b0 70%,#e3e3e3 100%);}
+    .podium-base.bronze { background: linear-gradient(180deg,#bc6c25 0%,#e0b080 70%,#bc6c25 100%);}
+    /* Lista */
+    .ranking-list-box {
+      max-width: 590px;
+      margin: 0 auto;
+      margin-top: 90px; /* Espaço maior acima da lista! */
+      text-align: left;
+    }
+    .ranking-list {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+    .ranking-list-item {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      margin-bottom: 11px;
+      border-radius: 13px;
+      padding: 14px 18px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 12px -8px #0004;
+      transition: background .18s;
+    }
+    .ranking-list-item:hover { background: rgba(255,255,255,0.10);}
+    .pos-ball {
+      background: #ffd700;
+      color: #2947ad;
+      font-size: 1.13rem;
+      font-weight: 900;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 18px;
+      box-shadow: 0 2px 12px #0002;
+      border: 2px solid #fff;
+      flex-shrink: 0;
+    }
+    .ranking-list-nome {
+      flex: 1;
+      font-size: 1.09rem;
+      font-weight: 900;
+      color: #fffde5;
+      letter-spacing:1px;
+    }
+    .ranking-list-pontos {
+      color: #ffd700;
+      font-size: 1.08rem;
+      font-weight: 900;
+      margin-left: 18px;
+      text-shadow:0 1px 6px #0008;
+    }
+    .ranking-list-selos {
+      display: flex;
+      gap: 8px;
+      margin-left: 18px;
+      flex-wrap: wrap;
+    }
+    .ranking-list-selo {
+      padding: 3px 12px;
+      border-radius: 13px;
+      font-size: 1.08rem;
+      font-weight: 700;
+      background: #7fffd4;
+      color: #2947ad;
+    }
+    .ranking-list-selo.ouro { background: #ffd700; color: #333;}
+    .ranking-list-selo.prata { background: #b0b0b0; color: #333;}
+    .ranking-list-selo.bronze { background: #bc6c25; color: #fff;}
+    .ranking-list-selo.destaque { background: #7209b7; color: #fff;}
+    @media (max-width: 900px) {
+      .top-bar {padding: 30px 10px 0 10px;}
+      .ranking-box {padding: 0 4px;}
+      .podium-row {gap:10px;}
+      .podium-card {min-width: 95vw;}
+    }
+    @media (max-width: 700px) {
+      h1 {font-size:2.1rem;}
+      .subtitle {font-size:1rem;}
+      .podium-row { flex-direction: column; align-items: center; gap:10px; min-height:unset;}
+      .podium-card { min-width: 98vw; position:static; left:unset; right:unset; top:unset; margin-bottom:18px;}
+      .ranking-box { padding: 0 2px;}
+      .ranking-list-box { padding: 0 2px;}
+      .search-box {width: 100%;}
+      .ranking-list-box {margin-top: 40px;}
+    }
   </style>
 </head>
 <body>
   <div class="top-bar">
     <input class="search-box" placeholder="Search" id="searchInput" oninput="filtrarRanking()"/>
-    <div class="checkin-box">
-      <span class="checkin-label">Fez seu treino? Confirme aqui agora mesmo:</span>
-      <select class="checkin-select" id="checkinSelect">
-        <option value="" disabled selected>Selecione seu nome</option>
-      </select>
-      <input class="checkin-input" id="checkinCode" placeholder="Código treino"/>
-      <button class="checkin-btn" onclick="doCheckin()">CHECK-IN</button>
-    </div>
+    <button class="login-btn">LOGIN</button>
   </div>
-  <div id="checkinResult"></div>
   <div class="ranking-box">
     <div class="header">
       <h1>RANKING DAS ATLETAS DO<br>DESAFIO 40+ PLAY</h1>
@@ -138,97 +297,16 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // --- Check-in ---
+    function seloClass(selo) {
+      if(selo==='Ouro') return 'ouro';
+      if(selo==='Prata') return 'prata';
+      if(selo==='Bronze') return 'bronze';
+      if(selo==='Destaque') return 'destaque';
+      return '';
+    }
+
     let todasAlunas = [];
-    let checkinCodeOficial = "404play"; // pode ser alterado depois
 
-    function normalizarCodigo(str){
-      return str
-        .toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
-        .replace(/ç/g,'c')
-        .replace(/[^a-z0-9]/g,''); // remove símbolos
-    }
-
-    function preencherSelect(){
-      const select = document.getElementById("checkinSelect");
-      select.innerHTML = '<option value="" disabled selected>Selecione seu nome</option>';
-      todasAlunas.forEach(a=>{
-        select.innerHTML += `<option value="${a.nome}">${a.nome}</option>`;
-      });
-    }
-
-    async function doCheckin(){
-      const nome = document.getElementById("checkinSelect").value;
-      const code = document.getElementById("checkinCode").value;
-      if(!nome){
-        alert("Selecione seu nome.");
-        return;
-      }
-      if(!code){
-        alert("Digite o código do treino.");
-        return;
-      }
-      if(normalizarCodigo(code) !== normalizarCodigo(checkinCodeOficial)){
-        alert("Código do treino inválido!");
-        return;
-      }
-      // Atualiza Firestore +5 pontos
-      const snap = await db.collection("usuarios").where("nome","==",nome).get();
-      if(snap.empty){
-        alert("Nome não encontrado.");
-        return;
-      }
-      const doc = snap.docs[0];
-      const pontosAtuais = doc.data().pontos ?? 0;
-      await db.collection("usuarios").doc(doc.id).update({pontos: pontosAtuais+5});
-      showCheckinSuccess(nome);
-      renderRanking();
-    }
-
-    function showCheckinSuccess(nome){
-      const motivacoes = [
-        "Parabéns! Você está evoluindo a cada treino!",
-        "Treino confirmado! Você está inspirando outras mulheres!",
-        "Mandou bem demais, continue nessa energia!",
-        "Mais 5 pontos pra conta! Você é exemplo de dedicação!",
-        "Sua força está transformando resultados! Continue!"
-      ];
-      const msg = motivacoes[Math.floor(Math.random()*motivacoes.length)];
-      document.getElementById("checkinResult").innerHTML = `
-        <div class="checkin-success">
-          🎉 Parabéns, ${nome}! Você ganhou 5 pontos.
-          <div class="checkin-motivation">${msg}</div>
-        </div>
-      `;
-      confetti();
-      setTimeout(()=>document.getElementById("checkinResult").innerHTML="", 4000);
-    }
-
-    // Confetti animation
-    function confetti(){
-      const colors=["#ffd700","#7209b7","#38b4ff","#ff4d6d","#b0b0b0"];
-      const confettiDiv = document.createElement("div");
-      confettiDiv.className = "confetti";
-      for(let i=0;i<60;i++){
-        const span = document.createElement("span");
-        const size = Math.random()*11+8;
-        span.style.position="absolute";
-        span.style.width=size+"px";
-        span.style.height=size+"px";
-        span.style.background=colors[Math.floor(Math.random()*colors.length)];
-        span.style.borderRadius="50%";
-        span.style.left=Math.random()*100+"vw";
-        span.style.top=Math.random()*80+"vh";
-        span.style.opacity=Math.random()*0.6+0.4;
-        span.style.transform=`rotate(${Math.random()*360}deg)`;
-        confettiDiv.appendChild(span);
-      }
-      document.body.appendChild(confettiDiv);
-      setTimeout(()=>confettiDiv.remove(), 2300);
-    }
-
-    // Ranking render
     async function renderRanking() {
       const snap = await db.collection("usuarios").orderBy("pontos","desc").get();
       todasAlunas = [];
@@ -240,7 +318,6 @@
           selos: Array.isArray(d.selos) ? d.selos : []
         });
       });
-      preencherSelect();
       desenharRanking(todasAlunas);
     }
 
