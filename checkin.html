@@ -450,7 +450,7 @@
     }
 
     async function carregarNomes(){
-      const snap = await db.collection("usuarios").orderBy("nome").get();
+      const snap = await db.collection("usuarios").get();
       todasAlunas = [];
       snap.forEach(doc => {
         const d = doc.data();
