@@ -35,11 +35,16 @@
     .selo.prata{background:linear-gradient(90deg,#e0e0e0,#b0b0b0);color:#444;}
     .selo.destaque{background:linear-gradient(90deg,#e0aaff,#7209b7);color:#fff;}
     .selo.selecionado{border:2px solid #2947ad;box-shadow:0 0 8px #ffd700;}
+    .selo-personalizado{background:linear-gradient(90deg,#222,#7fffd4);color:#2947ad;}
     .selo-remove{padding:4px 11px;margin-left:6px;border-radius:14px;background:#c83d3d;color:#fff;font-weight:600;font-size:12px;cursor:pointer;}
+    #novoSeloForm{margin:16px 0 0 0;display:flex;align-items:center;gap:10px;}
+    #novoSeloInput{padding:11px 14px;font-size:16px;width:180px;}
+    #selosPersonalizadosBox{margin:8px 0;}
     @media(max-width:600px){
       .container{padding:0 4px;}
       .card{padding:12px;}
       .aluna-card{padding:12px;}
+      #novoSeloInput{width:100px;}
     }
   </style>
 </head>
@@ -69,6 +74,13 @@
       <button class="tab-btn active" id="tabPontuacao" onclick="mudarAba('pontuacao')">Pontuação</button>
       <button class="tab-btn" id="tabSelos" onclick="mudarAba('selos')">Selos</button>
     </div>
+
+    <!-- Adicionar selo personalizado (aparece só na aba selos) -->
+    <div id="novoSeloForm" style="display:none;">
+      <input id="novoSeloInput" placeholder="Novo selo (texto ou emoji)" />
+      <button onclick="adicionarSeloPersonalizado()" style="background:#ffd700;color:#2947ad;">Adicionar selo</button>
+    </div>
+    <div id="selosPersonalizadosBox"></div>
 
     <!-- Lista de alunas -->
     <div id="alunasList" class="alunas-list"></div>
@@ -119,19 +131,83 @@
       ABA = aba;
       document.getElementById('tabPontuacao').classList.toggle('active', aba === 'pontuacao');
       document.getElementById('tabSelos').classList.toggle('active', aba === 'selos');
+      document.getElementById('novoSeloForm').style.display = aba === 'selos' ? 'flex':'none';
+      carregarSelosPersonalizados(); // mostra selos personalizados
       carregarAlunas();
     }
 
     // --------- ALUNAS E SELOS -------------
 
-    const SEL0S = [
+    const SEL0S_PADRAO = [
       { nome: "Ouro", class:"ouro"},
       { nome: "Prata", class:"prata"},
       { nome: "Destaque", class:"destaque"},
     ];
+    let SEL0S_PERSONALIZADOS = []; // será carregado do banco
+
+    async function carregarSelosPersonalizados() {
+      const box = document.getElementById("selosPersonalizadosBox");
+      if (ABA !== 'selos') { box.innerHTML = ""; return; }
+      try {
+        const doc = await db.collection("config").doc("selos_personalizados").get();
+        SEL0S_PERSONALIZADOS = doc.exists && Array.isArray(doc.data().selos) ? doc.data().selos : [];
+        if (SEL0S_PERSONALIZADOS.length === 0) {
+          box.innerHTML = "<div style='color:#ccc;font-size:13px;'>Nenhum selo personalizado ainda.</div>";
+        } else {
+          let html = "<div style='font-size:14px;color:#ffd700;font-weight:700;'>Selos personalizados disponíveis:</div>";
+          html += "<div class='selo-list'>";
+          SEL0S_PERSONALIZADOS.forEach((selo, idx) => {
+            html += `<span class="selo selo-personalizado">${selo}</span>
+            <span class="selo-remove" onclick="removerSeloPersonalizado(${idx})">×</span>`;
+          });
+          html += "</div><div style='font-size:12px;color:#888;'>Os selos personalizados também aparecem abaixo das alunas</div>";
+          box.innerHTML = html;
+        }
+      } catch(e) {
+        box.innerHTML = "<div style='color:#c00;font-size:13px;'>Erro ao carregar selos personalizados!</div>";
+      }
+    }
+
+    async function adicionarSeloPersonalizado() {
+      const input = document.getElementById("novoSeloInput");
+      let selo = input.value.trim();
+      if (!selo) { logErro("Digite um selo!"); return; }
+      if (SEL0S_PADRAO.some(s=>s.nome.toLowerCase()===selo.toLowerCase()) || SEL0S_PERSONALIZADOS.includes(selo)) {
+        logErro("Este selo já existe!");
+        return;
+      }
+      SEL0S_PERSONALIZADOS.push(selo);
+      try {
+        await db.collection("config").doc("selos_personalizados").set({ selos: SEL0S_PERSONALIZADOS });
+        logSucesso("Selo personalizado adicionado!");
+        input.value = "";
+        carregarSelosPersonalizados();
+        carregarAlunas();
+      } catch(e) {
+        logErro("Erro ao adicionar selo personalizado: " + e.message);
+      }
+    }
+
+    async function removerSeloPersonalizado(idx) {
+      if(!confirm("Remover este selo personalizado?")) return;
+      SEL0S_PERSONALIZADOS.splice(idx,1);
+      try {
+        await db.collection("config").doc("selos_personalizados").set({ selos: SEL0S_PERSONALIZADOS });
+        logSucesso("Selo removido!");
+        carregarSelosPersonalizados();
+        carregarAlunas();
+      } catch(e) {
+        logErro("Erro ao remover selo: " + e.message);
+      }
+    }
 
     async function carregarAlunas() {
       try {
+        // Carrega selos personalizados antes de mostrar alunas
+        if(ABA === 'selos') {
+          const doc = await db.collection("config").doc("selos_personalizados").get();
+          SEL0S_PERSONALIZADOS = doc.exists && Array.isArray(doc.data().selos) ? doc.data().selos : [];
+        }
         const snap = await db.collection("usuarios").orderBy("nome").get();
         const lista = document.getElementById("alunasList");
         if (snap.empty) {
@@ -155,9 +231,15 @@
           } else if (ABA === 'selos') {
             const selos = Array.isArray(d.selos) ? d.selos : [];
             html += `<div class="selo-list">`;
-            SEL0S.forEach(selo => {
+            // Selos padrão
+            SEL0S_PADRAO.forEach(selo => {
               const isSel = selos.includes(selo.nome);
               html += `<span class="selo ${selo.class}${isSel ? " selecionado":""}" onclick="alternarSelo('${doc.id}','${selo.nome}')">${selo.nome}</span>`;
+            });
+            // Selos personalizados
+            SEL0S_PERSONALIZADOS.forEach(selo => {
+              const isSel = selos.includes(selo);
+              html += `<span class="selo selo-personalizado${isSel ? " selecionado":""}" onclick="alternarSelo('${doc.id}','${selo}')">${selo}</span>`;
             });
             html += `</div>`;
             html += `<div style="font-size:13px;color:#888;">Clique para adicionar/remover selos</div>`;
@@ -210,7 +292,7 @@
       }
     }
 
-    // ADICIONAR/REMOVER SELOS
+    // ADICIONAR/REMOVER SELOS (padrão e personalizados)
     async function alternarSelo(id, seloNome) {
       try {
         const ref = db.collection("usuarios").doc(id);
@@ -229,7 +311,6 @@
         logErro("Erro ao atualizar selos: " + e.message);
       }
     }
-
   </script>
 </body>
 </html>
