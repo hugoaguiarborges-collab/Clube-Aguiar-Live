@@ -75,68 +75,83 @@
       line-height: 1.35;
       text-shadow:0 2px 18px #0006;
     }
-
-    /* PÓDIO */
+    /* Pódio */
     .podium-row {
       display: flex;
       justify-content: center;
-      gap: 0px;
+      align-items: flex-end;
       margin-bottom: 36px;
       margin-top: 0px;
-      align-items: flex-end;
       position: relative;
-      min-height: 330px;
+      min-height: 340px;
     }
     .podium-card {
-      flex: 1 1 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       position: absolute;
-      min-width: 220px;
-      min-height: 250px;
-      padding-top: 24px;
-      z-index: 1;
+      min-width: 240px;
+      min-height: 280px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 24px;
+      box-shadow: 0 6px 32px -10px #0008;
+      padding: 24px 18px 16px 18px;
+      z-index: 2;
       transition: top .2s;
+      border: 2px solid #143869;
     }
     .podium-card.ouro {
       left: 50%;
       transform: translateX(-50%);
       top: 0;
-      z-index: 2;
+      z-index: 3;
     }
     .podium-card.prata {
-      left: 8%;
-      top: 65px;
+      left: 3%;
+      top: 75px;
     }
     .podium-card.bronze {
-      right: 8%;
-      top: 110px;
+      right: 3%;
+      top: 125px;
     }
+    .podium-selo {
+      display: inline-block;
+      font-weight: 900;
+      font-size: 1.13rem;
+      border-radius: 18px;
+      padding: 7px 26px;
+      margin-bottom: 10px;
+      margin-top: 0;
+      box-shadow: 0 2px 16px #0002;
+      letter-spacing: 2px;
+      background: #ffd700;
+      color: #294700;
+    }
+    .podium-selo.prata { background:#b0b0b0;color:#333;}
+    .podium-selo.bronze { background:#bc6c25;color:#fff;}
     .podium-nome {
-      font-size: 2.6rem;
+      font-size: 2.25rem;
       font-weight: 900;
       color: #fffde5;
       text-align: center;
-      margin-top: 40px;
-      margin-bottom: 0px;
+      margin: 22px 0 0 0;
       text-shadow: 0 2px 12px #000b;
       letter-spacing: 2px;
+      word-break: break-word;
     }
     .podium-pontos {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       color: #ffd700;
       font-weight: 700;
       margin-top: 10px;
       text-align: center;
       text-shadow:0 1px 6px #0008;
     }
-    /* Bases */
     .podium-base {
-      width: 115px;
-      height: 32px;
+      width: 90px;
+      height: 26px;
       border-radius: 50%;
-      margin-top: 38px;
+      margin-top: 32px;
       margin-bottom: 0;
       box-shadow: 0 8px 32px -8px #000c;
       position: relative;
@@ -145,7 +160,6 @@
     .podium-base.ouro { background: linear-gradient(180deg,#ffe066 0%,#ffd700 70%,#e8c300 100%);}
     .podium-base.prata { background: linear-gradient(180deg,#e0e0e0 0%,#b0b0b0 70%,#e3e3e3 100%);}
     .podium-base.bronze { background: linear-gradient(180deg,#bc6c25 0%,#e0b080 70%,#bc6c25 100%);}
-    /* Louro */
     .podium-laurel {
       position: absolute;
       top: -28px;
@@ -157,23 +171,6 @@
       pointer-events: none;
       opacity: 0.85;
     }
-    /* Selo visual do admin para medalha */
-    .podium-selo {
-      display: inline-block;
-      font-weight: 900;
-      font-size: 1.05rem;
-      border-radius: 18px;
-      padding: 7px 26px;
-      margin-top: 5px;
-      margin-bottom: 2px;
-      box-shadow: 0 2px 16px #0002;
-      letter-spacing: 2px;
-      text-shadow: 0 2px 12px #0003;
-      background: #ffd700;
-      color: #294700;
-    }
-    .podium-selo.prata { background:#b0b0b0;color:#333;}
-    .podium-selo.bronze { background:#bc6c25;color:#fff;}
     /* Lista */
     .ranking-list-box {
       max-width: 590px;
@@ -252,6 +249,7 @@
     @media (max-width: 900px) {
       .top-bar {padding: 30px 10px 0 10px;}
       .ranking-box {padding: 0 4px;}
+      .podium-card {min-width: 95vw;}
     }
     @media (max-width: 700px) {
       h1 {font-size:2.1rem;}
