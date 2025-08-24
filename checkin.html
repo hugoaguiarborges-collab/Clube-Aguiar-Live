@@ -5,6 +5,7 @@
   <title>Check-in - Desafio 40+ Play</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
   <style>
     body {
@@ -126,6 +127,97 @@
       font-weight: 700;
       margin-bottom: 0;
     }
+    .extra-points-area {
+      margin-top: 30px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 18px;
+      padding: 20px 10px 16px 10px;
+      box-shadow: 0 2px 16px #0002;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+    .extra-title {
+      font-size: 1.13rem;
+      font-weight: 900;
+      color: #ffef5b;
+      margin-bottom: 7px;
+      text-shadow:0 2px 18px #0006;
+    }
+    .extra-subtitle {
+      font-size: 1.03rem;
+      color: #e3e3e3;
+      font-weight: 500;
+      margin-bottom: 16px;
+      line-height: 1.32;
+    }
+    .upload-btn {
+      background: linear-gradient(180deg,#38b4ff,#2f5aa2);
+      color: #fffde5;
+      font-weight: 900;
+      font-size: 1.09rem;
+      border: none;
+      border-radius: 13px;
+      padding: 12px 0;
+      width: 210px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 12px #0002;
+      transition: background .2s;
+    }
+    .upload-btn:hover {background: linear-gradient(180deg,#2f5aa2,#38b4ff);}
+    .file-input {
+      display: none;
+    }
+    .checkbox-area {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      font-size: 0.97rem;
+      color: #fffde5;
+      font-weight: 500;
+      text-align: left;
+      max-width: 350px;
+      margin-left: auto;
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap:8px;
+    }
+    .checkbox-area input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #2f5aa2;
+      margin-right: 8px;
+    }
+    .confirm-upload-btn {
+      background: linear-gradient(180deg,#ffd700,#e3c300);
+      color: #143869;
+      font-weight: 900;
+      font-size: 1.09rem;
+      border: none;
+      border-radius: 13px;
+      padding: 12px 0;
+      width: 210px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 12px #0002;
+      transition: background .2s;
+    }
+    .confirm-upload-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #ccc;
+    }
+    @media (max-width: 540px) {
+      .container {padding: 20px 4vw;}
+      h1 {font-size:1.23rem;}
+      .checkin-select,.checkin-input,.checkin-btn {min-width:unset;width:100%;}
+      .back-btn {padding: 13px 0; width:98%;}
+      .extra-points-area {padding: 10px 2vw;}
+    }
     .back-btn {
       margin-top: 32px;
       background: linear-gradient(180deg,#3974cb,#183a73);
@@ -142,12 +234,6 @@
       text-align: center;
     }
     .back-btn:hover {background: linear-gradient(180deg,#183a73,#3974cb);}
-    @media (max-width: 540px) {
-      .container {padding: 20px 4vw;}
-      h1 {font-size:1.23rem;}
-      .checkin-select,.checkin-input,.checkin-btn {min-width:unset;width:100%;}
-      .back-btn {padding: 13px 0; width:98%;}
-    }
   </style>
 </head>
 <body>
@@ -164,6 +250,7 @@
       <button class="checkin-btn" type="submit">Confirmar Check-in</button>
     </form>
     <div id="checkinResult"></div>
+    <div id="extraPointsArea"></div>
     <button class="back-btn" onclick="window.location.href='index.html'">← Voltar ao Ranking</button>
   </div>
   <script>
@@ -171,16 +258,20 @@
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
       authDomain: "clube-aguiar-live.firebaseapp.com",
       projectId: "clube-aguiar-live",
-      storageBucket: "clube-aguiar-live.firebasestorage.app",
+      storageBucket: "clube-aguiar-live.appspot.com",
       messagingSenderId: "694025911850",
       appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const storage = firebase.storage();
 
     let todasAlunas = [];
     let checkinCodeOficial = ""; // dinâmico!
     let pontosDoCheckin = 5;     // dinâmico!
+    let nomeSelecionado = "";
+    let uploadFile = null;
+    let autorizacao = false;
 
     function normalizarCodigo(str){
       return str
@@ -209,6 +300,7 @@
     async function doCheckin(){
       const nome = document.getElementById("checkinSelect").value;
       const code = document.getElementById("checkinCode").value;
+      nomeSelecionado = nome;
       if(!nome){
         alert("Selecione seu nome.");
         return;
@@ -231,6 +323,7 @@
       const pontosAtuais = docUser.data().pontos ?? 0;
       await db.collection("usuarios").doc(docUser.id).update({pontos: pontosAtuais + pontosDoCheckin});
       showCheckinSuccess(nome);
+      showExtraPointsArea();
     }
 
     function showCheckinSuccess(nome){
@@ -245,6 +338,87 @@
       document.getElementById("checkinResult").innerHTML = `
         <div class="checkin-success">
           🎉 Parabéns, ${nome}! Você ganhou ${pontosDoCheckin} pontos.
+          <div class="checkin-motivation">${msg}</div>
+        </div>
+      `;
+      confetti();
+      setTimeout(()=>document.getElementById("checkinResult").innerHTML="", 4000);
+    }
+
+    function showExtraPointsArea(){
+      document.getElementById("extraPointsArea").innerHTML = `
+        <div class="extra-points-area">
+          <div class="extra-title">Que tal ganhar mais 10 pontos e disparar rumo à liderança?</div>
+          <div class="extra-subtitle">Envie uma foto ou vídeo seu fazendo o treino de <b>hoje</b>!<br>Essa é sua chance de mostrar sua evolução e motivar outras alunas.</div>
+          <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Enviar foto ou vídeo do treino de hoje</button>
+          <input type="file" id="fileInput" class="file-input" accept="image/*,video/*" onchange="handleFileChange(event)"/>
+          <div id="uploadFileName" style="margin-top: 9px; color:#ffd700; font-size:0.97rem;"></div>
+          <div class="checkbox-area">
+            <input type="checkbox" id="autorizacaoCheckbox" onchange="handleAutorizacaoChange(event)">
+            <label for="autorizacaoCheckbox">Autorizo que essa foto ou vídeo seja publicada na rede social do Clube Aguiar.</label>
+          </div>
+          <button class="confirm-upload-btn" id="confirmUploadBtn" onclick="confirmUpload()" disabled>Confirmar treino (+10 pontos)</button>
+          <div id="uploadStatus" style="margin-top:8px;font-size:0.98rem"></div>
+        </div>
+      `;
+      uploadFile = null;
+      autorizacao = false;
+      updateUploadButtonState();
+    }
+
+    function handleFileChange(event){
+      uploadFile = event.target.files[0];
+      document.getElementById("uploadFileName").innerText = uploadFile ? "Arquivo selecionado: " + uploadFile.name : "";
+      updateUploadButtonState();
+    }
+    function handleAutorizacaoChange(event){
+      autorizacao = event.target.checked;
+      updateUploadButtonState();
+    }
+    function updateUploadButtonState(){
+      const btn = document.getElementById("confirmUploadBtn");
+      btn.disabled = !(uploadFile && autorizacao);
+    }
+
+    async function confirmUpload(){
+      if(!(uploadFile && autorizacao)) return;
+      document.getElementById("confirmUploadBtn").disabled = true;
+      document.getElementById("uploadStatus").innerHTML = "Enviando arquivo...";
+      try {
+        // Nome: treino_hoje_nomealuna_timestamp.ext
+        const ext = uploadFile.name.split('.').pop();
+        const safeName = nomeSelecionado.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+        const fileName = `treino_hoje_${safeName}_${Date.now()}.${ext}`;
+        const storageRef = storage.ref().child("uploads/"+fileName);
+        await storageRef.put(uploadFile);
+        // Atualiza Firestore +10 pontos
+        const snap = await db.collection("usuarios").where("nome","==",nomeSelecionado).get();
+        if(!snap.empty){
+          const docUser = snap.docs[0];
+          const pontosAtuais = docUser.data().pontos ?? 0;
+          await db.collection("usuarios").doc(docUser.id).update({pontos: pontosAtuais + 10});
+        }
+        document.getElementById("uploadStatus").innerHTML = "";
+        showUploadSuccess(nomeSelecionado);
+        document.getElementById("extraPointsArea").innerHTML = "";
+      } catch(e){
+        document.getElementById("uploadStatus").innerHTML = "Erro no envio, tente novamente!";
+        document.getElementById("confirmUploadBtn").disabled = false;
+      }
+    }
+
+    function showUploadSuccess(nome){
+      const motivacoes = [
+        "Você é inspiração! Parabéns pelo envio!",
+        "Treino registrado, +10 pontos! Continue assim!",
+        "Sua dedicação vai longe! Mantenha o foco!",
+        "Exemplo de superação, parabéns!",
+        "Sua energia motiva outras mulheres!"
+      ];
+      const msg = motivacoes[Math.floor(Math.random()*motivacoes.length)];
+      document.getElementById("checkinResult").innerHTML = `
+        <div class="checkin-success">
+          🎉 Parabéns, ${nome}! Você ganhou mais 10 pontos pelo envio do treino!
           <div class="checkin-motivation">${msg}</div>
         </div>
       `;
