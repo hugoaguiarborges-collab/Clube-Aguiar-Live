@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Ranking Desafio 40+ Play</title>
+  <title>Ranking das atletas do Desafio 40+ Play</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
@@ -24,25 +24,26 @@
     }
     .search-box {
       background: rgba(255,255,255,0.15);
-      border-radius: 14px;
-      padding: 12px 20px;
-      font-size: 1.22rem;
+      border-radius: 16px;
+      padding: 15px 24px;
+      font-size: 1.25rem;
       color: #fff;
       border: none;
-      width: 330px;
+      width: 320px;
       font-family: Poppins, Arial, sans-serif;
       outline: none;
       box-shadow: 0 2px 12px #0003;
+      font-weight: 700;
     }
     .search-box::placeholder { color: #d2e3ff; }
     .login-btn {
       background: linear-gradient(180deg,#3974cb,#183a73);
       color: #fff;
       font-weight: 700;
-      font-size: 1.11rem;
+      font-size: 1.13rem;
       border: none;
-      border-radius: 13px;
-      padding: 13px 40px;
+      border-radius: 16px;
+      padding: 14px 44px;
       cursor: pointer;
       letter-spacing: 1px;
       box-shadow: 0 2px 12px #0002;
@@ -56,23 +57,24 @@
       text-align: center;
     }
     .header {
-      margin-top: 32px;
-      margin-bottom: 24px;
+      margin-top: 38px;
+      margin-bottom: 30px;
     }
     h1 {
       color: #fffde5;
-      font-size: 3.2rem;
+      font-size: 3rem;
       font-weight: 900;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
       text-shadow: 0 2px 18px #000b;
       letter-spacing: 1px;
+      line-height: 1.07;
     }
     .subtitle {
       color: #e3e3e3;
-      font-size: 1.33rem;
-      font-weight: 500;
-      margin-bottom: 34px;
-      line-height: 1.35;
+      font-size: 1.28rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      line-height: 1.32;
       text-shadow:0 2px 18px #0006;
     }
     /* Pódio */
@@ -91,12 +93,12 @@
       flex-direction: column;
       align-items: center;
       position: absolute;
-      min-width: 180px;
+      min-width: 210px;
       min-height: 190px;
-      background: rgba(255,255,255,0.07);
-      border-radius: 20px;
+      background: rgba(255,255,255,0.09);
+      border-radius: 24px;
       box-shadow: 0 6px 32px -10px #0008;
-      padding: 16px 12px 12px 12px;
+      padding: 20px 12px 12px 12px;
       z-index: 2;
       border: 2px solid #143869;
       transition: top .2s, left .2s;
@@ -117,33 +119,43 @@
       top: 70px;
       z-index: 2;
     }
+    /* SEL0S DO PÓDIO - IGUAL AO ADMIN */
     .podium-selo {
       display: inline-block;
-      font-weight: 900;
-      font-size: 1rem;
-      border-radius: 18px;
-      padding: 7px 22px;
+      font-family: Poppins, Arial, sans-serif;
+      font-weight: 700;
+      font-size: 1.18rem;
+      border-radius: 19px;
+      padding: 8px 30px;
       margin-bottom: 10px;
       margin-top: 0;
-      box-shadow: 0 2px 16px #0002;
-      letter-spacing: 2px;
-      background: #ffd700;
-      color: #294700;
+      box-shadow: 0 2px 8px #0002;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg,#ffe066 0%,#ffd700 100%);
+      color: #3c2e00;
+      border: none;
+      text-align: center;
     }
-    .podium-selo.prata { background:#b0b0b0;color:#333;}
-    .podium-selo.bronze { background:#bc6c25;color:#fff;}
+    .podium-selo.prata {
+      background: linear-gradient(90deg,#e0e0e0 0%,#b0b0b0 100%);
+      color: #333;
+    }
+    .podium-selo.bronze {
+      background: linear-gradient(90deg,#bc6c25 0%,#e0b080 100%);
+      color: #fff;
+    }
     .podium-nome {
-      font-size: 1.35rem;
+      font-size: 1.4rem;
       font-weight: 900;
       color: #fffde5;
       text-align: center;
-      margin: 16px 0 0 0;
+      margin: 18px 0 0 0;
       text-shadow: 0 2px 12px #000b;
       letter-spacing: 1px;
       word-break: break-word;
     }
     .podium-pontos {
-      font-size: 1.08rem;
+      font-size: 1.10rem;
       color: #ffd700;
       font-weight: 700;
       margin-top: 9px;
@@ -163,17 +175,6 @@
     .podium-base.ouro { background: linear-gradient(180deg,#ffe066 0%,#ffd700 70%,#e8c300 100%);}
     .podium-base.prata { background: linear-gradient(180deg,#e0e0e0 0%,#b0b0b0 70%,#e3e3e3 100%);}
     .podium-base.bronze { background: linear-gradient(180deg,#bc6c25 0%,#e0b080 70%,#bc6c25 100%);}
-    .podium-laurel {
-      position: absolute;
-      top: -28px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 120px;
-      height: 70px;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.85;
-    }
     /* Lista */
     .ranking-list-box {
       max-width: 590px;
@@ -273,9 +274,9 @@
   </div>
   <div class="ranking-box">
     <div class="header">
-      <h1>RANKING DAS ATLETAS DO DESAFIO 40+ PLAY</h1>
+      <h1>RANKING DAS ATLETAS DO<br>DESAFIO 40+ PLAY</h1>
       <div class="subtitle">
-        Ranking oficial das mulheres que inspiram e transformam esforço em resultados. ✨ 
+        Ranking oficial das mulheres que inspiram e transformam esforço em resultados.
       </div>
     </div>
     <div class="podium-row" id="podiumRow"></div>
@@ -283,17 +284,6 @@
       <ul class="ranking-list" id="rankingList"></ul>
     </div>
   </div>
-  <!-- SVG Laurel -->
-  <svg id="laurelSVG" style="display:none;" viewBox="0 0 140 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Left -->
-    <path d="M40,88 Q70,22 100,88" stroke="#38b4ff" stroke-width="5" fill="none"/>
-    <path d="M24,81 Q70,6 116,81" stroke="#38b4ff" stroke-width="5" fill="none"/>
-    <!-- Leaves left -->
-    <path d="M50,55 Q52,60 56,56" stroke="#38b4ff" stroke-width="3"/>
-    <path d="M60,40 Q62,45 66,41" stroke="#38b4ff" stroke-width="3"/>
-    <path d="M81,41 Q85,46 87,40" stroke="#38b4ff" stroke-width="3"/>
-    <path d="M89,56 Q93,61 95,55" stroke="#38b4ff" stroke-width="3"/>
-  </svg>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
@@ -305,10 +295,6 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-
-    function getLaurelSVG() {
-      return document.getElementById('laurelSVG').outerHTML.replace('id="laurelSVG" style="display:none;"','class="podium-laurel"');
-    }
 
     function seloClass(selo) {
       if(selo==='Ouro') return 'ouro';
@@ -338,9 +324,9 @@
       // PODIUM
       let podiumHtml = "";
       const medalInfos = [
-        {label:"OURO", cls:"ouro", base:"ouro"},
-        {label:"PRATA", cls:"prata", base:"prata"},
-        {label:"BRONZE", cls:"bronze", base:"bronze"}
+        {label:"Ouro", cls:"ouro", base:"ouro"},
+        {label:"Prata", cls:"prata", base:"prata"},
+        {label:"Bronze", cls:"bronze", base:"bronze"}
       ];
       for(let i=0;i<3;i++){
         const a = alunas[i];
@@ -348,7 +334,6 @@
         podiumHtml += `
           <div class="podium-card ${medalInfos[i].cls}">
             <span class="podium-selo ${medalInfos[i].cls}">${medalInfos[i].label}</span>
-            ${getLaurelSVG()}
             <div class="podium-nome">${a.nome}</div>
             <div class="podium-pontos">${a.pontos} pts</div>
             <div class="podium-base ${medalInfos[i].base}"></div>
