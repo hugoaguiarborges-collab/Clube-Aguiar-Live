@@ -2,145 +2,282 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Check-in — Desafio 40+</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <title>Check-in - Desafio 40+ Play</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --muted:#a7b6d0;
-      --ok:#16a34a;
-      --err:#dc2626;
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at top,#163869 0%,#061b30 100%);
+      color: #f8f8f8;
+      font-family: Poppins, Arial, sans-serif;
+      margin: 0;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      background:linear-gradient(180deg,#0e2345,#0a1a33);
-      color:#e6efff;
-      font-family:Poppins,Arial,Helvetica,sans-serif
+    .container {
+      max-width: 440px;
+      margin: 0 auto;
+      margin-top: 70px;
+      background: rgba(255,255,255,0.11);
+      border-radius: 28px;
+      box-shadow: 0 6px 32px -10px #0008;
+      padding: 38px 28px 28px 28px;
+      text-align: center;
     }
-    header{
-      padding:16px;
-      text-align:center;
-      background:#0e2345;
-      box-shadow:0 2px 8px rgba(0,0,0,.25)
+    h1 {
+      color: #fffde5;
+      font-size: 2.1rem;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-shadow: 0 2px 18px #000b;
+      letter-spacing: 1px;
+      line-height: 1.13;
     }
-    .wrap{
-      max-width:760px;
-      margin:24px auto;
-      padding:0 14px
+    .subtitle {
+      color: #e3e3e3;
+      font-size: 1.13rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      line-height: 1.32;
+      text-shadow:0 2px 18px #0006;
     }
-    .card{
-      background:#255,255,255,0.05;
-      border-radius:14px;
-      padding:18px;
-      box-shadow:0 6px 16px rgba(0,0,0,.12)
+    .checkin-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 22px;
     }
-    h1{margin:0 0 8px;color:var(--muted)}
-    label{display:block;font-size:14px;color:#b0c4ff;margin:10px 0 6px}
-    input,select{
-      width:100%;
-      padding:12px;
-      border:1px solid #2947ad;
-      background:#0d2144;
-      color:#e6efff;
-      border-radius:12px;
-      margin-bottom:14px;
-      font-size:14px;
+    .checkin-select {
+      border-radius: 12px;
+      padding: 11px 18px;
+      font-size: 1.09rem;
+      font-family: Poppins, Arial, sans-serif;
+      background: #143869;
+      color: #fffde5;
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 2px 8px #0003;
+      margin-bottom: 0;
+      min-width: 220px;
     }
-    button{
-      background:linear-gradient(180deg,#3d66ff,#224ad6);
-      color:#fff;
-      border:0;
-      border-radius:12px;
-      padding:14px;
-      cursor:pointer;
-      font-size:15px;
-      font-weight:bold;
-      width:100%
+    .checkin-input {
+      border-radius: 12px;
+      padding: 11px 18px;
+      font-size: 1.09rem;
+      font-family: Poppins, Arial, sans-serif;
+      background: #143869;
+      color: #fffde5;
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 2px 8px #0003;
+      min-width: 220px;
     }
-    button:hover{opacity:0.9}
-    small{font-size:12px;line-height:1.4}
-    a{color:#6da4ff;text-decoration:none}
+    .checkin-btn {
+      background: linear-gradient(180deg,#ffd700,#e3c300);
+      color: #143869;
+      font-weight: 900;
+      font-size: 1.13rem;
+      border: none;
+      border-radius: 13px;
+      padding: 13px 0;
+      width: 220px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 12px #0002;
+      transition: background .2s;
+    }
+    .checkin-btn:hover { background: linear-gradient(180deg,#e3c300,#ffd700);}
+    .checkin-label {
+      color: #fffde5;
+      font-weight: 700;
+      font-size: 1.09rem;
+      margin-bottom: 6px;
+      text-align: left;
+      width: 100%;
+    }
+    .confetti {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+      animation: fadeout 2.5s forwards;
+    }
+    @keyframes fadeout { 100% { opacity: 0; } }
+    .checkin-success {
+      margin-top: 24px;
+      background: linear-gradient(90deg, #ffd700 0%, #ffe066 100%);
+      color: #143869;
+      font-weight: 900;
+      font-size: 1.33rem;
+      border-radius: 20px;
+      padding: 24px 14px;
+      box-shadow: 0 2px 18px #0003;
+      text-align: center;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      letter-spacing: 1px;
+    }
+    .checkin-motivation {
+      margin-top: 12px;
+      font-size: 1.18rem;
+      color: #183a73;
+      font-weight: 700;
+      margin-bottom: 0;
+    }
+    .back-btn {
+      margin-top: 32px;
+      background: linear-gradient(180deg,#3974cb,#183a73);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.09rem;
+      border: none;
+      border-radius: 13px;
+      padding: 13px 48px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 12px #0002;
+      transition: background .2s;
+      text-align: center;
+    }
+    .back-btn:hover {background: linear-gradient(180deg,#183a73,#3974cb);}
+    @media (max-width: 540px) {
+      .container {padding: 20px 4vw;}
+      h1 {font-size:1.23rem;}
+      .checkin-select,.checkin-input,.checkin-btn {min-width:unset;width:100%;}
+      .back-btn {padding: 13px 0; width:98%;}
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h2>Check-in — Desafio 40+</h2>
-  </header>
-  <div class="wrap">
-    <div class="card">
-      <h1>Fez o treino de hoje?</h1>
-      <p>
-        Este check-in só deve ser feito se você realmente realizou o treino de hoje.  
-        Para contar no ranking, informe o <b>código da aula</b> (enviado no grupo).  
-      </p>
-
-      <form id="checkinForm" enctype="multipart/form-data">
-        <!-- Seleção do nome -->
-        <label for="nome">Selecione seu nome (igual ao ranking):</label>
-        <select id="nome" name="nome" required>
-          <option value="">Carregando nomes...</option>
-        </select>
-
-        <!-- Código do treino -->
-        <label for="codigo">Código do treino:</label>
-        <input type="text" id="codigo" name="codigo" placeholder="Ex.: AG18" required />
-
-        <!-- Upload de foto/vídeo -->
-        <label for="arquivo">
-          Foto ou vídeo do treino (máx. 10 MB)  
-          <br>
-          <small style="color:#FFD700; font-weight:bold;">
-            ➜ Enviando foto/vídeo da aula de hoje (mostrando você e a TV com a aula), você ganha +5 pontos.  
-            Atenção: usar imagens de outras aulas pode acarretar em perda de pontos.
-          </small>
-        </label>
-        <input type="file" id="arquivo" name="arquivo" accept="image/*,video/*" />
-
-        <!-- Botão -->
-        <button type="submit">Fazer check-in</button>
-      </form>
-
-      <p style="margin-top:16px">
-        <a href="index.html">← Voltar ao ranking</a>
-      </p>
-    </div>
+  <div class="container">
+    <h1>CHECK-IN DO TREINO</h1>
+    <div class="subtitle">Confirme sua presença no treino e ganhe <b>5 pontos</b> no ranking!</div>
+    <form class="checkin-form" onsubmit="doCheckin();return false;">
+      <div class="checkin-label">Selecione seu nome:</div>
+      <select class="checkin-select" id="checkinSelect">
+        <option value="" disabled selected>Selecione seu nome</option>
+      </select>
+      <div class="checkin-label">Digite o código do treino:</div>
+      <input class="checkin-input" id="checkinCode" placeholder="Código treino"/>
+      <button class="checkin-btn" type="submit">Confirmar Check-in</button>
+    </form>
+    <div id="checkinResult"></div>
+    <button class="back-btn" onclick="window.location.href='index.html'">← Voltar ao Ranking</button>
   </div>
-
   <script>
-    // Buscar os nomes direto do ranking (sample_data.json ou Firestore)
-    async function carregarNomes() {
-      try {
-        // Caminho do JSON do ranking (ajuste se o nome estiver em outro arquivo)
-        const resposta = await fetch("sample_data.json");
-        const dados = await resposta.json();
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
+      authDomain: "clube-aguiar-live.firebaseapp.com",
+      projectId: "clube-aguiar-live",
+      storageBucket: "clube-aguiar-live.firebasestorage.app",
+      messagingSenderId: "694025911850",
+      appId: "1:694025911850:web:5f0c6117dbc60b15118d53"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        const select = document.getElementById("nome");
-        select.innerHTML = "<option value=''>-- Escolha seu nome --</option>";
+    let todasAlunas = [];
+    let checkinCodeOficial = "404play"; // pode personalizar
 
-        // Supondo que o JSON tenha formato { "usuarios": [ { "nome": "Paula Silva", "pontos": 10 } ] }
-        if (dados.usuarios && Array.isArray(dados.usuarios)) {
-          dados.usuarios.forEach(usuario => {
-            const opt = document.createElement("option");
-            opt.value = usuario.nome;
-            opt.textContent = usuario.nome;
-            select.appendChild(opt);
-          });
-        } else {
-          // Se não houver nomes, mostra erro
-          select.innerHTML = "<option value=''>Nenhum nome encontrado</option>";
-        }
-
-      } catch (erro) {
-        console.error("Erro ao carregar nomes:", erro);
-        document.getElementById("nome").innerHTML =
-          "<option value=''>Erro ao carregar nomes</option>";
-      }
+    function normalizarCodigo(str){
+      return str
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+        .replace(/ç/g,'c')
+        .replace(/[^a-z0-9]/g,''); // remove símbolos
     }
 
-    // Executa quando a página abrir
+    function preencherSelect(){
+      const select = document.getElementById("checkinSelect");
+      select.innerHTML = '<option value="" disabled selected>Selecione seu nome</option>';
+      todasAlunas.forEach(a=>{
+        select.innerHTML += `<option value="${a.nome}">${a.nome}</option>`;
+      });
+    }
+
+    async function doCheckin(){
+      const nome = document.getElementById("checkinSelect").value;
+      const code = document.getElementById("checkinCode").value;
+      if(!nome){
+        alert("Selecione seu nome.");
+        return;
+      }
+      if(!code){
+        alert("Digite o código do treino.");
+        return;
+      }
+      if(normalizarCodigo(code) !== normalizarCodigo(checkinCodeOficial)){
+        alert("Código do treino inválido!");
+        return;
+      }
+      // Atualiza Firestore +5 pontos
+      const snap = await db.collection("usuarios").where("nome","==",nome).get();
+      if(snap.empty){
+        alert("Nome não encontrado.");
+        return;
+      }
+      const doc = snap.docs[0];
+      const pontosAtuais = doc.data().pontos ?? 0;
+      await db.collection("usuarios").doc(doc.id).update({pontos: pontosAtuais+5});
+      showCheckinSuccess(nome);
+    }
+
+    function showCheckinSuccess(nome){
+      const motivacoes = [
+        "Parabéns! Você está evoluindo a cada treino!",
+        "Treino confirmado! Você está inspirando outras mulheres!",
+        "Mandou bem demais, continue nessa energia!",
+        "Mais 5 pontos pra conta! Você é exemplo de dedicação!",
+        "Sua força está transformando resultados! Continue!"
+      ];
+      const msg = motivacoes[Math.floor(Math.random()*motivacoes.length)];
+      document.getElementById("checkinResult").innerHTML = `
+        <div class="checkin-success">
+          🎉 Parabéns, ${nome}! Você ganhou 5 pontos.
+          <div class="checkin-motivation">${msg}</div>
+        </div>
+      `;
+      confetti();
+      setTimeout(()=>document.getElementById("checkinResult").innerHTML="", 4000);
+    }
+
+    // Confetti animation
+    function confetti(){
+      const colors=["#ffd700","#7209b7","#38b4ff","#ff4d6d","#b0b0b0"];
+      const confettiDiv = document.createElement("div");
+      confettiDiv.className = "confetti";
+      for(let i=0;i<60;i++){
+        const span = document.createElement("span");
+        const size = Math.random()*11+8;
+        span.style.position="absolute";
+        span.style.width=size+"px";
+        span.style.height=size+"px";
+        span.style.background=colors[Math.floor(Math.random()*colors.length)];
+        span.style.borderRadius="50%";
+        span.style.left=Math.random()*100+"vw";
+        span.style.top=Math.random()*80+"vh";
+        span.style.opacity=Math.random()*0.6+0.4;
+        span.style.transform=`rotate(${Math.random()*360}deg)`;
+        confettiDiv.appendChild(span);
+      }
+      document.body.appendChild(confettiDiv);
+      setTimeout(()=>confettiDiv.remove(), 2300);
+    }
+
+    // Carregar nomes ao abrir
+    async function carregarNomes(){
+      const snap = await db.collection("usuarios").orderBy("nome").get();
+      todasAlunas = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        todasAlunas.push({
+          nome: d.nome,
+        });
+      });
+      preencherSelect();
+    }
     carregarNomes();
   </script>
 </body>
