@@ -9,14 +9,22 @@
     body{background:#001a35;color:#fff;font-family:sans-serif;margin:0;padding:30px;}
     h2{color:#ffd700;}
     #erros{background:#330000;color:#ffcfcf;padding:10px;margin:15px 0;border-radius:10px;}
+    #sucesso{background:#002d00;color:#a8e6a6;padding:10px;margin:15px 0;border-radius:10px;}
     #alunas{background:#112244;padding:10px;border-radius:8px;}
+    .aluna-item{margin-bottom:10px;padding:8px;border-radius:6px;background:#233f5a;display:flex;align-items:center;justify-content:space-between;}
+    .aluna-nome{font-weight:700;}
+    .pontos{margin:0 10px;}
+    .edit-pontos{width:50px;}
     button{padding:8px 16px;border-radius:8px;border:none;background:#2a6af7;color:#fff;}
+    .remover-btn{background:#c83d3d;margin-left:10px;}
+    .salvar-btn{background:#16a34a;margin-left:10px;}
     input{padding:8px;border-radius:8px;}
   </style>
 </head>
 <body>
   <h2>Admin — Desafio 40+</h2>
   <div id="erros"></div>
+  <div id="sucesso"></div>
   <div>
     <h3>Adicionar aluna</h3>
     <input id="nomeAluna" placeholder="Nome da aluna" />
@@ -40,21 +48,35 @@
 
     function logErro(msg) {
       document.getElementById("erros").textContent = msg;
+      setTimeout(()=>{document.getElementById("erros").textContent = "";}, 5000);
+    }
+    function logSucesso(msg) {
+      document.getElementById("sucesso").textContent = msg;
+      setTimeout(()=>{document.getElementById("sucesso").textContent = "";}, 3000);
     }
 
     async function carregarAlunas() {
       try {
         const snap = await db.collection("usuarios").orderBy("nome").get();
+        const lista = document.getElementById("alunas");
         if (snap.empty) {
-          document.getElementById("alunas").innerHTML = "Nenhuma aluna cadastrada.";
+          lista.innerHTML = "Nenhuma aluna cadastrada.";
           return;
         }
         let html = "";
         snap.forEach(doc => {
           const d = doc.data();
-          html += `<div><b>${d.nome}</b> — ${d.pontos ?? 0} pts</div>`;
+          html += `
+            <div class="aluna-item" id="item-${doc.id}">
+              <span class="aluna-nome">${d.nome}</span>
+              <span class="pontos">${d.pontos ?? 0} pts</span>
+              <input type="number" class="edit-pontos" id="edit-${doc.id}" placeholder="+/- pontos" />
+              <button class="salvar-btn" onclick="editarPontos('${doc.id}', ${d.pontos ?? 0})">Salvar</button>
+              <button class="remover-btn" onclick="removerAluna('${doc.id}')">Remover</button>
+            </div>
+          `;
         });
-        document.getElementById("alunas").innerHTML = html;
+        lista.innerHTML = html;
       } catch(e) {
         logErro("ERRO ao carregar alunas: " + e.message);
       }
@@ -66,9 +88,37 @@
       if (!nome) return;
       try {
         await db.collection("usuarios").add({ nome, pontos: 0 });
+        logSucesso("Aluna adicionada!");
+        document.getElementById("nomeAluna").value = "";
         carregarAlunas();
       } catch(e) {
         logErro("ERRO ao adicionar aluna: " + e.message);
+      }
+    }
+
+    async function editarPontos(id, pontosAtuais) {
+      const val = parseInt(document.getElementById("edit-" + id).value);
+      if (isNaN(val)) {
+        logErro("Insira um número para editar pontos.");
+        return;
+      }
+      try {
+        await db.collection("usuarios").doc(id).update({ pontos: pontosAtuais + val });
+        logSucesso("Pontuação atualizada!");
+        carregarAlunas();
+      } catch(e) {
+        logErro("ERRO ao editar pontos: " + e.message);
+      }
+    }
+
+    async function removerAluna(id) {
+      if(!confirm("Tem certeza que deseja remover esta aluna?")) return;
+      try {
+        await db.collection("usuarios").doc(id).delete();
+        logSucesso("Aluna removida!");
+        carregarAlunas();
+      } catch(e) {
+        logErro("ERRO ao remover aluna: " + e.message);
       }
     }
   </script>
