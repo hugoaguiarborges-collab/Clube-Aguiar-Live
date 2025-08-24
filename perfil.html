@@ -1,26 +1,121 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Perfil da Atleta</title>
-  <link rel="stylesheet" href="style.css" />
-  <!-- Chart.js CDN para o gráfico -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at top,#163869 0%,#061b30 100%);
+      color: #f8f8f8;
+      font-family: Poppins, Arial, sans-serif;
+      margin: 0;
+    }
+    .perfil-container {
+      max-width: 590px;
+      margin: 48px auto 0 auto;
+      background: rgba(255,255,255,0.08);
+      border-radius: 24px;
+      box-shadow: 0 6px 32px -10px #0008;
+      padding: 38px 32px 32px 32px;
+      text-align: center;
+    }
+    .perfil-nome {
+      font-size: 2.1rem;
+      font-weight: 900;
+      color: #fffde5;
+      margin-bottom: 7px;
+      text-shadow: 0 2px 12px #000b;
+    }
+    .perfil-selos {
+      margin-bottom: 16px;
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: #ffd700;
+    }
+    .perfil-pontos {
+      font-size: 1.10rem;
+      color: #ffd700;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-shadow:0 1px 6px #0008;
+    }
+    .historico-title {
+      font-size: 1.13rem;
+      color: #e3e3e3;
+      margin-top: 18px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      text-align: left;
+    }
+    .historico-list {
+      text-align: left;
+      margin: 0 auto 24px auto;
+      max-width: 340px;
+      color: #fffde5;
+      font-size: 1rem;
+      font-weight: 400;
+      padding-left: 0;
+      list-style: none;
+    }
+    .historico-list li {
+      margin-bottom: 6px;
+      padding-left: 0;
+    }
+    .voltar-btn {
+      background: linear-gradient(180deg,#3974cb,#183a73);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.03rem;
+      border: none;
+      border-radius: 16px;
+      padding: 10px 28px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 12px #0002;
+      margin-top: 22px;
+      margin-bottom: 0;
+      transition: background .2s;
+    }
+    .voltar-btn:hover { background: linear-gradient(180deg,#183a73,#3974cb);}
+    .grafico-title {
+      margin-top: 28px;
+      margin-bottom: 8px;
+      font-size: 1.09rem;
+      font-weight: 700;
+      color: #ffe066;
+      text-shadow: 0 2px 8px #0002;
+      text-align: left;
+    }
+    #graficoEvolucao {
+      background: #061b30;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px #0006;
+      margin: 0 auto 24px auto;
+      display: block;
+      max-width: 100%;
+      height: 260px;
+    }
+    .notfound {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fffde5;
+      margin-bottom: 34px;
+      text-shadow: 0 2px 12px #000b;
+    }
+    @media (max-width: 700px) {
+      .perfil-container {padding: 18px 7vw;}
+      .perfil-nome {font-size: 1.4rem;}
+    }
+  </style>
 </head>
 <body>
-  <div class="container perfil-container">
-    <h1 id="perfil-nome">Nome da Atleta</h1>
-    <div id="perfil-info">
-      <p><strong>Selos conquistados:</strong> <span id="perfil-selos"></span></p>
-      <p><strong>Histórico de treinos:</strong></p>
-      <ul id="perfil-treinos"></ul>
-    </div>
-    <div class="grafico-evolucao">
-      <h2>Evolução no Ranking</h2>
-      <canvas id="graficoEvolucao" width="400" height="200"></canvas>
-    </div>
-    <button onclick="window.history.back()" class="btn-voltar">Voltar ao Ranking</button>
+  <div class="perfil-container" id="perfilBox">
+    <!-- Conteúdo gerado pelo JS -->
   </div>
   <script src="perfil.js"></script>
 </body>
