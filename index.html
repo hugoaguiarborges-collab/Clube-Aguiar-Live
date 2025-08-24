@@ -5,49 +5,244 @@
   <title>Melhores Desempenhos Aguiar 40+</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    body{background:#061b30;color:#e6efff;font-family:Poppins,Arial,sans-serif;margin:0;}
-    h1{text-align:center;color:#ffd700;font-size:2.5rem;font-weight:800;margin-top:40px;}
-    .ranking-box{max-width:900px;margin:50px auto;}
-    .cards{display:flex;justify-content:center;gap:32px;margin-bottom:30px;}
-    .card{background:rgba(255,255,255,0.07);border-radius:18px;padding:32px 26px;min-width:220px;min-height:190px;box-shadow:0 6px 16px rgba(0,0,0,.13);display:flex;flex-direction:column;align-items:center;position:relative;}
-    .medal{position:absolute;top:18px;right:18px;font-size:1.1rem;font-weight:700;}
-    .medal.ouro{color:#ffd700;}
-    .medal.prata{color:#b0b0b0;}
-    .medal.bronze{color:#bc6c25;}
-    .card-nome{font-size:1.25rem;font-weight:800;margin-top:38px;text-align:center;}
-    .card-pontos{font-size:1.15rem;margin-top:10px;color:#ffd700;font-weight:700;}
-    .card-selos{margin-top:14px;display:flex;gap:7px;flex-wrap:wrap;justify-content:center;}
-    .card-selo{padding:4px 12px;border-radius:13px;font-size:0.97rem;font-weight:700;}
-    .card-selo.ouro{background:#ffd700;color:#333;}
-    .card-selo.prata{background:#b0b0b0;color:#333;}
-    .card-selo.destaque{background:#7209b7;color:#fff;}
-    .card-selo{background:#7fffd4;color:#222;}
-    /* Lista de demais alunas */
-    .lista-alunas{max-width:700px;margin:30px auto 0 auto;}
-    .row-aluna{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);margin-bottom:12px;border-radius:12px;padding:14px 18px;}
-    .row-aluna-nome{font-weight:700;font-size:1.05rem;}
-    .row-aluna-pontos{color:#ffd700;font-weight:700;font-size:1.05rem;}
-    .row-aluna-selos{display:flex;gap:8px;flex-wrap:wrap;}
-    .row-aluna-selo{padding:3px 10px;border-radius:12px;font-size:0.94rem;font-weight:600;}
-    .row-aluna-selo.ouro{background:#ffd700;color:#333;}
-    .row-aluna-selo.prata{background:#b0b0b0;color:#333;}
-    .row-aluna-selo.destaque{background:#7209b7;color:#fff;}
-    .row-aluna-selo{background:#7fffd4;color:#222;}
-    @media(max-width:800px){
-      .cards{flex-direction:column;align-items:center;}
-      .ranking-box{padding:0 8px;}
-      .lista-alunas{padding:0 2px;}
+    body {
+      background: radial-gradient(ellipse at top,#14305c 0%,#061b30 100%);
+      color: #e6efff;
+      font-family: Poppins, Arial, sans-serif;
+      margin: 0;
+    }
+    .ranking-box {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .header {
+      text-align: center;
+      margin-top: 40px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      color: #ffd700;
+      font-size: 2.5rem;
+      font-weight: 900;
+      margin: 0 0 12px 0;
+      letter-spacing: 1px;
+    }
+    .subtitle {
+      color: #c3d0e6;
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 36px;
+      line-height: 1.5;
+    }
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 0 16px;
+    }
+    .search-box {
+      background: rgba(255,255,255,0.13);
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-size: 1.1rem;
+      color: #fff;
+      border: none;
+      width: 260px;
+      font-family: Poppins, Arial, sans-serif;
+    }
+    .login-btn {
+      background: linear-gradient(180deg,#3d66ff,#224ad6);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 28px;
+      cursor: pointer;
+    }
+    .podium-row {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      margin-bottom: 30px;
+      margin-top: 16px;
+    }
+    .podium-card {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      min-width: 190px;
+      min-height: 220px;
+      padding-top: 10px;
+    }
+    .podium-nome {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      margin-top: 32px;
+      text-shadow: 0 2px 12px #000b;
+      letter-spacing: 1px;
+    }
+    .podium-pontos {
+      font-size: 1.3rem;
+      color: #ffd700;
+      font-weight: 700;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .podium-base {
+      width: 100px;
+      height: 26px;
+      border-radius: 50%;
+      margin-top: 22px;
+      margin-bottom: 0;
+      box-shadow: 0 6px 22px -8px #0008;
+      position: relative;
+    }
+    .podium-base.ouro { background: linear-gradient(90deg,#ffe066,#ffd700 80%,#e8c300);}
+    .podium-base.prata { background: linear-gradient(90deg,#e0e0e0,#b0b0b0 80%,#e3e3e3);}
+    .podium-base.bronze { background: linear-gradient(90deg,#bc6c25,#e0b080 80%,#bc6c25);}
+    .podium-laurel {
+      position: absolute;
+      top: 0px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 0;
+      width: 120px;
+      height: 76px;
+      pointer-events: none;
+    }
+    .medal-label {
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+      background: rgba(0,0,0,0.25);
+      padding: 4px 20px;
+      border-radius: 16px;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 6px #0006;
+    }
+    .medal-label.ouro { color: #ffd700;}
+    .medal-label.prata { color: #b0b0b0;}
+    .medal-label.bronze { color: #bc6c25;}
+    /* Lista */
+    .ranking-list-box {
+      max-width: 580px;
+      margin: 0 auto;
+      margin-top: 30px;
+    }
+    .ranking-list-title {
+      color: #fff;
+      font-size: 1.18rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+      margin-left: 6px;
+    }
+    .ranking-list {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+    .ranking-list-item {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      margin-bottom: 11px;
+      border-radius: 13px;
+      padding: 12px 18px;
+      font-size: 1.13rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 12px -8px #0004;
+    }
+    .pos-ball {
+      background: #ffd700;
+      color: #2947ad;
+      font-size: 1.12rem;
+      font-weight: 800;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 18px;
+      box-shadow: 0 2px 12px #0002;
+      border: 2px solid #fff;
+    }
+    .ranking-list-nome {
+      flex: 1;
+      font-size: 1.09rem;
+      font-weight: 800;
+    }
+    .ranking-list-pontos {
+      color: #ffd700;
+      font-size: 1.09rem;
+      font-weight: 800;
+      margin-left: 18px;
+    }
+    .ranking-list-selos {
+      display: flex;
+      gap: 8px;
+      margin-left: 18px;
+      flex-wrap: wrap;
+    }
+    .ranking-list-selo {
+      padding: 3px 12px;
+      border-radius: 13px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      background: #7fffd4;
+      color: #2947ad;
+    }
+    .ranking-list-selo.ouro { background: #ffd700; color: #333;}
+    .ranking-list-selo.prata { background: #b0b0b0; color: #333;}
+    .ranking-list-selo.destaque { background: #7209b7; color: #fff;}
+    @media (max-width: 700px) {
+      .podium-row { flex-direction: column; align-items: center; }
+      .podium-card { min-width: 90vw; }
+      .ranking-box { padding: 0 2px;}
+      .ranking-list-box { padding: 0 2px;}
     }
   </style>
 </head>
 <body>
-  <div class="ranking-box">
-    <h1>MELHORES DESEMPENHOS AGUIAR 40+</h1>
-    <div id="rankingCards" class="cards"></div>
-    <div class="lista-alunas" id="listaAlunas"></div>
+  <div class="top-bar">
+    <input class="search-box" placeholder="Search" id="searchInput" oninput="filtrarRanking()"/>
+    <button class="login-btn">LOGIN</button>
   </div>
+  <div class="ranking-box">
+    <div class="header">
+      <h1>MELHORES DESEMPENHOS AGUIAR 40+</h1>
+      <div class="subtitle">
+        Ranking de melhores desempenhos de mulheres 40+ que participaram dos treinos em casa do Club Aguiar do instagram
+      </div>
+    </div>
+    <div class="podium-row" id="podiumRow"></div>
+    <div class="ranking-list-box">
+      <div class="ranking-list-title">Ranking completo:</div>
+      <ul class="ranking-list" id="rankingList"></ul>
+    </div>
+  </div>
+  <!-- SVG Laurel -->
+  <svg id="laurelSVG" style="display:none;" viewBox="0 0 120 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M40,75 Q60,30 80,75" stroke="#38b4ff" stroke-width="4" fill="none"/>
+    <path d="M26,70 Q60,10 94,70" stroke="#38b4ff" stroke-width="4" fill="none"/>
+  </svg>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
@@ -60,12 +255,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function medalType(idx) {
-      if(idx===0) return {txt:'🏆 OURO',cls:'ouro'};
-      if(idx===1) return {txt:'🥈 PRATA',cls:'prata'};
-      if(idx===2) return {txt:'🥉 BRONZE',cls:'bronze'};
-      return {txt:'',cls:''};
+    // Pega SVG de laurel para usar nos cards
+    function getLaurelSVG() {
+      return document.getElementById('laurelSVG').outerHTML.replace('id="laurelSVG" style="display:none;"','style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:120px;height:76px;"');
     }
+
     function seloClass(selo) {
       if(selo==='Ouro') return 'ouro';
       if(selo==='Prata') return 'prata';
@@ -73,48 +267,70 @@
       return '';
     }
 
+    let todasAlunas = [];
+
     async function renderRanking() {
       const snap = await db.collection("usuarios").orderBy("pontos","desc").get();
-      let alunas = [];
+      todasAlunas = [];
       snap.forEach(doc => {
         const d = doc.data();
-        alunas.push({
+        todasAlunas.push({
           nome: d.nome,
           pontos: d.pontos ?? 0,
           selos: Array.isArray(d.selos) ? d.selos : []
         });
       });
-      // Top 3 cards
-      let html = "";
-      for(let i=0;i<3;i++) {
+      desenharRanking(todasAlunas);
+    }
+
+    function desenharRanking(alunas){
+      // PODIUM
+      let podiumHtml = "";
+      const medalInfos = [
+        {label:"OURO", cls:"ouro", base:"ouro"},
+        {label:"PRATA", cls:"prata", base:"prata"},
+        {label:"BRONZE", cls:"bronze", base:"bronze"}
+      ];
+      for(let i=0;i<3;i++){
         const a = alunas[i];
         if(!a) continue;
-        const medal = medalType(i);
-        html += `<div class="card">
-          <div class="medal ${medal.cls}">${medal.txt}</div>
-          <div class="card-nome">${a.nome}</div>
-          <div class="card-pontos">${a.pontos} pts</div>
-          <div class="card-selos">
-            ${a.selos.map(s=>`<span class="card-selo ${seloClass(s)}">${s}</span>`).join('')}
+        podiumHtml += `
+          <div class="podium-card">
+            <span class="medal-label ${medalInfos[i].cls}"> ${medalInfos[i].label} </span>
+            ${getLaurelSVG()}
+            <div class="podium-nome">${a.nome}</div>
+            <div class="podium-pontos">${a.pontos} pts</div>
+            <div class="podium-base ${medalInfos[i].base}"></div>
           </div>
-        </div>`;
+        `;
       }
-      document.getElementById("rankingCards").innerHTML = html;
+      document.getElementById("podiumRow").innerHTML = podiumHtml;
 
-      // Lista das demais alunas
-      let listaHtml = "";
-      for(let i=3;i<alunas.length;i++) {
+      // LISTA COMPLETA
+      let listHtml = "";
+      for(let i=3;i<alunas.length;i++){
         const a = alunas[i];
-        listaHtml += `<div class="row-aluna">
-          <span class="row-aluna-nome">${a.nome}</span>
-          <span class="row-aluna-pontos">${a.pontos} pts</span>
-          <span class="row-aluna-selos">
-            ${a.selos.map(s=>`<span class="row-aluna-selo ${seloClass(s)}">${s}</span>`).join('')}
-          </span>
-        </div>`;
+        listHtml += `
+          <li class="ranking-list-item">
+            <span class="pos-ball">${i+1}</span>
+            <span class="ranking-list-nome">${a.nome}</span>
+            <span class="ranking-list-pontos">${a.pontos} pts</span>
+            <span class="ranking-list-selos">
+              ${a.selos.map(s=>`<span class="ranking-list-selo ${seloClass(s)}">${s}</span>`).join('')}
+            </span>
+          </li>
+        `;
       }
-      document.getElementById("listaAlunas").innerHTML = listaHtml;
+      document.getElementById("rankingList").innerHTML = listHtml;
     }
+
+    function filtrarRanking(){
+      const termo = document.getElementById("searchInput").value.toLowerCase().trim();
+      if(!termo) { desenharRanking(todasAlunas); return;}
+      const filtradas = todasAlunas.filter(a => a.nome.toLowerCase().includes(termo));
+      desenharRanking(filtradas);
+    }
+
     renderRanking();
   </script>
 </body>
