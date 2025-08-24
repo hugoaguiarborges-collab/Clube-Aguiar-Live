@@ -19,21 +19,36 @@
     .remover-btn{background:#c83d3d;margin-left:10px;}
     .salvar-btn{background:#16a34a;margin-left:10px;}
     input{padding:8px;border-radius:8px;}
+    #treinoBox{background:#112244;padding:14px;border-radius:10px;margin-bottom:24px;}
+    #statusTreino{margin-top:8px;color:#ffd700;}
   </style>
 </head>
 <body>
   <h2>Admin — Desafio 40+</h2>
   <div id="erros"></div>
   <div id="sucesso"></div>
+
+  <!-- Bloco do código do treino do dia -->
+  <div id="treinoBox">
+    <h3>Código do treino do dia</h3>
+    <input id="codigoTreino" placeholder="Digite o código do treino" />
+    <button onclick="salvarCodigoTreino()" style="background:#16a34a;">Salvar</button>
+    <div id="statusTreino"></div>
+  </div>
+
+  <!-- Bloco de adicionar aluna -->
   <div>
     <h3>Adicionar aluna</h3>
     <input id="nomeAluna" placeholder="Nome da aluna" />
     <button onclick="addAluna()">Adicionar</button>
   </div>
+
+  <!-- Lista de alunas -->
   <div>
     <h3>Lista de alunas</h3>
     <div id="alunas">Carregando...</div>
   </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAMf0Z5_a1DufNRCTHGPGC6ZBE9T2-tYAU",
@@ -55,6 +70,27 @@
       setTimeout(()=>{document.getElementById("sucesso").textContent = "";}, 3000);
     }
 
+    // --------- CÓDIGO DO TREINO DO DIA --------------
+
+    async function salvarCodigoTreino() {
+      const codigo = document.getElementById("codigoTreino").value.trim();
+      if (!codigo) {
+        document.getElementById("statusTreino").textContent = "Digite o código!";
+        return;
+      }
+      document.getElementById("statusTreino").textContent = "Salvando...";
+      try {
+        await db.collection("config").doc("treino_do_dia").set({ codigo });
+        document.getElementById("statusTreino").textContent = "Código salvo com sucesso!";
+        setTimeout(() => { document.getElementById("statusTreino").textContent = ""; }, 2500);
+        document.getElementById("codigoTreino").value = "";
+      } catch(e) {
+        document.getElementById("statusTreino").textContent = "Erro ao salvar: " + e.message;
+      }
+    }
+
+    // --------- ALUNAS --------------
+
     async function carregarAlunas() {
       try {
         const snap = await db.collection("usuarios").orderBy("nome").get();
@@ -70,7 +106,7 @@
             <div class="aluna-item" id="item-${doc.id}">
               <span class="aluna-nome">${d.nome}</span>
               <span class="pontos">${d.pontos ?? 0} pts</span>
-              <input type="number" class="edit-pontos" id="edit-${doc.id}" placeholder="+/- pontos" />
+              <input type="number" class="edit-pontos" id="edit-${doc.id}" placeholder="+/- po" />
               <button class="salvar-btn" onclick="editarPontos('${doc.id}', ${d.pontos ?? 0})">Salvar</button>
               <button class="remover-btn" onclick="removerAluna('${doc.id}')">Remover</button>
             </div>
