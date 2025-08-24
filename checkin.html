@@ -153,7 +153,7 @@
 <body>
   <div class="container">
     <h1>CHECK-IN DO TREINO</h1>
-    <div class="subtitle">Confirme sua presença no treino e ganhe <b>5 pontos</b> no ranking!</div>
+    <div class="subtitle">Confirme sua presença no treino e ganhe <b id="pontosCheckin">5 pontos</b> no ranking!</div>
     <form class="checkin-form" onsubmit="doCheckin();return false;">
       <div class="checkin-label">Selecione seu nome:</div>
       <select class="checkin-select" id="checkinSelect">
@@ -179,7 +179,8 @@
     const db = firebase.firestore();
 
     let todasAlunas = [];
-    let checkinCodeOficial = ""; // agora dinâmico!
+    let checkinCodeOficial = ""; // dinâmico!
+    let pontosDoCheckin = 5;     // dinâmico!
 
     function normalizarCodigo(str){
       return str
@@ -190,9 +191,11 @@
     }
 
     async function carregarCodigoTreino(){
-      // Supondo coleção 'config', documento 'treino', campo 'codigo'
-      const doc = await db.collection("config").doc("treino").get();
-      checkinCodeOficial = (doc.exists && doc.data().codigo) ? doc.data().codigo : "";
+      // Busca o código do treino do dia e os pontos do documento correto!
+      const doc = await db.collection("codes").doc("today").get();
+      checkinCodeOficial = (doc.exists && doc.data().code) ? doc.data().code : "";
+      pontosDoCheckin = (doc.exists && doc.data().points) ? doc.data().points : 5;
+      document.getElementById("pontosCheckin").innerText = pontosDoCheckin + " pontos";
     }
 
     function preencherSelect(){
@@ -218,15 +221,15 @@
         alert("Código do treino inválido!");
         return;
       }
-      // Atualiza Firestore +5 pontos
+      // Atualiza Firestore com pontos do dia!
       const snap = await db.collection("usuarios").where("nome","==",nome).get();
       if(snap.empty){
         alert("Nome não encontrado.");
         return;
       }
-      const doc = snap.docs[0];
-      const pontosAtuais = doc.data().pontos ?? 0;
-      await db.collection("usuarios").doc(doc.id).update({pontos: pontosAtuais+5});
+      const docUser = snap.docs[0];
+      const pontosAtuais = docUser.data().pontos ?? 0;
+      await db.collection("usuarios").doc(docUser.id).update({pontos: pontosAtuais + pontosDoCheckin});
       showCheckinSuccess(nome);
     }
 
@@ -235,13 +238,13 @@
         "Parabéns! Você está evoluindo a cada treino!",
         "Treino confirmado! Você está inspirando outras mulheres!",
         "Mandou bem demais, continue nessa energia!",
-        "Mais 5 pontos pra conta! Você é exemplo de dedicação!",
+        "Mais pontos pra conta! Você é exemplo de dedicação!",
         "Sua força está transformando resultados! Continue!"
       ];
       const msg = motivacoes[Math.floor(Math.random()*motivacoes.length)];
       document.getElementById("checkinResult").innerHTML = `
         <div class="checkin-success">
-          🎉 Parabéns, ${nome}! Você ganhou 5 pontos.
+          🎉 Parabéns, ${nome}! Você ganhou ${pontosDoCheckin} pontos.
           <div class="checkin-motivation">${msg}</div>
         </div>
       `;
