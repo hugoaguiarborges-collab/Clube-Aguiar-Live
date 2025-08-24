@@ -23,17 +23,24 @@ let todasAlunas = [];
 
 // Renderiza o ranking a partir dos dados do Firestore
 async function renderRanking() {
-  const snap = await db.collection("usuarios").orderBy("pontos","desc").get();
-  todasAlunas = [];
-  snap.forEach(doc => {
-    const d = doc.data();
-    todasAlunas.push({
-      nome: d.nome,
-      pontos: d.pontos ?? 0,
-      selos: Array.isArray(d.selos) ? d.selos : []
+  try {
+    const snap = await db.collection("usuarios").orderBy("pontos","desc").get();
+    todasAlunas = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      todasAlunas.push({
+        nome: d.nome || "Sem nome",
+        pontos: d.pontos ?? 0,
+        selos: Array.isArray(d.selos) ? d.selos : []
+      });
     });
-  });
-  desenharRanking(todasAlunas);
+    desenharRanking(todasAlunas);
+  } catch (error) {
+    // Mostra erro no console e na tela
+    console.error("Erro ao carregar ranking:", error);
+    document.getElementById("podiumRow").innerHTML = "<div style='color:red'>Erro ao carregar ranking.</div>";
+    document.getElementById("rankingList").innerHTML = "";
+  }
 }
 
 // Desenha o ranking, pódio e lista completa
