@@ -75,30 +75,44 @@
       line-height: 1.35;
       text-shadow:0 2px 18px #0006;
     }
-    /* Podium Row */
+
+    /* PÓDIO */
     .podium-row {
       display: flex;
       justify-content: center;
       gap: 0px;
-      margin-bottom: 40px;
+      margin-bottom: 36px;
       margin-top: 0px;
       align-items: flex-end;
       position: relative;
+      min-height: 330px;
     }
     .podium-card {
       flex: 1 1 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      position: relative;
+      position: absolute;
       min-width: 220px;
       min-height: 250px;
       padding-top: 24px;
       z-index: 1;
+      transition: top .2s;
     }
-    .podium-card.prata {margin-top: 45px;}
-    .podium-card.ouro {margin-top: 0px;}
-    .podium-card.bronze {margin-top: 60px;}
+    .podium-card.ouro {
+      left: 50%;
+      transform: translateX(-50%);
+      top: 0;
+      z-index: 2;
+    }
+    .podium-card.prata {
+      left: 8%;
+      top: 65px;
+    }
+    .podium-card.bronze {
+      right: 8%;
+      top: 110px;
+    }
     .podium-nome {
       font-size: 2.6rem;
       font-weight: 900;
@@ -143,25 +157,23 @@
       pointer-events: none;
       opacity: 0.85;
     }
-    .medal-label {
-      position: absolute;
-      top: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 1.23rem;
+    /* Selo visual do admin para medalha */
+    .podium-selo {
+      display: inline-block;
       font-weight: 900;
-      color: #fff;
-      background: rgba(0,0,0,0.25);
-      padding: 6px 26px;
-      border-radius: 16px;
+      font-size: 1.05rem;
+      border-radius: 18px;
+      padding: 7px 26px;
+      margin-top: 5px;
+      margin-bottom: 2px;
+      box-shadow: 0 2px 16px #0002;
       letter-spacing: 2px;
-      box-shadow: 0 2px 16px #0006;
-      text-shadow: 0 2px 12px #0006;
-      z-index: 2;
+      text-shadow: 0 2px 12px #0003;
+      background: #ffd700;
+      color: #294700;
     }
-    .medal-label.ouro { color: #ffd700;}
-    .medal-label.prata { color: #b0b0b0;}
-    .medal-label.bronze { color: #bc6c25;}
+    .podium-selo.prata { background:#b0b0b0;color:#333;}
+    .podium-selo.bronze { background:#bc6c25;color:#fff;}
     /* Lista */
     .ranking-list-box {
       max-width: 590px;
@@ -235,6 +247,7 @@
     }
     .ranking-list-selo.ouro { background: #ffd700; color: #333;}
     .ranking-list-selo.prata { background: #b0b0b0; color: #333;}
+    .ranking-list-selo.bronze { background: #bc6c25; color: #fff;}
     .ranking-list-selo.destaque { background: #7209b7; color: #fff;}
     @media (max-width: 900px) {
       .top-bar {padding: 30px 10px 0 10px;}
@@ -243,8 +256,8 @@
     @media (max-width: 700px) {
       h1 {font-size:2.1rem;}
       .subtitle {font-size:1rem;}
-      .podium-row { flex-direction: column; align-items: center; gap:10px;}
-      .podium-card { min-width: 98vw; }
+      .podium-row { flex-direction: column; align-items: center; gap:10px; min-height:unset;}
+      .podium-card { min-width: 98vw; position:static; left:unset; right:unset; top:unset;}
       .ranking-box { padding: 0 2px;}
       .ranking-list-box { padding: 0 2px;}
       .search-box {width: 100%;}
@@ -291,7 +304,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Pega SVG de laurel para usar nos cards
     function getLaurelSVG() {
       return document.getElementById('laurelSVG').outerHTML.replace('id="laurelSVG" style="display:none;"','class="podium-laurel"');
     }
@@ -299,6 +311,7 @@
     function seloClass(selo) {
       if(selo==='Ouro') return 'ouro';
       if(selo==='Prata') return 'prata';
+      if(selo==='Bronze') return 'bronze';
       if(selo==='Destaque') return 'destaque';
       return '';
     }
@@ -332,7 +345,7 @@
         if(!a) continue;
         podiumHtml += `
           <div class="podium-card ${medalInfos[i].cls}">
-            <span class="medal-label ${medalInfos[i].cls}"> ${medalInfos[i].label} </span>
+            <span class="podium-selo ${medalInfos[i].cls}">${medalInfos[i].label}</span>
             ${getLaurelSVG()}
             <div class="podium-nome">${a.nome}</div>
             <div class="podium-pontos">${a.pontos} pts</div>
