@@ -82,6 +82,15 @@
     </div>
     <div id="selosPersonalizadosBox"></div>
 
+    <!-- Publicar/congelar ranking (nova funcionalidade para registrar evolução) -->
+    <div class="card">
+      <h3>Congelar/Publicar Ranking</h3>
+      <button onclick="publicarRanking()">Publicar Ranking</button>
+      <div style="font-size:13px;color:#ffd700;margin-top:6px;">
+        Use este botão para registrar a posição de cada atleta no histórico, permitindo o gráfico de evolução/regressão aparecer no perfil.
+      </div>
+    </div>
+
     <!-- Lista de alunas -->
     <div id="alunasList" class="alunas-list"></div>
   </div>
@@ -311,6 +320,30 @@
         logErro("Erro ao atualizar selos: " + e.message);
       }
     }
+
+    // --------- NOVO BLOCO: PUBLICAR/CONGELAR RANKING (EVOLUÇÃO DE POSIÇÕES) ---------
+    async function publicarRanking() {
+      try {
+        // 1. Busca todas atletas ordenadas por pontos (ranking atual)
+        const snap = await db.collection("usuarios").orderBy("pontos","desc").get();
+        let promises = [];
+        snap.forEach((doc, idx) => {
+          const dados = doc.data();
+          let posicoes = Array.isArray(dados.posicoes) ? dados.posicoes : [];
+          posicoes.push({
+            data: new Date().toLocaleDateString('pt-BR'),
+            posicao: idx + 1
+          });
+          // Atualiza Firestore com a nova posição
+          promises.push(db.collection("usuarios").doc(doc.id).update({ posicoes }));
+        });
+        await Promise.all(promises);
+        logSucesso("Ranking publicado e evolução registrada!");
+      } catch(e) {
+        logErro("Erro ao publicar ranking: " + e.message);
+      }
+    }
+    // -------------------------------------------------------------------------------
   </script>
 </body>
 </html>
