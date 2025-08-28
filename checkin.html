@@ -309,11 +309,10 @@
         .replace(/[^a-z0-9]/g,'');
     }
 
-    // CORRIGIDO: busca o código do treino da coleção/config usada pelo admin
     async function carregarCodigoTreino(){
       const doc = await db.collection("config").doc("treino_do_dia").get();
       checkinCodeOficial = (doc.exists && doc.data().codigo) ? doc.data().codigo : "";
-      pontosDoCheckin = 5; // fixo, ou altere se quiser buscar de outro lugar
+      pontosDoCheckin = 5;
       document.getElementById("pontosCheckin").innerText = pontosDoCheckin + " pontos";
     }
 
@@ -353,7 +352,6 @@
         alert("Selecione seu emoji de como se sentiu no treino.");
         return;
       }
-      // CORRIGIDO: valida o código do treino que está no admin/config
       if(normalizarCodigo(code) !== normalizarCodigo(checkinCodeOficial)){
         alert("Código do treino inválido!");
         return;
@@ -375,14 +373,17 @@
         return;
       }
 
-      await db.collection("usuarios").doc(docUser.id).update({
-        pontos: pontosAtuais + pontosDoCheckin,
-        checkinsFeitos: [...checkinsFeitos, checkinCodeOficial],
-        emocoesCheckin: {...emocoesCheckin, [checkinCodeOficial]: emojiFinal}
-      });
-
-      showCheckinSuccess(nome, emojiFinal);
-      showExtraPointsArea();
+      try {
+        await db.collection("usuarios").doc(docUser.id).update({
+          pontos: pontosAtuais + pontosDoCheckin,
+          checkinsFeitos: [...checkinsFeitos, checkinCodeOficial],
+          emocoesCheckin: {...emocoesCheckin, [checkinCodeOficial]: emojiFinal}
+        });
+        showCheckinSuccess(nome, emojiFinal);
+        showExtraPointsArea();
+      } catch(e) {
+        alert("Erro ao registrar seu check-in: " + e.message);
+      }
     }
 
     function showCheckinSuccess(nome, emoji){
