@@ -5,6 +5,7 @@
   <title>Admin — Desafio 40+</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
   <style>
     body{background:#061b30;color:#e6efff;font-family:Poppins,Arial,sans-serif;margin:0;}
@@ -40,6 +41,8 @@
     #novoSeloForm{margin:16px 0 0 0;display:flex;align-items:center;gap:10px;}
     #novoSeloInput{padding:11px 14px;font-size:16px;width:180px;}
     #selosPersonalizadosBox{margin:8px 0;}
+    #authBox{background:#102040;padding:14px 20px;margin-bottom:22px;border-radius:12px;}
+    #adminOnly{display:none;}
     @media(max-width:600px){
       .container{padding:0 4px;}
       .card{padding:12px;}
@@ -54,45 +57,63 @@
     <div id="erros"></div>
     <div id="sucesso"></div>
 
-    <!-- Código do treino do dia -->
-    <div class="card">
-      <h3>Código do treino do dia</h3>
-      <input id="codigoTreino" placeholder="Digite o código do treino" />
-      <button onclick="salvarCodigoTreino()" class="salvar-btn">Salvar</button>
-      <div id="statusTreino" style="margin-top:8px;color:#ffd700;"></div>
-    </div>
-
-    <!-- Adicionar aluna -->
-    <div class="card">
-      <h3>Adicionar aluna</h3>
-      <input id="nomeAluna" placeholder="Nome da aluna" />
-      <button onclick="addAluna()">Adicionar</button>
-    </div>
-
-    <!-- Tabs de Pontuação/Selos -->
-    <div class="tab-bar">
-      <button class="tab-btn active" id="tabPontuacao" onclick="mudarAba('pontuacao')">Pontuação</button>
-      <button class="tab-btn" id="tabSelos" onclick="mudarAba('selos')">Selos</button>
-    </div>
-
-    <!-- Adicionar selo personalizado (aparece só na aba selos) -->
-    <div id="novoSeloForm" style="display:none;">
-      <input id="novoSeloInput" placeholder="Novo selo (texto ou emoji)" />
-      <button onclick="adicionarSeloPersonalizado()" style="background:#ffd700;color:#2947ad;">Adicionar selo</button>
-    </div>
-    <div id="selosPersonalizadosBox"></div>
-
-    <!-- Publicar/congelar ranking (nova funcionalidade para registrar evolução) -->
-    <div class="card">
-      <h3>Congelar/Publicar Ranking</h3>
-      <button onclick="publicarRanking()">Publicar Ranking</button>
-      <div style="font-size:13px;color:#ffd700;margin-top:6px;">
-        Use este botão para registrar a posição de cada atleta no histórico, permitindo o gráfico de evolução/regressão aparecer no perfil.
+    <!-- Login/Logout Firebase Auth -->
+    <div id="authBox">
+      <div id="loginForm">
+        <input id="email" type="email" placeholder="Seu e-mail de admin" style="margin-right:6px;">
+        <input id="senha" type="password" placeholder="Senha" style="margin-right:6px;">
+        <button onclick="loginAdmin()">Entrar</button>
+      </div>
+      <div id="adminInfo" style="display:none;">
+        Logado como <span id="adminEmail"></span>
+        <button onclick="logoutAdmin()">Sair</button>
+      </div>
+      <div id="notAdmin" style="display:none;color:#ff3333;margin-top:8px;">
+        Você não tem permissão para acessar este painel!
       </div>
     </div>
 
-    <!-- Lista de alunas -->
-    <div id="alunasList" class="alunas-list"></div>
+    <div id="adminOnly">
+      <!-- Código do treino do dia -->
+      <div class="card">
+        <h3>Código do treino do dia</h3>
+        <input id="codigoTreino" placeholder="Digite o código do treino" />
+        <button onclick="salvarCodigoTreino()" class="salvar-btn">Salvar</button>
+        <div id="statusTreino" style="margin-top:8px;color:#ffd700;"></div>
+      </div>
+
+      <!-- Adicionar aluna -->
+      <div class="card">
+        <h3>Adicionar aluna</h3>
+        <input id="nomeAluna" placeholder="Nome da aluna" />
+        <button onclick="addAluna()">Adicionar</button>
+      </div>
+
+      <!-- Tabs de Pontuação/Selos -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tabPontuacao" onclick="mudarAba('pontuacao')">Pontuação</button>
+        <button class="tab-btn" id="tabSelos" onclick="mudarAba('selos')">Selos</button>
+      </div>
+
+      <!-- Adicionar selo personalizado (aparece só na aba selos) -->
+      <div id="novoSeloForm" style="display:none;">
+        <input id="novoSeloInput" placeholder="Novo selo (texto ou emoji)" />
+        <button onclick="adicionarSeloPersonalizado()" style="background:#ffd700;color:#2947ad;">Adicionar selo</button>
+      </div>
+      <div id="selosPersonalizadosBox"></div>
+
+      <!-- Publicar/congelar ranking -->
+      <div class="card">
+        <h3>Congelar/Publicar Ranking</h3>
+        <button onclick="publicarRanking()">Publicar Ranking</button>
+        <div style="font-size:13px;color:#ffd700;margin-top:6px;">
+          Use este botão para registrar a posição de cada atleta no histórico, permitindo o gráfico de evolução/regressão aparecer no perfil.
+        </div>
+      </div>
+
+      <!-- Lista de alunas -->
+      <div id="alunasList" class="alunas-list"></div>
+    </div>
   </div>
 
   <script>
@@ -106,6 +127,10 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Seu UID de admin
+    const ADMIN_UID = "Lklp9zwhhcSMgrWttuSiEk2D5I02";
 
     function logErro(msg) {
       document.getElementById("erros").textContent = msg;
@@ -115,6 +140,44 @@
       document.getElementById("sucesso").textContent = msg;
       setTimeout(()=>{document.getElementById("sucesso").textContent = "";}, 3000);
     }
+
+    // --------- LOGIN/LOGOUT FUNÇÕES --------------
+    function loginAdmin() {
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value.trim();
+      auth.signInWithEmailAndPassword(email, senha)
+        .then(userCred => {
+          // Login feito, checa UID
+        })
+        .catch(e => {
+          logErro("Erro ao logar: " + e.message);
+        });
+    }
+    function logoutAdmin() {
+      auth.signOut();
+    }
+    // Checa autenticação ao carregar
+    auth.onAuthStateChanged(user => {
+      if (user && user.uid === ADMIN_UID) {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("adminInfo").style.display = "block";
+        document.getElementById("adminOnly").style.display = "block";
+        document.getElementById("notAdmin").style.display = "none";
+        document.getElementById("adminEmail").textContent = user.email;
+        carregarAlunas();
+      } else if (user && user.uid !== ADMIN_UID) {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("adminInfo").style.display = "block";
+        document.getElementById("adminOnly").style.display = "none";
+        document.getElementById("notAdmin").style.display = "block";
+        document.getElementById("adminEmail").textContent = user.email;
+      } else {
+        document.getElementById("loginForm").style.display = "block";
+        document.getElementById("adminInfo").style.display = "none";
+        document.getElementById("adminOnly").style.display = "none";
+        document.getElementById("notAdmin").style.display = "none";
+      }
+    });
 
     // --------- CÓDIGO DO TREINO DO DIA --------------
     async function salvarCodigoTreino() {
@@ -260,7 +323,6 @@
         logErro("ERRO ao carregar alunas: " + e.message);
       }
     }
-    carregarAlunas();
 
     async function addAluna() {
       const nome = document.getElementById("nomeAluna").value.trim();
@@ -321,7 +383,7 @@
       }
     }
 
-    // --------- NOVO BLOCO: PUBLICAR/CONGELAR RANKING (EVOLUÇÃO DE POSIÇÕES) ---------
+    // --------- PUBLICAR/CONGELAR RANKING (EVOLUÇÃO DE POSIÇÕES) ---------
     async function publicarRanking() {
       try {
         // 1. Busca todas atletas ordenadas por pontos (ranking atual)
