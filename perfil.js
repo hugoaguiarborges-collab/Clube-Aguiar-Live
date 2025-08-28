@@ -79,13 +79,27 @@ async function carregarPerfil() {
     <button class="voltar-btn" onclick="window.location.href='index.html'">← Voltar ao Ranking</button>
   `;
 
-  // Gráfico de evolução (simples: exibe posição ao longo dos treinos)
-  // Aqui, como exemplo, pega posicoes do atleta.posicoes (se existir) ou gera fictício
-  let posicoes = Array.isArray(atleta.posicoes) && atleta.posicoes.length
-    ? atleta.posicoes
-    : historico.map((h, i) => ({ data: h.split(" - ")[0] || `Treino ${i + 1}`, posicao: i + 1 }));
+  // Gráfico de evolução
+  let posicoes = [];
+  if (Array.isArray(atleta.posicoes) && atleta.posicoes.length > 0) {
+    posicoes = atleta.posicoes
+      .filter(p => p.data && p.posicao) // só pega entradas válidas
+      .map(p => ({
+        data: p.data,
+        posicao: Number(p.posicao)
+      }));
+  }
 
-  criarGraficoEvolucao(posicoes);
+  // Caso não tenha dados suficientes para montar gráfico, mostra mensagem
+  if (!posicoes.length) {
+    // Mostra um gráfico zerado, mas com label informativa
+    criarGraficoEvolucao([{ data: "Sem registro", posicao: 0 }]);
+    // Ou, se preferir, pode mostrar uma mensagem em vez do gráfico:
+    // document.getElementById("graficoEvolucao").style.display = "none";
+    // box.innerHTML += `<div style="color:#fffde5;font-size:0.98rem;">Nenhuma evolução registrada ainda.</div>`;
+  } else {
+    criarGraficoEvolucao(posicoes);
+  }
 }
 
 function criarGraficoEvolucao(posicoes) {
@@ -113,7 +127,9 @@ function criarGraficoEvolucao(posicoes) {
         y: {
           reverse: true,
           beginAtZero: false,
-          title: { display: true, text: 'Posição' }
+          title: { display: true, text: 'Posição' },
+          min: 1, // Ranking começa em 1
+          // Se quiser sempre mostrar até o último lugar, pode usar max aqui
         }
       },
       plugins: {
