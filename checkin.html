@@ -309,10 +309,11 @@
         .replace(/[^a-z0-9]/g,'');
     }
 
+    // CORRIGIDO: busca o código do treino da coleção/config usada pelo admin
     async function carregarCodigoTreino(){
-      const doc = await db.collection("codes").doc("today").get();
-      checkinCodeOficial = (doc.exists && doc.data().code) ? doc.data().code : "";
-      pontosDoCheckin = (doc.exists && doc.data().points) ? doc.data().points : 5;
+      const doc = await db.collection("config").doc("treino_do_dia").get();
+      checkinCodeOficial = (doc.exists && doc.data().codigo) ? doc.data().codigo : "";
+      pontosDoCheckin = 5; // fixo, ou altere se quiser buscar de outro lugar
       document.getElementById("pontosCheckin").innerText = pontosDoCheckin + " pontos";
     }
 
@@ -324,13 +325,11 @@
       });
     }
 
-    // PROTEÇÃO: só permite um check-in por código/treino por aluna
     async function doCheckin(){
       const nome = document.getElementById("checkinSelect").value;
       const code = document.getElementById("checkinCode").value;
       nomeSelecionado = nome;
 
-      // EMOJI de emoção selecionado
       const emojiSelecionada = document.querySelector('input[name="emoji"]:checked');
       const emocoes = {
         feliz: "😃",
@@ -354,12 +353,12 @@
         alert("Selecione seu emoji de como se sentiu no treino.");
         return;
       }
+      // CORRIGIDO: valida o código do treino que está no admin/config
       if(normalizarCodigo(code) !== normalizarCodigo(checkinCodeOficial)){
         alert("Código do treino inválido!");
         return;
       }
 
-      // Busca o documento da aluna
       const snap = await db.collection("usuarios").where("nome","==",nome).get();
       if(snap.empty){
         alert("Nome não encontrado.");
@@ -368,16 +367,14 @@
       const docUser = snap.docs[0];
       const dados = docUser.data();
       const pontosAtuais = dados.pontos ?? 0;
-      const checkinsFeitos = dados.checkinsFeitos ?? []; // array de códigos
-      const emocoesCheckin = dados.emocoesCheckin ?? {}; // objeto { codigo: emoji }
+      const checkinsFeitos = dados.checkinsFeitos ?? [];
+      const emocoesCheckin = dados.emocoesCheckin ?? {};
 
-      // VERIFICA SE JÁ FEZ CHECK-IN COM ESSE CÓDIGO
       if (checkinsFeitos.includes(checkinCodeOficial)) {
         alert("Você já fez check-in nesse treino! Só é permitido um por código.");
         return;
       }
 
-      // Atualiza Firestore com pontos do dia, registra o código no array, salva o emoji
       await db.collection("usuarios").doc(docUser.id).update({
         pontos: pontosAtuais + pontosDoCheckin,
         checkinsFeitos: [...checkinsFeitos, checkinCodeOficial],
@@ -448,13 +445,11 @@
       document.getElementById("confirmUploadBtn").disabled = true;
       document.getElementById("uploadStatus").innerHTML = "Enviando arquivo...";
       try {
-        // Nome: treino_hoje_nomealuna_timestamp.ext
         const ext = uploadFile.name.split('.').pop();
         const safeName = nomeSelecionado.replace(/[^a-z0-9]/gi,'_').toLowerCase();
         const fileName = `treino_hoje_${safeName}_${Date.now()}.${ext}`;
         const storageRef = storage.ref().child("uploads/"+fileName);
         await storageRef.put(uploadFile);
-        // Atualiza Firestore +10 pontos
         const snap = await db.collection("usuarios").where("nome","==",nomeSelecionado).get();
         if(!snap.empty){
           const docUser = snap.docs[0];
